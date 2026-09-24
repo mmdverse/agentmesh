@@ -22,10 +22,14 @@ COPY packages/messaging/package.json ./packages/messaging/
 COPY packages/mcp-bridge/package.json ./packages/mcp-bridge/
 COPY packages/webhooks/package.json ./packages/webhooks/
 COPY packages/observability/package.json ./packages/observability/
+COPY adapters/postgres/package.json ./adapters/postgres/
 COPY adapters/redis/package.json ./adapters/redis/
 COPY adapters/nats/package.json ./adapters/nats/
 COPY adapters/s3/package.json ./adapters/s3/
+COPY adapters/oidc/package.json ./adapters/oidc/
 COPY apps/gateway/package.json ./apps/gateway/
+COPY apps/control-plane/package.json ./apps/control-plane/
+COPY apps/console/package.json ./apps/console/
 RUN pnpm install --frozen-lockfile || pnpm install
 
 FROM base AS builder

@@ -26,7 +26,10 @@ COPY adapters/postgres/package.json ./adapters/postgres/
 COPY adapters/redis/package.json ./adapters/redis/
 COPY adapters/nats/package.json ./adapters/nats/
 COPY adapters/s3/package.json ./adapters/s3/
+COPY adapters/oidc/package.json ./adapters/oidc/
+COPY apps/gateway/package.json ./apps/gateway/
 COPY apps/control-plane/package.json ./apps/control-plane/
+COPY apps/console/package.json ./apps/console/
 RUN pnpm install --frozen-lockfile || pnpm install
 
 FROM base AS builder
