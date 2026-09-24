@@ -5,8 +5,6 @@ const LogLevelSchema = z.enum(["fatal", "error", "warn", "info", "debug", "trace
 
 const PortSchema = z.coerce.number().int().min(1).max(65535);
 
-const UrlSchema = z.string().url().or(z.string().startsWith("postgresql://")).or(z.string().startsWith("redis://")).or(z.string().startsWith("nats://"));
-
 // Shared infra
 export const InfraConfigSchema = z.object({
   DATABASE_URL: z.string().min(1).default("postgresql://agentmesh:agentmesh_secret@localhost:5432/agentmesh"),
@@ -35,8 +33,13 @@ export const GatewayConfigSchema = InfraConfigSchema.extend({
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000),
   MAX_MESSAGE_SIZE: z.coerce.number().default(1024 * 1024), // 1MB
   MAX_ARTIFACT_SIZE: z.coerce.number().default(100 * 1024 * 1024), // 100MB
+  MAX_CONCURRENT_TASKS: z.coerce.number().default(100),
+  MAX_FAN_OUT: z.coerce.number().default(10),
+  MAX_RETRIES: z.coerce.number().default(3),
   REQUEST_TIMEOUT_MS: z.coerce.number().default(30000),
-  VERSION: z.string().default("0.1.0-phase0"),
+  CIRCUIT_BREAKER_THRESHOLD: z.coerce.number().default(5),
+  CIRCUIT_BREAKER_TIMEOUT_MS: z.coerce.number().default(60000),
+  VERSION: z.string().default("0.1.0-phase3"),
 });
 
 export type GatewayConfig = z.infer<typeof GatewayConfigSchema>;
@@ -56,7 +59,13 @@ export const ControlPlaneConfigSchema = InfraConfigSchema.extend({
   AGENT_HEARTBEAT_INTERVAL_MS: z.coerce.number().default(30000),
   AGENT_TTL_MS: z.coerce.number().default(120000),
   TASK_TIMEOUT_MS: z.coerce.number().default(1000 * 60 * 30), // 30m
-  VERSION: z.string().default("0.1.0-phase0"),
+  MAX_CONCURRENT_TASKS: z.coerce.number().default(100),
+  MAX_FAN_OUT: z.coerce.number().default(10),
+  MAX_MESSAGE_SIZE: z.coerce.number().default(1024 * 1024),
+  MAX_ARTIFACT_SIZE: z.coerce.number().default(100 * 1024 * 1024),
+  REQUIRE_TENANT: z.coerce.boolean().default(false),
+  ALLOW_CROSS_TENANT: z.coerce.boolean().default(false),
+  VERSION: z.string().default("0.1.0-phase3"),
 });
 
 export type ControlPlaneConfig = z.infer<typeof ControlPlaneConfigSchema>;

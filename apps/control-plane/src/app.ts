@@ -6,6 +6,11 @@ import type { ControlPlaneConfig } from "@agentmesh/config";
 import { createEventBus } from "@agentmesh/events";
 import { healthRoutes } from "./routes/health.js";
 import { v1Routes } from "./routes/v1/index.js";
+import { observabilityPlugin } from "./plugins/observability.js";
+import { authPlugin } from "./plugins/auth.js";
+import { tenantPlugin } from "./plugins/tenant.js";
+import { rateLimitPlugin } from "./plugins/rate-limit.js";
+import { authorizationPlugin } from "./plugins/authorization.js";
 
 export interface BuildAppOptions {
   config: ControlPlaneConfig;
@@ -22,14 +27,38 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
   await app.register(helmet, { contentSecurityPolicy: false });
   await app.register(sensible);
 
+  await app.register(observabilityPlugin, { serviceName: "control-plane" });
+
+  await app.register(authPlugin, {
+    jwtSecret: opts.config.JWT_SECRET,
+    oidcIssuer: opts.config.OIDC_ISSUER,
+    oidcClientId: opts.config.OIDC_CLIENT_ID,
+    publicRoutes: ["/health", "/ready", "/v1/health", "/v1/info", "/v1/observability/*", "/v1/reliability/*"],
+  });
+  await app.register(tenantPlugin);
+  await app.register(rateLimitPlugin, { enabled: true });
+  await app.register(authorizationPlugin, {
+    publicRoutes: ["/health", "/ready", "/v1/health", "/v1/info", "/v1/observability/*", "/v1/reliability/*"],
+  });
+
   const eventBus = createEventBus({ serviceName: "control-plane", url: opts.config.NATS_URL });
 
   app.decorate("config", opts.config);
   app.decorate("eventBus", eventBus);
 
-  app.addHook("onRequest", async (req) => {
-    // @ts-ignore
-    req.traceId = req.headers["x-trace-id"] ?? `trace_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+  app.addHook("onResponse", async (req, reply) => {
+    if (req.url.includes("/health")) return;
+    app.log.info(
+      {
+        method: req.method,
+        url: req.url,
+        status: reply.statusCode,
+        traceId: (req as any).traceId,
+        tenant: (req as any).tenant,
+        auth: (req as any).auth?.method,
+      },
+      "request completed"
+    );
   });
 
   await app.register(healthRoutes, { prefix: "/" });

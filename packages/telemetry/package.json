@@ -1,6 +1,6 @@
 {
   "name": "@agentmesh/telemetry",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "OpenTelemetry setup for AgentMesh",
   "type": "module",
@@ -26,7 +26,8 @@
     "@opentelemetry/auto-instrumentations-node": "^0.55.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.55.0",
     "@opentelemetry/resources": "^1.26.0",
-    "@opentelemetry/semantic-conventions": "^1.26.0"
+    "@opentelemetry/semantic-conventions": "^1.26.0",
+    "@agentmesh/observability": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

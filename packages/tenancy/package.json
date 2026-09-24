@@ -1,0 +1,26 @@
+{
+  "name": "@agentmesh/tenancy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Multi-tenancy subsystem - organization/project isolation, tenant context, enforcement",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo ok",
+    "clean": "rm -rf dist",
+    "test": "echo ok"
+  },
+  "dependencies": {
+    "@agentmesh/core": "workspace:*",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "@types/node": "^20.14.0"
+  }
+}

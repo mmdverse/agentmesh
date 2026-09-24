@@ -1,17 +1,22 @@
-# Default values for agentmesh - Phase 5 will be fully templated
+# AgentMesh Helm values - Production-grade defaults
 
 replicaCount:
   gateway: 3
   controlPlane: 2
+  console: 1
 
 image:
   gateway:
     repository: agentmesh/gateway
-    tag: "0.1.0-phase0"
+    tag: "1.0.0"
     pullPolicy: IfNotPresent
   controlPlane:
     repository: agentmesh/control-plane
-    tag: "0.1.0-phase0"
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  console:
+    repository: agentmesh/console
+    tag: "1.0.0"
     pullPolicy: IfNotPresent
 
 service:
@@ -21,13 +26,26 @@ service:
   controlPlane:
     type: ClusterIP
     port: 3002
+  console:
+    type: ClusterIP
+    port: 3000
 
 ingress:
-  enabled: false
+  enabled: true
   className: "nginx"
-  annotations: {}
-  hosts: []
-  tls: []
+  annotations:
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+  hosts:
+    - host: agentmesh.local
+      paths:
+        - path: /
+          service: console
+        - path: /v1
+          service: gateway
+        - path: /api/gateway
+          service: gateway
+        - path: /api/control-plane
+          service: control-plane
 
 resources:
   gateway:
@@ -44,6 +62,13 @@ resources:
     requests:
       cpu: 200m
       memory: 256Mi
+  console:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
 
 autoscaling:
   gateway:
@@ -51,11 +76,73 @@ autoscaling:
     minReplicas: 3
     maxReplicas: 10
     targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  controlPlane:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
 
 config:
+  nodeEnv: production
+  version: "1.0.0"
   databaseUrl: "postgresql://agentmesh:agentmesh_secret@postgres:5432/agentmesh"
   redisUrl: "redis://redis:6379"
   natsUrl: "nats://nats:4222"
   s3Endpoint: "http://minio:9000"
+  s3Region: "us-east-1"
+  s3Bucket: "agentmesh-artifacts"
+  controlPlaneUrl: "http://control-plane:3002"
+  gatewayUrl: "http://gateway:3001"
+  jwtSecret: "change_this_in_production_use_strong_secret"
+  maxMessageSize: 1048576
+  maxArtifactSize: 104857600
+  maxConcurrentTasks: 100
+  maxFanOut: 10
 
-# Phase 5: will include postgres, redis, nats, minio as subcharts or external
+secrets:
+  jwtSecret: "change_this_in_production_use_strong_secret"
+  s3AccessKeyId: "minioadmin"
+  s3SecretAccessKey: "minioadmin123"
+  postgresPassword: "agentmesh_secret"
+
+postgresql:
+  enabled: true
+  auth:
+    username: agentmesh
+    password: agentmesh_secret
+    database: agentmesh
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+
+redis:
+  enabled: true
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: true
+      size: 5Gi
+
+nats:
+  enabled: true
+  cluster:
+    enabled: false
+  jetstream:
+    enabled: true
+    fileStore:
+      pvc:
+        size: 5Gi
+
+# Optional MinIO via external chart or included
+minio:
+  enabled: true
+  rootUser: minioadmin
+  rootPassword: minioadmin123
+  persistence:
+    size: 10Gi
+  buckets:
+    - name: agentmesh-artifacts
+      policy: public

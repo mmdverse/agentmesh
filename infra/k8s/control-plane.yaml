@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: control-plane
+  namespace: agentmesh
+  labels:
+    app: control-plane
+    tier: control-plane
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: control-plane
+  template:
+    metadata:
+      labels:
+        app: control-plane
+        tier: control-plane
+    spec:
+      containers:
+        - name: control-plane
+          image: agentmesh/control-plane:0.1.0-phase5
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3002
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: agentmesh-config
+                  key: NODE_ENV
+            - name: NATS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: agentmesh-config
+                  key: NATS_URL
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: agentmesh-config
+                  key: REDIS_URL
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: agentmesh-config
+                  key: DATABASE_URL
+            - name: S3_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: agentmesh-config
+                  key: S3_ENDPOINT
+            - name: S3_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: agentmesh-config
+                  key: S3_BUCKET
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: agentmesh-secrets
+                  key: JWT_SECRET
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: agentmesh-secrets
+                  key: S3_ACCESS_KEY_ID
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: agentmesh-secrets
+                  key: S3_SECRET_ACCESS_KEY
+            - name: CONTROL_PLANE_PORT
+              value: "3002"
+            - name: VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: agentmesh-config
+                  key: VERSION
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+            requests:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: control-plane
+  namespace: agentmesh
+spec:
+  selector:
+    app: control-plane
+  ports:
+    - port: 3002
+      targetPort: 3002
+      name: http
+  type: ClusterIP

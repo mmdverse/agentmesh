@@ -1,7 +1,8 @@
 import { getDb, schema } from "@agentmesh/postgres-adapter";
-import { eq, and, ilike, or, desc, asc, sql, inArray } from "drizzle-orm";
+import { eq, and, ilike, desc, sql } from "drizzle-orm";
 import type { AgentFilter, RegisterAgentInput, AgentRecord } from "./types.js";
 import type { AgentCard } from "@agentmesh/a2a-protocol";
+import { compareSemVer } from "@agentmesh/versioning";
 
 // In-memory fallback for Phase 0/1 when Postgres not available
 class InMemoryRepo {
@@ -63,6 +64,15 @@ class InMemoryRepo {
     if (filter.trustLevel) {
       list = list.filter((a) => a.trustLevel === filter.trustLevel);
     }
+    if (filter.organizationId) {
+      list = list.filter((a) => a.organizationId === filter.organizationId);
+    }
+    if (filter.projectId) {
+      list = list.filter((a) => a.projectId === filter.projectId);
+    }
+    if (filter.version) {
+      list = list.filter((a) => a.version === filter.version);
+    }
     if (filter.skill) {
       list = list.filter((a) => {
         const skills = this.skills.get(a.id) ?? [];
@@ -74,7 +84,27 @@ class InMemoryRepo {
       list = list.filter((a) => a.name.toLowerCase().includes(q) || (a.description ?? "").toLowerCase().includes(q));
     }
 
+    // Version strategy filtering
+    if (filter.versionStrategy === "stable") {
+      list = list.filter((a) => {
+        const v = a.version.toLowerCase();
+        return !v.includes("canary") && !v.includes("beta") && !v.includes("alpha") && !v.includes("-dev");
+      });
+    }
+    if (filter.versionStrategy === "canary") {
+      list = list.filter((a) => a.version.toLowerCase().includes("canary"));
+    }
+    if (filter.versionStrategy === "minimum" && filter.minVersion) {
+      list = list.filter((a) => compareSemVer(a.version, filter.minVersion!) >= 0);
+    }
+
     const total = list.length;
+
+    // Sort by version desc for latest-first, or createdAt
+    if (filter.versionStrategy === "latest" || filter.versionStrategy === "stable" || filter.versionStrategy === "canary") {
+      list.sort((a, b) => compareSemVer(b.version, a.version));
+    }
+
     const offset = filter.offset ?? 0;
     const limit = filter.limit ?? 20;
     list = list.slice(offset, offset + limit);
@@ -131,16 +161,9 @@ export class RegistryRepository {
   private useMemory: boolean;
 
   constructor() {
-    // Check if DATABASE_URL is set and we can connect
-    // For Phase 1, we default to memory if no DB, but try Postgres
-    this.useMemory = !process.env.DATABASE_URL || process.env.DATABASE_URL.includes("localhost") ? true : false;
-    // Actually we will try to use memory for now to keep Phase 1 simple and not require DB running in CI
-    // In production, set USE_POSTGRES=true to force Postgres
-    if (process.env.USE_POSTGRES === "true") this.useMemory = false;
-    else this.useMemory = true; // Phase 1: default to memory for simplicity, Postgres will be used in Phase 2 when we have migrations running
-
+    this.useMemory = process.env.USE_POSTGRES !== "true";
     if (this.useMemory) {
-      console.log("[registry-repo] Using InMemory repository (Phase 1 default, set USE_POSTGRES=true to use Postgres)");
+      console.log("[registry-repo] Using InMemory repository (Phase 3 default, set USE_POSTGRES=true to use Postgres)");
     } else {
       console.log("[registry-repo] Using Postgres repository");
     }
@@ -150,9 +173,6 @@ export class RegistryRepository {
     if (this.useMemory) return memRepo.create(input);
 
     const db = getDb();
-    const now = new Date();
-
-    // Create agent
     const [agent] = await db
       .insert(schema.agents)
       .values({
@@ -173,7 +193,6 @@ export class RegistryRepository {
       })
       .returning();
 
-    // Create skills if card has them
     if (input.card?.skills?.length) {
       await db.insert(schema.skills).values(
         input.card.skills.map((s) => ({
@@ -187,7 +206,6 @@ export class RegistryRepository {
       );
     }
 
-    // Create agent card
     if (input.card) {
       await db.insert(schema.agentCards).values({
         agentId: agent.id,
@@ -221,8 +239,6 @@ export class RegistryRepository {
     if (this.useMemory) return memRepo.list(filter);
 
     const db = getDb();
-    // For simplicity, we do basic filtering in Phase 1
-    // Full capability filtering with joins will be in Phase 2
     let query = db.select().from(schema.agents).$dynamic();
     const conditions: any[] = [];
 
@@ -231,13 +247,14 @@ export class RegistryRepository {
     if (filter.health) conditions.push(eq(schema.agents.health, filter.health));
     if (filter.trustLevel) conditions.push(eq(schema.agents.trustLevel, filter.trustLevel));
     if (filter.organizationId) conditions.push(eq(schema.agents.organizationId, filter.organizationId as any));
+    if (filter.projectId) conditions.push(eq(schema.agents.projectId, filter.projectId as any));
+    if (filter.version) conditions.push(eq(schema.agents.version, filter.version));
 
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
 
     const agents = await query.limit(filter.limit ?? 20).offset(filter.offset ?? 0);
-    // Get total count
     const [{ count }] = await db
       .select({ count: sql<number>`count(*)` })
       .from(schema.agents)
@@ -250,7 +267,6 @@ export class RegistryRepository {
       })
     );
 
-    // Skill filtering post-query for Phase 1 (will be optimized in Phase 2)
     let filtered = enriched;
     if (filter.skill) {
       filtered = filtered.filter((a) => a.skills?.some((s) => s.skillId === filter.skill || s.name === filter.skill));

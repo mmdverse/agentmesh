@@ -1,0 +1,139 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  namespace: agentmesh
+  labels:
+    app: gateway
+    tier: data-plane
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+        tier: data-plane
+    spec:
+      containers:
+        - name: gateway
+          image: agentmesh/gateway:0.1.0-phase5
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3001
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: agentmesh-config
+                  key: NODE_ENV
+            - name: NATS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: agentmesh-config
+                  key: NATS_URL
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: agentmesh-config
+                  key: REDIS_URL
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: agentmesh-config
+                  key: DATABASE_URL
+            - name: S3_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: agentmesh-config
+                  key: S3_ENDPOINT
+            - name: S3_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: agentmesh-config
+                  key: S3_BUCKET
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: agentmesh-secrets
+                  key: JWT_SECRET
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: agentmesh-secrets
+                  key: S3_ACCESS_KEY_ID
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: agentmesh-secrets
+                  key: S3_SECRET_ACCESS_KEY
+            - name: CONTROL_PLANE_URL
+              value: http://control-plane:3002
+            - name: GATEWAY_PORT
+              value: "3001"
+            - name: VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: agentmesh-config
+                  key: VERSION
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+            requests:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: agentmesh
+spec:
+  selector:
+    app: gateway
+  ports:
+    - port: 3001
+      targetPort: 3001
+      name: http
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: gateway-hpa
+  namespace: agentmesh
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: gateway
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80

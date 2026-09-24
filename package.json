@@ -1,15 +1,15 @@
 {
   "name": "agentmesh",
   "private": true,
-  "version": "0.1.0-phase0",
-  "description": "AgentMesh - Infrastructure Gateway and Control Plane for AI Agents",
+  "version": "1.0.0",
+  "description": "AgentMesh - Production-grade Infrastructure Gateway and Control Plane for AI Agents",
   "packageManager": "pnpm@9.12.3",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
   },
   "scripts": {
-    "build": "turbo run build",
+    "build": "turbo run build --concurrency=1",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
@@ -21,11 +21,20 @@
     "db:migrate": "turbo run db:migrate --filter=@agentmesh/postgres-adapter",
     "docker:up": "docker compose -f infra/docker-compose.yml up -d",
     "docker:down": "docker compose -f infra/docker-compose.yml down -v",
-    "docker:logs": "docker compose -f infra/docker-compose.yml logs -f"
+    "docker:logs": "docker compose -f infra/docker-compose.yml logs -f",
+    "docker:build": "docker compose -f infra/docker-compose.yml build",
+    "k8s:apply": "kubectl apply -f infra/k8s/",
+    "k8s:delete": "kubectl delete -f infra/k8s/",
+    "helm:install": "helm install agentmesh infra/helm/agentmesh -n agentmesh --create-namespace",
+    "helm:upgrade": "helm upgrade agentmesh infra/helm/agentmesh -n agentmesh",
+    "helm:uninstall": "helm uninstall agentmesh -n agentmesh",
+    "console:dev": "pnpm --filter @agentmesh/console dev",
+    "gateway:dev": "pnpm --filter @agentmesh/gateway dev",
+    "control-plane:dev": "pnpm --filter @agentmesh/control-plane dev"
   },
   "devDependencies": {
     "prettier": "^3.3.3",
-    "turbo": "^2.3.3",
+    "turbo": "^2.11.3",
     "typescript": "^5.6.3"
   },
   "workspaces": [

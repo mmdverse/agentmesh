@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { getRegistryClient } from "../../modules/registry-client.js";
 import { getA2AProxy } from "../../modules/a2a-proxy.js";
 import { tasksRoutes } from "./tasks.js";
+import { getObservability } from "@agentmesh/observability";
 
 export async function v1Routes(app: FastifyInstance) {
   const registry = getRegistryClient();
@@ -13,40 +14,48 @@ export async function v1Routes(app: FastifyInstance) {
       service: "gateway",
       version: app.config.VERSION,
       dataPlane: "active",
-      controlPlane: "cached-config (Phase 2: Redis + Control Plane HTTP + Tasks)",
+      controlPlane: "cached-config + Redis + NATS JetStream",
       routingStrategies: app.routingEngine.listStrategies(),
+      features: {
+        reliability: "CircuitBreaker, Bulkhead, Retry, Timeout",
+        security: "Auth, RateLimit, Tenant Isolation, Policy",
+        artifacts: "S3 + InMemory",
+        messaging: "sync/async/streaming",
+        webhooks: "signed + retry + SSRF protection",
+        mcpBridge: "A2A<->MCP",
+        observability: "OTel + InMemory tracing",
+      },
       timestamp: new Date().toISOString(),
-    };
-  });
-
-  app.get("/routes", async () => {
-    return {
-      routes: [],
-      message: "Routing table - Phase 2: engine integrated with task creation",
     };
   });
 
   app.get("/info", async () => {
     return {
       name: "AgentMesh Gateway",
-      description: "Data Plane - Handles message forwarding, routing, streaming",
+      description: "Data Plane - Handles message forwarding, routing, streaming, artifacts, messaging",
       version: app.config.VERSION,
       capabilities: {
         routing: ["round_robin", "least_loaded", "latency_aware", "weighted", "capability_match"],
-        streaming: "sse (Phase 2: implemented)",
-        loadBalancing: "health-aware, latency-aware (Phase 2)",
-        rateLimiting: "per org/project/agent/skill (Phase 3)",
-        discovery: ["local_registry", "direct_url", "well_known", "manual"],
-        a2aProxy: "Phase 1: JSON-RPC forwarding with SSRF protection",
-        tasks: "Phase 2: creation with routing, SSE streaming, delegation graph",
+        streaming: "sse with event bus",
+        loadBalancing: "health-aware, latency-aware, capacity-aware",
+        rateLimiting: "per org/project/agent/skill/endpoint/ip/global",
+        discovery: ["local_registry", "direct_url", "well_known", "manual", "mcp_bridge"],
+        a2aProxy: "JSON-RPC forwarding with SSRF protection + circuit breaker",
+        tasks: "creation with routing, SSE streaming, delegation graph, reliability",
+        artifacts: "S3 + presigned URLs + lifecycle",
+        messaging: "sync/async/streaming with trace propagation",
+        webhooks: "signed delivery + retry + dead-letter",
+        mcpBridge: "A2A<->MCP translation",
+        observability: "OTel tracing + metrics",
       },
-      controlPlane: app.config.NATS_URL ? "connected via NATS (Phase 2)" : "in-memory",
+      controlPlane: app.config.NATS_URL ? "connected via NATS JetStream" : "in-memory",
     };
   });
 
-  // Agent discovery via gateway (proxies to control-plane)
   app.get("/agents", async (req) => {
-    const { skill, capability, region, search, limit = "20" } = req.query as any;
+    const { skill, capability, region, search, limit = "20", versionStrategy, version } = req.query as any;
+    const tenant = (req as any).tenant ?? {};
+
     const agents = await registry.discover({
       skill,
       capability,
@@ -54,7 +63,14 @@ export async function v1Routes(app: FastifyInstance) {
       search,
       limit: parseInt(limit, 10) || 20,
     });
-    return { agents, total: agents.length, source: "gateway->control-plane" };
+
+    // Apply tenant filter
+    let filtered = agents;
+    if (tenant.organizationId) {
+      filtered = filtered.filter((a: any) => !a.organizationId || a.organizationId === tenant.organizationId);
+    }
+
+    return { agents: filtered, total: filtered.length, source: "gateway->control-plane", tenant, versionStrategy, version };
   });
 
   app.get("/agents/:id", async (req, reply) => {
@@ -66,16 +82,23 @@ export async function v1Routes(app: FastifyInstance) {
     return { agent };
   });
 
-  // A2A Proxy - Forward JSON-RPC to agent
   app.post("/agents/:id/invoke", async (req, reply) => {
     const { id } = req.params as { id: string };
+    const tenant = (req as any).tenant ?? {};
+    const obs = getObservability();
+    const span = obs["tracer"].startSpan(`gateway.invoke.${id}`, {
+      attributes: { agentId: id, traceId: req.traceId, organizationId: tenant.organizationId },
+    });
+
     const agent = await registry.getAgent(id);
     if (!agent) {
+      obs.endSpan(span.id, { error: new Error(`Agent ${id} not found`) });
       return reply.status(404).send({ error: { code: "AGENT_NOT_FOUND", message: `Agent not found: ${id}` } });
     }
 
     const body = req.body as any;
     if (!body || !body.method) {
+      obs.endSpan(span.id, { error: new Error("Invalid JSON-RPC") });
       return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "Invalid JSON-RPC request, missing method" } });
     }
 
@@ -89,10 +112,14 @@ export async function v1Routes(app: FastifyInstance) {
           headers: {
             "X-AgentMesh-Agent-Id": id,
             "X-AgentMesh-Trace-Id": req.traceId,
+            "X-Organization-Id": tenant.organizationId ?? "",
+            "X-Project-Id": tenant.projectId ?? "",
           },
         },
         { timeoutMs: app.config.REQUEST_TIMEOUT_MS, retries: 0, allowPrivate: true }
       );
+
+      obs.endSpan(span.id, { attributes: { status: result.status, latency: result.latencyMs } });
 
       try {
         await app.eventBus.publish({
@@ -103,18 +130,20 @@ export async function v1Routes(app: FastifyInstance) {
           data: { agentId: id, method: body.method, status: result.status, latencyMs: result.latencyMs },
           timestamp: new Date().toISOString(),
           traceId: req.traceId,
+          organizationId: tenant.organizationId,
+          projectId: tenant.projectId,
         });
       } catch {}
 
       return reply.status(result.status).send(result.body);
     } catch (err) {
       const e = err as Error;
+      obs.endSpan(span.id, { error: e });
       app.log.error({ err: e, agentId: id, traceId: req.traceId }, "A2A proxy failed");
       return reply.status(502).send({ error: { code: "PROXY_FAILED", message: e.message, agentId: id, traceId: req.traceId } });
     }
   });
 
-  // Generic A2A proxy - /v1/a2a/:id/* -> forwards to agent
   app.all("/a2a/:id/*", async (req, reply) => {
     const { id } = req.params as { id: string; "*": string };
     const agent = await registry.getAgent(id);
@@ -151,31 +180,108 @@ export async function v1Routes(app: FastifyInstance) {
     }
   });
 
-  // Routing preview - Phase 2 with real routing
   app.post("/route", async (req) => {
-    const { skill, capability, region, strategy = "capability_match" } = req.body as any;
+    const { skill, capability, region, strategy = "capability_match", versionStrategy, version } = req.body as any;
+    const tenant = (req as any).tenant ?? {};
     const candidates = await registry.discover({ skill, capability, region, limit: 50 });
 
-    if (candidates.length === 0) {
+    let filtered = candidates;
+    if (tenant.organizationId) {
+      filtered = filtered.filter((a: any) => !a.organizationId || a.organizationId === tenant.organizationId);
+    }
+
+    if (filtered.length === 0) {
       return { agent: null, candidates: [], message: "No agents found for criteria" };
     }
 
-    const routingCandidates = candidates.map((a) => ({
+    const routingCandidates = filtered.map((a) => ({
       agent: a as any,
       health: (a as any).health ?? "UNKNOWN",
       score: 1,
     }));
 
-    const selected = app.routingEngine.route(routingCandidates as any, { skill, capability, region }, strategy);
+    const selected = app.routingEngine.route(routingCandidates as any, { skill, capability, region, tenant }, strategy);
 
     return {
       agent: selected?.agent ?? null,
-      candidates: candidates.slice(0, 10),
+      candidates: filtered.slice(0, 10),
       strategy,
-      total: candidates.length,
+      total: filtered.length,
+      versionStrategy,
+      version,
     };
   });
 
-  // Register tasks routes - Phase 2
   await app.register(tasksRoutes, { prefix: "/tasks" });
+
+  // Artifacts proxy to control-plane (or handle via gateway for direct upload)
+  app.get("/artifacts", async (req, reply) => {
+    // Proxy to control-plane
+    const controlPlaneUrl = process.env.CONTROL_PLANE_URL ?? "http://localhost:3002";
+    try {
+      const query = req.url.includes("?") ? `?${req.url.split("?")[1]}` : "";
+      const res = await fetch(`${controlPlaneUrl}/v1/artifacts${query}`, {
+        headers: {
+          "X-Organization-Id": (req as any).tenant?.organizationId ?? "",
+          "X-Project-Id": (req as any).tenant?.projectId ?? "",
+          Authorization: (req.headers["authorization"] as string) ?? "",
+        },
+      });
+      const data = await res.json();
+      return reply.status(res.status).send(data);
+    } catch (err) {
+      return reply.status(502).send({ error: { code: "PROXY_FAILED", message: (err as Error).message } });
+    }
+  });
+
+  // Messages
+  app.get("/messages", async (req, reply) => {
+    const controlPlaneUrl = process.env.CONTROL_PLANE_URL ?? "http://localhost:3002";
+    try {
+      const query = req.url.includes("?") ? `?${req.url.split("?")[1]}` : "";
+      const res = await fetch(`${controlPlaneUrl}/v1/messages${query}`, {
+        headers: {
+          "X-Organization-Id": (req as any).tenant?.organizationId ?? "",
+          "X-Project-Id": (req as any).tenant?.projectId ?? "",
+          Authorization: (req.headers["authorization"] as string) ?? "",
+        },
+      });
+      const data = await res.json();
+      return reply.status(res.status).send(data);
+    } catch (err) {
+      return reply.status(502).send({ error: { code: "PROXY_FAILED", message: (err as Error).message } });
+    }
+  });
+
+  // Observability - traces via gateway
+  app.get("/observability/traces/:traceId", async (req) => {
+    const { traceId } = req.params as { traceId: string };
+    const obs = getObservability();
+    const trace = obs.getTrace(traceId);
+    return { traceId, spans: trace, total: trace.length, source: "gateway" };
+  });
+
+  app.get("/observability/metrics", async (req) => {
+    const { name } = req.query as any;
+    const obs = getObservability();
+    const metrics = obs.getMetrics(name);
+    return { metrics, total: metrics.length, source: "gateway" };
+  });
+
+  // MCP Bridge discovery via gateway
+  app.get("/mcp/servers", async (req, reply) => {
+    const controlPlaneUrl = process.env.CONTROL_PLANE_URL ?? "http://localhost:3002";
+    try {
+      const res = await fetch(`${controlPlaneUrl}/v1/mcp/servers`, {
+        headers: {
+          "X-Organization-Id": (req as any).tenant?.organizationId ?? "",
+          Authorization: (req.headers["authorization"] as string) ?? "",
+        },
+      });
+      const data = await res.json();
+      return reply.status(res.status).send(data);
+    } catch (err) {
+      return reply.status(502).send({ error: { code: "PROXY_FAILED", message: (err as Error).message } });
+    }
+  });
 }

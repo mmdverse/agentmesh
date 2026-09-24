@@ -1,6 +1,13 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "outDir": "dist", "rootDir": "src" },
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
   "include": ["src/**/*"],
-  "references": [{ "path": "../a2a-protocol" }, { "path": "../core" }]
+  "references": [
+    { "path": "../a2a-protocol" },
+    { "path": "../core" },
+    { "path": "../observability" }
+  ]
 }

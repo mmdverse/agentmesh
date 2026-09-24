@@ -16,6 +16,7 @@ const CreateTaskSchema = z.object({
   organizationId: z.string().optional(),
   projectId: z.string().optional(),
   traceId: z.string().optional(),
+  delegationId: z.string().optional(),
 });
 
 export async function tasksRoutes(app: FastifyInstance) {
@@ -23,6 +24,7 @@ export async function tasksRoutes(app: FastifyInstance) {
 
   app.get("/", async (req) => {
     const { state, agentId, contextId, traceId, rootTaskId, organizationId, projectId, limit = "20", offset = "0" } = req.query as any;
+    const tenant = (req as any).tenant ?? {};
 
     const filter = {
       state,
@@ -34,6 +36,7 @@ export async function tasksRoutes(app: FastifyInstance) {
       projectId,
       limit: parseInt(limit, 10) || 20,
       offset: parseInt(offset, 10) || 0,
+      tenant,
     };
 
     const { tasks, total } = await service.list(filter as any);
@@ -43,8 +46,9 @@ export async function tasksRoutes(app: FastifyInstance) {
 
   app.get("/:id", async (req, reply) => {
     const { id } = req.params as { id: string };
+    const tenant = (req as any).tenant ?? {};
     try {
-      const task = await service.getById(id);
+      const task = await service.getById(id, tenant);
       return { task };
     } catch (err) {
       const e = err as any;
@@ -59,7 +63,8 @@ export async function tasksRoutes(app: FastifyInstance) {
         return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "Invalid input", details: parsed.error.flatten() } });
       }
 
-      const task = await service.create(parsed.data as any);
+      const tenant = (req as any).tenant ?? {};
+      const task = await service.create({ ...(parsed.data as any), tenant });
       return reply.status(201).send({ task });
     } catch (err) {
       const e = err as any;
@@ -70,8 +75,9 @@ export async function tasksRoutes(app: FastifyInstance) {
   app.post("/:id/cancel", async (req, reply) => {
     const { id } = req.params as { id: string };
     const { reason } = (req.body as any) ?? {};
+    const tenant = (req as any).tenant ?? {};
     try {
-      const task = await service.cancel(id, reason);
+      const task = await service.cancel(id, reason, tenant);
       return { task };
     } catch (err) {
       const e = err as any;
@@ -82,8 +88,9 @@ export async function tasksRoutes(app: FastifyInstance) {
   app.post("/:id/complete", async (req, reply) => {
     const { id } = req.params as { id: string };
     const { output } = (req.body as any) ?? {};
+    const tenant = (req as any).tenant ?? {};
     try {
-      const task = await service.complete(id, output);
+      const task = await service.complete(id, output, tenant);
       return { task };
     } catch (err) {
       const e = err as any;
@@ -94,11 +101,12 @@ export async function tasksRoutes(app: FastifyInstance) {
   app.post("/:id/fail", async (req, reply) => {
     const { id } = req.params as { id: string };
     const { error } = (req.body as any) ?? {};
+    const tenant = (req as any).tenant ?? {};
     if (!error?.message) {
       return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "error.message required" } });
     }
     try {
-      const task = await service.fail(id, error);
+      const task = await service.fail(id, error, tenant);
       return { task };
     } catch (err) {
       const e = err as any;
@@ -108,8 +116,9 @@ export async function tasksRoutes(app: FastifyInstance) {
 
   app.post("/:id/retry", async (req, reply) => {
     const { id } = req.params as { id: string };
+    const tenant = (req as any).tenant ?? {};
     try {
-      const task = await service.retry(id);
+      const task = await service.retry(id, tenant);
       return { task };
     } catch (err) {
       const e = err as any;
@@ -119,8 +128,9 @@ export async function tasksRoutes(app: FastifyInstance) {
 
   app.get("/:id/history", async (req, reply) => {
     const { id } = req.params as { id: string };
+    const tenant = (req as any).tenant ?? {};
     try {
-      const history = await service.getHistory(id);
+      const history = await service.getHistory(id, tenant);
       return { taskId: id, history };
     } catch (err) {
       const e = err as any;
@@ -130,8 +140,9 @@ export async function tasksRoutes(app: FastifyInstance) {
 
   app.get("/:id/graph", async (req, reply) => {
     const { id } = req.params as { id: string };
+    const tenant = (req as any).tenant ?? {};
     try {
-      const { tree, graph } = await service.getDelegationTree(id);
+      const { tree, graph } = await service.getDelegationTree(id, tenant);
       return { taskId: id, tree, graph };
     } catch (err) {
       const e = err as any;
@@ -139,18 +150,21 @@ export async function tasksRoutes(app: FastifyInstance) {
     }
   });
 
-  // SSE Streaming for task updates - Phase 2
+  app.get("/reliability/stats", async () => {
+    return service.getReliabilityStats();
+  });
+
   app.get("/:id/stream", async (req, reply) => {
     const { id } = req.params as { id: string };
+    const tenant = (req as any).tenant ?? {};
 
     try {
-      await service.getById(id); // ensure exists
+      await service.getById(id, tenant);
     } catch (err) {
       const e = err as any;
       return reply.status(e.statusCode ?? 404).send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
     }
 
-    // Setup SSE
     reply.raw.writeHead(200, {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
@@ -163,21 +177,21 @@ export async function tasksRoutes(app: FastifyInstance) {
       reply.raw.write(`data: ${JSON.stringify(data)}\n\n`);
     };
 
-    // Send initial task state
     try {
-      const task = await service.getById(id);
+      const task = await service.getById(id, tenant);
       sendEvent("task", task);
     } catch {}
 
-    // Subscribe to task events via event bus
     const { createEventBus } = await import("@agentmesh/events");
-    const eventBus = createEventBus({ serviceName: "control-plane-stream" });
+    const eventBus = createEventBus({ serviceName: "control-plane-stream", url: process.env.NATS_URL });
 
     const sub = await eventBus.subscribe("*", (event: any) => {
       if (event.subject === `task.${id}` || event.data?.task?.id === id) {
+        // Tenant check for stream
+        if (tenant.organizationId && event.organizationId && event.organizationId !== tenant.organizationId) return;
+        if (tenant.projectId && event.projectId && event.projectId !== tenant.projectId) return;
         const type = event.type.replace("task.", "");
         sendEvent(type, event.data);
-        // If terminal, close after a delay
         if (["completed", "failed", "canceled", "timeout"].includes(type)) {
           setTimeout(() => {
             try {
@@ -188,7 +202,6 @@ export async function tasksRoutes(app: FastifyInstance) {
       }
     });
 
-    // Heartbeat every 15s
     const heartbeat = setInterval(() => {
       try {
         reply.raw.write(`: heartbeat ${new Date().toISOString()}\n\n`);
@@ -197,11 +210,10 @@ export async function tasksRoutes(app: FastifyInstance) {
       }
     }, 15000);
 
-    // Polling fallback - check task state every 2s and send if changed
     let lastState: string | null = null;
     const poll = setInterval(async () => {
       try {
-        const task = await service.getById(id);
+        const task = await service.getById(id, tenant);
         if (task.state !== lastState) {
           lastState = task.state;
           sendEvent("state", { state: task.state, task });
@@ -215,7 +227,6 @@ export async function tasksRoutes(app: FastifyInstance) {
           }
         }
       } catch {
-        // Task deleted? close
         clearInterval(poll);
         try {
           reply.raw.end();
@@ -235,7 +246,6 @@ export async function tasksRoutes(app: FastifyInstance) {
       } catch {}
     });
 
-    // Don't return, keep connection open
     return reply;
   });
 }

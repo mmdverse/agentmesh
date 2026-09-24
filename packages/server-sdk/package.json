@@ -1,6 +1,6 @@
 {
   "name": "@agentmesh/server-sdk",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "AgentMesh Server SDK for building A2A-compatible agents",
   "type": "module",
@@ -23,7 +23,10 @@
   "dependencies": {
     "@agentmesh/a2a-protocol": "workspace:*",
     "@agentmesh/core": "workspace:*",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "@agentmesh/observability": "workspace:*",
+    "fastify": "^5.3.2",
+    "@fastify/cors": "^10.0.1"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

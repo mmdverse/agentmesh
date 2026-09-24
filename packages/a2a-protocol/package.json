@@ -1,6 +1,6 @@
 {
   "name": "@agentmesh/a2a-protocol",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "A2A Protocol types, validation, Agent Card parser - versioned",
   "type": "module",

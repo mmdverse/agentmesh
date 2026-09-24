@@ -10,6 +10,7 @@ export interface CreateTaskInput {
   organizationId?: string;
   projectId?: string;
   traceId?: string;
+  delegationId?: string; // for delegation chain
 }
 
 export interface TaskRecord {
@@ -32,6 +33,7 @@ export interface TaskRecord {
   createdAt: string;
   updatedAt: string;
   expiresAt?: string | null;
+  delegationChain?: string[]; // chain of delegation IDs
 }
 
 export interface TaskHistoryRecord {
