@@ -42,6 +42,9 @@ export interface AgentServerConfig {
   middleware?: Array<(req: any, reply: any, next: () => void) => void>;
   enableTelemetry?: boolean;
   enableStreaming?: boolean;
+  controlPlaneUrl?: string;
+  autoRegister?: boolean;
+  heartbeatIntervalMs?: number;
 }
 
 export function createAgentServer(config: AgentServerConfig) {
@@ -259,7 +262,72 @@ export function createAgentServer(config: AgentServerConfig) {
       );
       console.log(`[server-sdk] Card: http://${host}:${port}/.well-known/agent.json`);
 
-      return { app, card, url: `http://${host}:${port}`, handlers: Array.from(handlers.keys()) };
+      // Auto-register with control-plane if enabled
+      let registeredId: string | null = null;
+      const cpUrl = config.controlPlaneUrl || process.env.CONTROL_PLANE_URL || "http://localhost:3002";
+      const autoReg = config.autoRegister ?? true;
+      const hbInterval = config.heartbeatIntervalMs ?? 15000;
+
+      if (autoReg) {
+        const register = async () => {
+          try {
+            const res = await fetch(`${cpUrl}/v1/agents`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                name: card.name,
+                url: `http://localhost:${port}`,
+                version: card.version,
+                description: card.description,
+                tags: card.skills?.map((s: any) => s.id) || [],
+              }),
+            });
+            const data: any = await res.json();
+            if (res.ok && data.agent?.id) {
+              registeredId = data.agent.id;
+              console.log(`[server-sdk] Registered with CP as ${registeredId}`);
+            } else {
+              // Try find existing
+              const listRes = await fetch(`${cpUrl}/v1/agents`).then(r=>r.json()).catch(()=>({ agents:[] }));
+              const existing = listRes.agents?.find((a: any) => a.name === card.name);
+              if (existing) {
+                registeredId = existing.id;
+                console.log(`[server-sdk] Using existing ${registeredId}`);
+              }
+            }
+            if (registeredId) {
+              await fetch(`${cpUrl}/v1/agents/${registeredId}/health`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ health: "HEALTHY" }),
+              }).catch(()=>{});
+            }
+          } catch (e: any) {
+            console.warn(`[server-sdk] Auto-register failed: ${e.message}, will retry`);
+          }
+        };
+
+        const heartbeat = async () => {
+          if (!registeredId) {
+            await register();
+            return;
+          }
+          try {
+            await fetch(`${cpUrl}/v1/agents/${registeredId}/heartbeat`, { method: "POST" }).catch(()=>{});
+            await fetch(`${cpUrl}/v1/agents/${registeredId}/health`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ health: "HEALTHY" }),
+            }).catch(()=>{});
+          } catch {}
+        };
+
+        await register();
+        setInterval(heartbeat, hbInterval);
+        setTimeout(heartbeat, 2000);
+      }
+
+      return { app, card, url: `http://${host}:${port}`, handlers: Array.from(handlers.keys()), registeredId };
     },
 
     handleTask: async (ctx: TaskHandlerContext): Promise<TaskHandlerResult> => {

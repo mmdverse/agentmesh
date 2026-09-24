@@ -42,29 +42,45 @@ export function isBlockedHostname(hostname: string, opts: SSRFOptions = {}): boo
   if (opts.allowedHosts?.includes(lower)) return false;
   if (opts.blockedHosts?.includes(lower)) return true;
 
-  if (BLOCKED_HOSTNAMES.has(lower)) return true;
+  // AWS metadata and Google metadata always blocked unless explicitly allowed
+  const alwaysBlocked = new Set([
+    "169.254.169.254",
+    "metadata.google.internal",
+    "metadata.google",
+    "instance-data",
+  ]);
+  if (alwaysBlocked.has(lower)) return true;
 
-  for (const suffix of BLOCKED_SUFFIXES) {
-    if (lower.endsWith(suffix)) return true;
+  // Loopback / localhost handling - respect allowLoopback first
+  if (lower === "localhost" || lower === "127.0.0.1" || lower === "::1" || lower.startsWith("127.")) {
+    if (opts.allowLoopback || opts.allowPrivate) return false;
+    return true;
   }
 
-  // Check if IP and private
+  // Private IP handling (excluding metadata which already blocked)
   if (/^\d+\.\d+\.\d+\.\d+$/.test(lower) || lower.includes(":")) {
     if (isPrivateIP(lower)) {
-      if (lower.startsWith("127.") && opts.allowLoopback) return false;
+      // Link-local 169.254.x.x should still be blocked unless explicitly allowed (metadata protection)
+      if (lower.startsWith("169.254.")) return true;
       if (opts.allowPrivate) return false;
+      if (lower.startsWith("127.") && opts.allowLoopback) return false;
       return true;
     }
   }
 
-  // localhost
-  if (lower === "localhost" || lower === "127.0.0.1" || lower === "::1") {
-    if (opts.allowLoopback) return false;
+  if (BLOCKED_HOSTNAMES.has(lower)) {
+    if ((lower === "localhost" || lower === "127.0.0.1" || lower === "::1") && (opts.allowLoopback || opts.allowPrivate)) {
+      return false;
+    }
     return true;
   }
 
-  // AWS metadata
-  if (lower === "169.254.169.254") return true;
+  for (const suffix of BLOCKED_SUFFIXES) {
+    if (lower.endsWith(suffix)) {
+      if (opts.allowPrivate) return false;
+      return true;
+    }
+  }
 
   return false;
 }

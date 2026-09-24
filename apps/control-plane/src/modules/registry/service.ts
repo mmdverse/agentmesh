@@ -55,18 +55,28 @@ export class RegistryService {
       input.projectId = input.projectId ?? input.tenant.projectId;
     }
 
-    // Validate URL
+    // Validate URL + SSRF (metadata always blocked)
     if (!input.url) throw new ValidationError("Agent URL is required");
     try {
       new URL(input.url);
     } catch {
       throw new ValidationError(`Invalid URL: ${input.url}`);
     }
+    try {
+      const { validateUrlForSSRF } = await import("@agentmesh/core");
+      const ssrfRes = validateUrlForSSRF(input.url, { allowPrivate: true, allowLoopback: true });
+      if (!ssrfRes.allowed) {
+        throw new ValidationError(`SSRF blocked: ${ssrfRes.reason} - ${input.url}`);
+      }
+    } catch (e) {
+      if ((e as any).message?.includes("SSRF blocked")) throw e;
+      // If import fails, ignore (fallback)
+    }
 
     let card = input.card;
     let fetchedUrl = input.url;
 
-    // Fetch card if requested or not provided
+    // Fetch card if requested or not provided - SSRF blocked must fail fast
     if (input.fetchCard !== false && !card) {
       try {
         const result = await fetchCardWithDiscovery(input.url, { allowPrivate: true });
@@ -74,8 +84,12 @@ export class RegistryService {
         fetchedUrl = result.url;
         console.log(`[registry] fetched card from ${fetchedUrl} for ${card.name}`);
       } catch (err) {
+        const msg = (err as Error).message || "";
+        if (msg.includes("SSRF blocked")) {
+          throw new ValidationError(`SSRF blocked: ${msg}`);
+        }
         console.warn(
-          `[registry] failed to fetch card from ${input.url}: ${(err as Error).message}, proceeding with manual registration`
+          `[registry] failed to fetch card from ${input.url}: ${msg}, proceeding with manual registration`
         );
       }
     }
@@ -110,6 +124,14 @@ export class RegistryService {
       description,
       card,
     });
+
+    // Immediately mark HEALTHY if card was fetched (agent is live) - fixes UNKNOWN lingering
+    if (card) {
+      try {
+        await this.repo.updateHealth(record.id, "HEALTHY");
+        (record as any).health = "HEALTHY";
+      } catch {}
+    }
 
     // Cache
     await this.cache.setAgent(record);

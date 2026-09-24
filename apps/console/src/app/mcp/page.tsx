@@ -1,66 +1,32 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
 
 export default async function MCPPage() {
   let servers: any = { servers: [] };
-  try {
-    servers = await api.controlPlane.mcp.servers();
-  } catch {}
+  try { servers = await api.controlPlane.mcp.servers(); } catch {}
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">MCP Bridge</h1>
-      <p className="text-sm text-muted-foreground">
-        A2A Agent | AgentMesh | MCP Server/Tool • MCP Agent | AgentMesh | A2A Agent
-      </p>
+    <div className="space-y-8">
+      <div><div className="modern-label text-black/30">MCP BRIDGE • PROTOCOL SEPARATION • 11</div><h1 className="modern-display text-[32px] mt-2">MCP</h1><div className="modern-mono text-[11px] text-black/50 mt-2">A2A ↔ AGENTMESH ↔ MCP • TRANSLATION LAYER • TOOL → SKILL MAPPING</div></div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Protocol Separation</CardTitle>
-          <CardDescription>MCP and A2A kept separate with clear abstraction</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <pre className="text-xs bg-secondary p-4 rounded">
-            {`A2A Agent -> AgentMesh Gateway -> MCP Bridge -> MCP Server/Tool
-MCP Tool -> AgentMesh -> A2A Agent
+      <div className="grid md:grid-cols-12 gap-4">
+        <div className="md:col-span-7 rounded-[20px] bg-white border border-black/10 p-7">
+          <div className="modern-label text-black/30">PROTOCOL FLOW</div>
+          <pre className="mt-4 bg-[#fafafa] border border-black/5 rounded-xl p-4 text-[11px] modern-mono leading-[1.5]">{`A2A Agent → Gateway → MCP Bridge → MCP Tool
+MCP Tool → AgentMesh → A2A Agent
 
 Translation:
-- MCP Tool -> A2A Skill (id: mcp_{tool.name}, tags: [mcp, tool])
-- MCP Server -> A2A Agent Card
-- A2A Skill -> MCP Tool (inputSchema with message, context)
-`}
-          </pre>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        {servers.servers?.map((s: any) => (
-          <Card key={s.serverName}>
-            <CardHeader>
-              <CardTitle>{s.serverName}</CardTitle>
-              <CardDescription>{s.card?.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="text-sm">Version: {s.card?.version}</div>
-              <div className="text-sm">Skills: {s.card?.skills?.length}</div>
-              <div className="flex flex-wrap gap-1">
-                {s.card?.skills?.map((skill: any) => (
-                  <Badge key={skill.id} variant="outline" className="text-[10px]">
-                    {skill.name}
-                  </Badge>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {servers.servers?.length === 0 && (
-        <div className="text-sm text-muted-foreground">
-          No MCP servers bridged yet. POST /v1/mcp/servers to register.
+- MCP Tool → A2A Skill (mcp_{tool.name}, tags: [mcp, tool])
+- MCP Server → A2A Agent Card
+- Keep protocols separate, clear abstraction`}</pre>
         </div>
-      )}
+        <div className="md:col-span-5 rounded-[20px] bg-black text-white p-7">
+          <div className="modern-label text-white/40">SERVERS • {servers.servers?.length||0}</div>
+          <div className="mt-4 space-y-2">
+            {servers.servers?.map((s:any,i:number)=><div key={i} className="rounded-xl bg-white/5 border border-white/10 px-4 py-3 modern-mono text-[11px]">{s.name||s.id||JSON.stringify(s).slice(0,60)}</div>)}
+            {(!servers.servers || servers.servers.length===0) && <div className="modern-mono text-[11px] text-white/30 p-4 text-center">NO MCP SERVERS</div>}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

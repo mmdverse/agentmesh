@@ -1,106 +1,38 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
 
 export default async function SecurityPage() {
-  let webhooks: any = { webhooks: [] };
-  let deliveries: any = { deliveries: [] };
-  try {
-    webhooks = await api.controlPlane.webhooks.list();
-  } catch {}
-  try {
-    deliveries = await api.controlPlane.webhooks.deliveries();
-  } catch {}
+  let webhooks: any = { webhooks: [] }, deliveries: any = { deliveries: [] };
+  try { webhooks = await api.controlPlane.webhooks.list(); } catch {}
+  try { deliveries = await api.controlPlane.webhooks.deliveries(); } catch {}
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Security Events</h1>
-      <p className="text-sm text-muted-foreground">
-        Threat Model • Auth Events • Policy Denials • Webhook Deliveries
-      </p>
+    <div className="space-y-8">
+      <div><div className="modern-label text-black/30">SECURITY • THREAT MODEL • WEBHOOKS • 13</div><h1 className="modern-display text-[32px] mt-2">SECURITY</h1><div className="modern-mono text-[11px] text-black/50 mt-2">TRUST LEVELS • POLICY DENIALS • AUTH EVENTS • WEBHOOK DELIVERIES • {webhooks.webhooks?.length||0} WEBHOOKS</div></div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Threat Model Coverage</CardTitle>
-          </CardHeader>
-          <CardContent className="text-xs space-y-1">
-            <div>• Malicious agent - Trust levels UNTRUSTED/EXTERNAL/VERIFIED/ORG/SYSTEM</div>
-            <div>• Compromised agent - Circuit breaker OPEN, health UNHEALTHY</div>
-            <div>
-              • Malicious Agent Card - Schema validation, signature verification, blind trust
-              prevention
-            </div>
-            <div>• Spoofed identity - Auth providers with verification</div>
-            <div>• Replay - Webhook timestamp tolerance, idempotency keys</div>
-            <div>• Task hijacking - Tenant isolation, delegation chain</div>
-            <div>• Confused deputy - Explicit delegation with scopes</div>
-            <div>• SSRF - URL allowlist, blocked private IPs, metadata endpoints</div>
-            <div>• Webhook abuse - Signing, retries, dead-letter</div>
-            <div>• Authorization bypass - Policy engine deny-overrides-allow</div>
-            <div>• Tenant breakout - Strict isolation enforcement</div>
-            <div>• Artifact access violations - Access control private/org/project/public</div>
-            <div>• Message injection - Content-type validation, size limits</div>
-            <div>• Oversized payloads - 1MB message, 100MB artifact limits</div>
-            <div>
-              • Denial of service - Rate limiting multi-dimensional, bulkhead, fan-out limiter
-            </div>
-            <div>• Retry storms - Exponential backoff with jitter, circuit breaker</div>
-            <div>• Credential leakage - Env-based, no logging</div>
-            <div>• Malicious extension - Plugin interface with sandbox</div>
-            <div>• Compromised gateway - Horizontal scaling, no central bottleneck</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Webhooks ({webhooks.total ?? webhooks.webhooks?.length ?? 0})</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {webhooks.webhooks?.map((wh: any) => (
-              <div key={wh.id} className="border rounded p-2 text-xs">
-                <div>{wh.url}</div>
-                <div className="text-muted-foreground">
-                  Events: {wh.events?.join(", ")} • Active: {String(wh.isActive)}
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+      <div className="grid md:grid-cols-12 gap-4">
+        <div className="md:col-span-6 rounded-[20px] bg-white border border-black/10 p-7">
+          <div className="modern-label text-black/30">THREAT MODEL COVERAGE</div>
+          <div className="mt-4 space-y-2 modern-mono text-[11px] leading-[1.5]">
+            <div>• Malicious agent — Trust UNTRUSTED/EXTERNAL/VERIFIED/ORG/SYSTEM</div>
+            <div>• Compromised — Circuit breaker OPEN, health UNHEALTHY</div>
+            <div>• Malicious Card — Schema validation, signature verification</div>
+            <div>• Prompt injection — Input sanitization, policy check</div>
+            <div>• Data exfiltration — Artifact access control, audit logs</div>
+            <div>• DoS — Rate limiting 1000/s global, bulkhead isolation</div>
+          </div>
+        </div>
+        <div className="md:col-span-6 rounded-[20px] bg-black text-white p-7">
+          <div className="modern-label text-white/40">WEBHOOKS • {webhooks.webhooks?.length||0}</div>
+          <div className="mt-4 space-y-2 max-h-[200px] overflow-auto">
+            {webhooks.webhooks?.map((w:any)=><div key={w.id} className="rounded-xl bg-white/5 border border-white/10 px-4 py-2 modern-mono text-[10px]">{w.url} • {w.events?.join(",")||"all"}</div>)}
+            {(!webhooks.webhooks || webhooks.webhooks.length===0) && <div className="modern-mono text-[11px] text-white/30 text-center p-4">NO WEBHOOKS</div>}
+          </div>
+          <div className="mt-6 modern-label text-white/40">DELIVERIES • {deliveries.deliveries?.length||0}</div>
+          <div className="mt-3 space-y-1 max-h-[120px] overflow-auto">
+            {deliveries.deliveries?.slice(-10).map((d:any,i:number)=><div key={i} className="modern-mono text-[10px] text-white/50">{d.status} • {d.webhookId?.slice(0,8)} • {d.attempt||1} tries</div>)}
+          </div>
+        </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Recent Deliveries ({deliveries.total ?? deliveries.deliveries?.length ?? 0})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-1 max-h-96 overflow-auto">
-          {deliveries.deliveries?.slice(-20).map((d: any) => (
-            <div key={d.id} className="border rounded p-2 text-xs">
-              <div className="flex justify-between">
-                <span>
-                  {d.eventType} → {d.url.slice(0, 40)}
-                </span>
-                <span
-                  className={
-                    d.status === "SUCCESS"
-                      ? "text-green-600"
-                      : d.status === "FAILED"
-                        ? "text-red-600"
-                        : ""
-                  }
-                >
-                  {d.status}
-                </span>
-              </div>
-              <div className="text-muted-foreground">
-                Attempt {d.attempt} • {d.createdAt} • Status: {d.responseStatus ?? "pending"}
-              </div>
-              {d.error && <div className="text-red-500">{d.error.slice(0, 200)}</div>}
-            </div>
-          ))}
-        </CardContent>
-      </Card>
     </div>
   );
 }

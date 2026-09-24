@@ -1,54 +1,31 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 export default function ProjectsPage() {
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Projects</h1>
-      <p className="text-sm text-muted-foreground">
-        Organization → Projects • Tenant Isolation • Versioning per Project
-      </p>
+    <div className="space-y-8">
+      <div><div className="modern-label text-black/30">PROJECTS • VERSIONING PER PROJECT • 17</div><h1 className="modern-display text-[32px] mt-2">PROJECTS</h1><div className="modern-mono text-[11px] text-black/50 mt-2">ORG → PROJECTS • TENANT ISOLATION • CANARY DEPLOYMENTS</div></div>
+      <div className="grid md:grid-cols-12 gap-4">
+        <div className="md:col-span-7 rounded-[20px] bg-white border border-black/10 p-7">
+          <div className="modern-label text-black/30">MODEL</div>
+          <pre className="mt-4 bg-[#fafafa] border border-black/5 rounded-xl p-4 text-[11px] modern-mono leading-[1.6]">{`Organization (org_123) name: Acme Corp slug: acme
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Multi-Tenancy Model</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <pre className="text-xs bg-secondary p-4 rounded">
-            {`Organization (e.g., org_123)
-  name: "Acme Corp"
-  slug: "acme"
+Project A (proj_a)
+  organizationId: org_123 slug: project-a
+  Agents: CodeAgent v1.0.0, v2.0.0, v2.1.0-canary
+  Tasks: task_abc
+  Routing: weighted 90% v2, 10% canary
 
-  Project A (proj_a)
-    organizationId: org_123
-    slug: "project-a"
-    name: "Code Review Agents"
-
-    Agents:
-      - CodeAgent v1.0.0
-      - CodeAgent v2.0.0
-      - CodeAgent v2.1.0-canary
-
-    Tasks:
-      - task_abc (CodeAgent v2.0.0)
-      - task_def (CodeAgent v1.0.0)
-
-    Policies:
-      - allow_org_agents (priority 50)
-      - deny_untrusted_prod_deploy (priority 100)
-
-  Project B (proj_b)
-    Agents: DataAgent v1.0.0
-    Tasks: ...
-
-Isolation:
-- Strict: org mismatch → 403, project mismatch → 403
-- Headers: X-Organization-Id, X-Project-Id
-- Enforcement: Registry, Tasks, Artifacts, Messages, Webhooks, MCP
-- Super-admin: can bypass with identity in superAdminIdentities list
-`}
-          </pre>
-        </CardContent>
-      </Card>
+Project B (proj_b)
+  Agents: DataAgent
+  Routing: round_robin`}</pre>
+        </div>
+        <div className="md:col-span-5 rounded-[20px] bg-[#fafafa] border border-black/10 p-7">
+          <div className="modern-label text-black/30">VERSIONING</div>
+          <div className="mt-4 space-y-2">
+            <div className="rounded-xl bg-white border border-black/5 p-4 flex justify-between"><span className="modern-mono text-[11px]">v1.0.0</span><span className="modern-mono text-[9px] bg-black text-white px-2 py-1 rounded-full">STABLE</span></div>
+            <div className="rounded-xl bg-white border border-black/5 p-4 flex justify-between"><span className="modern-mono text-[11px]">v2.0.0</span><span className="modern-mono text-[9px] bg-black text-white px-2 py-1 rounded-full">STABLE 90%</span></div>
+            <div className="rounded-xl bg-white border border-black/5 p-4 flex justify-between"><span className="modern-mono text-[11px]">v2.1.0-canary</span><span className="modern-mono text-[9px] border border-black/10 px-2 py-1 rounded-full">CANARY 10%</span></div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

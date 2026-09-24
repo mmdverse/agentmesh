@@ -1,60 +1,27 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
 
 export default async function RoutesPage() {
-  let gatewayInfo: any = {};
-  let reliability: any = {};
-  try {
-    gatewayInfo = await api.gateway.info();
-  } catch {}
-  try {
-    reliability = await api.gateway.reliability();
-  } catch {}
+  let gwInfo: any = {}, rel: any = {};
+  try { gwInfo = await api.gateway.info(); } catch {}
+  try { rel = await api.gateway.reliability(); } catch {}
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Routes & Routing</h1>
-      <p className="text-sm text-muted-foreground">
-        Routing Engine • Strategies: round_robin, weighted, least_loaded, latency_aware,
-        capability_match
-      </p>
+    <div className="space-y-8">
+      <div><div className="modern-label text-black/30">ROUTING • STRATEGIES • 10</div><h1 className="modern-display text-[32px] mt-2">ROUTES</h1><div className="modern-mono text-[11px] text-black/50 mt-2">ROUND_ROBIN • WEIGHTED • LEAST_LOADED • LATENCY_AWARE • CAPABILITY_MATCH</div></div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Gateway Info</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <pre className="text-xs bg-secondary p-4 rounded overflow-auto">
-            {JSON.stringify(gatewayInfo, null, 2)}
-          </pre>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Reliability Stats</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <pre className="text-xs bg-secondary p-4 rounded overflow-auto max-h-96">
-            {JSON.stringify(reliability, null, 2)}
-          </pre>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Routing Test</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm">
-          <p>Test routing via API:</p>
-          <pre className="bg-secondary p-2 rounded text-xs mt-2">{`POST /v1/route
-{
-  "skill": "code-review",
-  "strategy": "capability_match",
-  "region": "us-east-1"
-}`}</pre>
-        </CardContent>
-      </Card>
+      <div className="grid md:grid-cols-12 gap-4">
+        <div className="md:col-span-7 rounded-[20px] bg-white border border-black/10 p-7">
+          <div className="modern-label text-black/30">GATEWAY INFO • :3001</div>
+          <pre className="mt-4 bg-[#fafafa] border border-black/5 rounded-xl p-4 text-[10px] modern-mono overflow-auto max-h-[400px]">{JSON.stringify(gwInfo, null, 2).slice(0,3000)}</pre>
+        </div>
+        <div className="md:col-span-5 rounded-[20px] bg-black text-white p-7">
+          <div className="modern-label text-white/40">RELIABILITY • GATEWAY</div>
+          <pre className="mt-4 bg-white/5 border border-white/10 rounded-xl p-4 text-[10px] modern-mono text-white/60 overflow-auto max-h-[400px]">{JSON.stringify(rel, null, 2).slice(0,3000)}</pre>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            {["ROUND_ROBIN","WEIGHTED","LEAST_LOADED","LATENCY_AWARE"].map(s=><span key={s} className="modern-mono text-[9px] bg-white/10 border border-white/10 rounded-full px-2 py-1 text-center">{s}</span>)}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

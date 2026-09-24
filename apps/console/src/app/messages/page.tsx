@@ -1,52 +1,22 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
 
 export default async function MessagesPage() {
   let data: any = { messages: [], total: 0 };
-  try {
-    data = await api.controlPlane.messages.list({ limit: "100" });
-  } catch {}
+  try { data = await api.controlPlane.messages.list({ limit: "100" }); } catch {}
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Messages</h1>
-      <p className="text-sm text-muted-foreground">
-        Message Router • Sync/Async/Streaming • Trace propagation
-      </p>
+    <div className="space-y-8">
+      <div><div className="modern-label text-black/30">ROUTER • SYNC ASYNC STREAMING • 08</div><h1 className="modern-display text-[32px] mt-2">MESSAGES</h1><div className="modern-mono text-[11px] text-black/50 mt-2">{data.total||data.messages?.length||0} MESSAGES • TRACE PROPAGATION • A2A PROTOCOL</div></div>
 
-      <div className="space-y-2">
-        {data.messages?.map((msg: any) => (
-          <Card key={msg.id}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex justify-between">
-                <span>
-                  {msg.sender} → {msg.receiver}
-                </span>
-                <Badge variant="outline">{msg.contentType}</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-xs space-y-1">
-              <div>
-                ID: {msg.id} • Task: {msg.taskId?.slice(0, 12) ?? "none"} • Trace:{" "}
-                {msg.traceId?.slice(0, 12)}
-              </div>
-              <div>
-                Correlation: {msg.correlationId?.slice(0, 12)} • Context:{" "}
-                {msg.contextId?.slice(0, 12) ?? "none"}
-              </div>
-              <pre className="bg-secondary p-2 rounded overflow-auto max-h-20">
-                {JSON.stringify(msg.content, null, 2).slice(0, 300)}
-              </pre>
-              <div className="text-muted-foreground">{msg.timestamp}</div>
-            </CardContent>
-          </Card>
+      <div className="space-y-3">
+        {data.messages?.map((msg:any)=>(
+          <div key={msg.id} className="rounded-[20px] bg-white border border-black/10 p-6 modern-hover">
+            <div className="flex justify-between items-center"><span className="modern-mono text-[11px] font-[500]">{msg.sender} → {msg.receiver}</span><span className="modern-mono text-[9px] bg-black text-white px-2 py-1 rounded-full">{msg.contentType}</span></div>
+            <div className="mt-3 rounded-xl bg-[#fafafa] border border-black/5 p-3"><div className="modern-mono text-[11px] truncate">{JSON.stringify(msg.content||msg.body||{}).slice(0,300)}</div><div className="modern-mono text-[9px] text-black/30 mt-2">{msg.traceId?.slice(0,12)} • {new Date(msg.createdAt||Date.now()).toLocaleTimeString()}</div></div>
+          </div>
         ))}
       </div>
-
-      {data.messages?.length === 0 && (
-        <div className="text-sm text-muted-foreground">No messages yet.</div>
-      )}
+      {(!data.messages || data.messages.length===0) && <div className="rounded-[20px] border border-black/10 p-12 text-center modern-mono text-[11px] text-black/30">NO MESSAGES YET</div>}
     </div>
   );
 }

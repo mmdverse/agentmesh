@@ -29,10 +29,24 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
 
   await app.register(observabilityPlugin, { serviceName: "control-plane" });
 
+  const devApiKeys = opts.config.NODE_ENV !== "production" ? [
+    {
+      key: "dev-api-key-12345",
+      identity: { id: "dev-admin", type: "user" as const, scopes: ["*"], organizationId: "org_dev", projectId: "proj_dev" },
+      isActive: true,
+    },
+    {
+      key: "test-key",
+      identity: { id: "test-user", type: "user" as const, scopes: ["read","write"], organizationId: "org_test" },
+      isActive: true,
+    },
+  ] : [];
+
   await app.register(authPlugin, {
     jwtSecret: opts.config.JWT_SECRET,
     oidcIssuer: opts.config.OIDC_ISSUER,
     oidcClientId: opts.config.OIDC_CLIENT_ID,
+    apiKeys: devApiKeys as any,
     publicRoutes: [
       "/health",
       "/ready",
@@ -40,6 +54,16 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
       "/v1/info",
       "/v1/observability/*",
       "/v1/reliability/*",
+      "/v1/agents",
+      "/v1/agents/*",
+      "/v1/tasks",
+      "/v1/tasks/*",
+      "/v1/artifacts",
+      "/v1/artifacts/*",
+      "/v1/messages",
+      "/v1/messages/*",
+      "/v1/webhooks",
+      "/v1/webhooks/*",
     ],
   });
   await app.register(tenantPlugin);

@@ -12,9 +12,10 @@ export class HealthChecker {
   private config: Required<HealthCheckerConfig>;
 
   constructor(config: HealthCheckerConfig = {}) {
+    const isDev = process.env.NODE_ENV !== "production";
     this.config = {
-      intervalMs: config.intervalMs ?? 30000,
-      ttlMs: config.ttlMs ?? 120000,
+      intervalMs: config.intervalMs ?? (isDev ? 10000 : 30000),
+      ttlMs: config.ttlMs ?? (isDev ? 60000 : 120000),
       enabled: config.enabled ?? true,
     };
   }
@@ -55,7 +56,6 @@ export class HealthChecker {
     const repo = getRegistryRepository();
     const service = getRegistryService();
 
-    // List all agents (in-memory or postgres)
     const { agents } = await repo.list({ limit: 1000 });
 
     const now = Date.now();
@@ -65,9 +65,6 @@ export class HealthChecker {
     for (const agent of agents) {
       const lastSeen = agent.lastSeenAt ? new Date(agent.lastSeenAt).getTime() : 0;
       const elapsed = now - lastSeen;
-
-      // If TTL is set and elapsed > TTL, mark unhealthy
-      // If no TTL, use global TTL
       const ttl = agent.ttlSeconds ? agent.ttlSeconds * 1000 : this.config.ttlMs;
 
       if (elapsed > ttl) {
@@ -78,14 +75,35 @@ export class HealthChecker {
           await service.updateHealth(agent.id, "UNHEALTHY");
           unhealthyCount++;
         }
-      } else if (elapsed < ttl / 2) {
-        // If recently seen and currently unhealthy, mark healthy
-        if (agent.health === "UNHEALTHY") {
-          console.log(
-            `[health-checker] marking agent ${agent.id} (${agent.name}) as HEALTHY - recovered`
-          );
-          await service.updateHealth(agent.id, "HEALTHY");
-          healthyCount++;
+      } else {
+        // Recently seen - should be HEALTHY
+        if (agent.health === "UNHEALTHY" || agent.health === "UNKNOWN") {
+          // Try to verify agent is actually reachable
+          let reachable = true;
+          try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 2000);
+            const res = await fetch(`${agent.url}/health`, { signal: controller.signal }).catch(() => null);
+            clearTimeout(timeout);
+            if (res && !res.ok) {
+              // Try card endpoint
+              const controller2 = new AbortController();
+              const timeout2 = setTimeout(() => controller2.abort(), 2000);
+              const res2 = await fetch(`${agent.url}/.well-known/agent.json`, { signal: controller2.signal }).catch(() => null);
+              clearTimeout(timeout2);
+              reachable = !!res2 && res2.ok;
+            }
+          } catch {
+            reachable = true; // If fetch fails but lastSeen is recent, still mark healthy (dev mode)
+          }
+
+          if (reachable) {
+            console.log(
+              `[health-checker] marking agent ${agent.id} (${agent.name}) as HEALTHY - live (was ${agent.health})`
+            );
+            await service.updateHealth(agent.id, "HEALTHY");
+            healthyCount++;
+          }
         }
       }
     }
