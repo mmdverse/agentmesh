@@ -39,7 +39,7 @@ export const GatewayConfigSchema = InfraConfigSchema.extend({
   REQUEST_TIMEOUT_MS: z.coerce.number().default(30000),
   CIRCUIT_BREAKER_THRESHOLD: z.coerce.number().default(5),
   CIRCUIT_BREAKER_TIMEOUT_MS: z.coerce.number().default(60000),
-  VERSION: z.string().default("0.1.0-phase3"),
+  VERSION: z.string().default("1.0.0"),
 });
 
 export type GatewayConfig = z.infer<typeof GatewayConfigSchema>;
@@ -65,7 +65,7 @@ export const ControlPlaneConfigSchema = InfraConfigSchema.extend({
   MAX_ARTIFACT_SIZE: z.coerce.number().default(100 * 1024 * 1024),
   REQUIRE_TENANT: z.coerce.boolean().default(false),
   ALLOW_CROSS_TENANT: z.coerce.boolean().default(false),
-  VERSION: z.string().default("0.1.0-phase3"),
+  VERSION: z.string().default("1.0.0"),
 });
 
 export type ControlPlaneConfig = z.infer<typeof ControlPlaneConfigSchema>;
