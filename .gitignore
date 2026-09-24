@@ -51,3 +51,17 @@ miniodata
 .parcel-cache
 uploads/
 .env
+
+# pnpm store and cache
+.pnpm-store
+.pnpm
+.local
+.config
+.npm
+.pnpm-debug.log
+
+# turbo telemetry
+.config/turborepo
+
+# keep infra .env.example
+!.env.example
