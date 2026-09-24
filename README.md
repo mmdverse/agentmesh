@@ -1,5 +1,7 @@
 # AgentMesh
 
+> 🌍 **Languages:** [English](./README.md) | [Русский](./README.ru.md) | [中文](./README.zh.md) | [العربية](./README.ar.md) | [فارسی](./README.fa.md)
+
 **Production-grade Infrastructure Gateway and Control Plane for AI Agents**
 
 > API Gateway + Service Mesh + Service Discovery + Message Broker + Observability — purpose-built for Agentic Workloads.
