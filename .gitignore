@@ -65,3 +65,4 @@ uploads/
 
 # keep infra .env.example
 !.env.example
+.gitconfig

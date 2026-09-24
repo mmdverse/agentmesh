@@ -216,3 +216,5 @@ export function negotiateProtocolVersion(requested: string[], supported: readonl
   }
   return null;
 }
+
+export * from "./fetcher.js";

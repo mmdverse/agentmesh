@@ -1,6 +1,7 @@
 import { loadControlPlaneConfig } from "@agentmesh/config";
 import { initTelemetry } from "@agentmesh/telemetry";
 import { buildApp } from "./app.js";
+import { getHealthChecker } from "./workers/health-checker.js";
 
 async function main() {
   const config = loadControlPlaneConfig();
@@ -15,11 +16,16 @@ async function main() {
 
   const app = await buildApp({ config });
 
+  // Start health checker worker
+  const healthChecker = getHealthChecker();
+  healthChecker.start();
+
   const signals: NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
   signals.forEach((signal) => {
     process.on(signal, async () => {
       console.log(`[control-plane] received ${signal}, shutting down...`);
       try {
+        healthChecker.stop();
         await app.close();
         console.log("[control-plane] closed gracefully");
         process.exit(0);
@@ -35,6 +41,8 @@ async function main() {
     console.log(`[control-plane] listening on http://${config.CONTROL_PLANE_HOST}:${config.CONTROL_PLANE_PORT}`);
     console.log(`[control-plane] health: http://${config.CONTROL_PLANE_HOST}:${config.CONTROL_PLANE_PORT}/health`);
     console.log(`[control-plane] v1 health: http://${config.CONTROL_PLANE_HOST}:${config.CONTROL_PLANE_PORT}/v1/health`);
+    console.log(`[control-plane] registry: http://${config.CONTROL_PLANE_HOST}:${config.CONTROL_PLANE_PORT}/v1/agents`);
+    console.log(`[control-plane] discovery: http://${config.CONTROL_PLANE_HOST}:${config.CONTROL_PLANE_PORT}/v1/agents/discover?skill=code-review`);
   } catch (err) {
     app.log.error(err);
     process.exit(1);
