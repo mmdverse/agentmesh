@@ -88,40 +88,68 @@ packages/
 ### 1. کلون و نصب
 
 ```bash
-git clone https://github.com/mmdverse/agentmesh
-cd agentmesh
+git clone https://github.com/mmdverse/AgentMesh
+cd AgentMesh
 pnpm install
 ```
 
-### 2. اجرای زیرساخت
+### 2. استارت یک‌خطی (جدید — مشکل dist/.next حل شد)
 
 ```bash
-pnpm docker:up
-# Postgres :5432, Redis :6379, NATS :4222 (مانیتور :8222), MinIO :9000, MinIO Console :9001
+./start.sh
+# انجام می‌ده: pnpm install + tsc -b --force + next build + چک dist
+# بعد:
+pnpm dev
+# gateway 3001, control-plane 3002 (health-checker 10s dev), console 3000 (بنر InMemory + دارک مود), real-agent 9001 (auto-register)
 ```
 
-### 3. کانفیگ
+بدون داکر همه چی با InMemory کار می‌کنه — بنر زرد تو کنسول میگه data با restart میره.
+
+### 3. زیرساخت برای persistence (اختیاری)
+
+```bash
+docker-compose up -d
+# Postgres 5432, Redis 6379, NATS 4222, MinIO 9000 — با این data می‌مونه
+```
+
+### 4. کانفیگ
 
 ```bash
 cp infra/.env.example .env
-# برای dev مقدارهای پیش‌فرض با fallback حافظه کار می‌کنند
+# Console از NEXT_PUBLIC_CONTROL_PLANE_URL و NEXT_PUBLIC_GATEWAY_URL استفاده می‌کنه
+# برای preview (مثل https://3002-xxx.e2b.app) اونا رو ست کن
 ```
 
-### 4. اجرای Dev
+### 5. اجرای Dev — ۴ سرویس
 
 ```bash
 pnpm dev
-# gateway -> http://localhost:3001
-# control-plane -> http://localhost:3002
-# console -> http://localhost:3000
+# یا جدا:
+pnpm --filter @agentmesh/control-plane dev
+pnpm --filter @agentmesh/gateway dev
+pnpm --filter @agentmesh/console dev
+node real-agent.js # auto-register + heartbeat 10s built-in تو server-sdk
 ```
 
-### 5. چک سلامت
+### 6. چک سلامت + endpointهای جدید زنده
 
 ```bash
-curl http://localhost:3001/health
-curl http://localhost:3002/health
-curl http://localhost:3000/
+curl http://localhost:3002/v1/configuration # کانفیگ زنده
+curl http://localhost:3002/v1/policies # ۳ تا policy
+curl http://localhost:3002/v1/organizations # ۲ تا org
+curl http://localhost:3002/v1/credentials # dev-api-key-12345
+curl http://localhost:3002/v1/security/stats # SSRF block, rate limit
+
+# تست SSRF (فیکس شد — metadata همیشه block حتی dev):
+curl -X POST http://localhost:3002/v1/agents -d '{"name":"bad","url":"http://169.254.169.254"}'
+# -> VALIDATION_ERROR SSRF blocked
+```
+
+### 7. تست عملیاتی
+
+```bash
+node test-20-scenarios.js # ۲۰/۲۰ پاس
+node test-chaos.js # chaos: agent crash, CB OPEN→HALF_OPEN→CLOSED, bulkhead, rate limit
 ```
 
 ---

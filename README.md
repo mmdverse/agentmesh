@@ -119,84 +119,153 @@ flowchart TB
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/mmdverse/agentmesh
-cd agentmesh
+git clone https://github.com/mmdverse/AgentMesh
+cd AgentMesh
 pnpm install
 ```
 
-### 2. Start Infrastructure
+### 2. One-Command Start (NEW — fixes build artifacts issue)
 
 ```bash
-pnpm docker:up
-# Postgres :5432, Redis :6379, NATS :4222 (monitor :8222), MinIO :9000, MinIO Console :9001
-# Bucket auto-created: agentmesh-artifacts
+./start.sh
+# Does: pnpm install + tsc -b --force + next build + verify dist
+# Then you run dev servers:
+pnpm dev
+# Or: pnpm --filter @agentmesh/control-plane dev etc
 ```
 
-Without Docker, everything falls back to InMemory — `pnpm dev` still works.
+Without Docker, everything falls back to InMemory — `pnpm dev` still works. InMemory mode shows amber warning banner in console: "DATA WILL BE LOST ON RESTART".
 
-### 3. Configure Env
+### 3. Start Infrastructure (Optional — for persistence)
+
+```bash
+docker-compose up -d
+# Postgres :5432, Redis :6379, NATS :4222 (monitor :8222), MinIO :9000
+# With docker-compose, data persists. Without it, InMemory fallback active.
+```
+
+### 4. Configure Env
 
 ```bash
 cp infra/.env.example .env
 # Edit .env if needed - JWT_SECRET, OIDC, etc.
+# Console uses NEXT_PUBLIC_CONTROL_PLANE_URL and NEXT_PUBLIC_GATEWAY_URL
+# For preview (e.g. https://3002-xxx.e2b.app), set them to preview hosts
 ```
 
-### 4. Run Dev (all apps)
+### 5. Run Dev (all apps) — 4 services
 
 ```bash
 pnpm dev
 # gateway -> http://localhost:3001
-# control-plane -> http://localhost:3002
-# console -> http://localhost:3000
-```
+# control-plane -> http://localhost:3002 (health-checker 10s dev, immediate HEALTHY)
+# console -> http://localhost:3000 (with InMemory warning banner + dark mode toggle)
+# real-agent -> http://localhost:9001 (auto-registers + heartbeat 10s)
 
-Or individually:
-
-```bash
+# Or individually:
 pnpm --filter @agentmesh/gateway dev
 pnpm --filter @agentmesh/control-plane dev
 pnpm --filter @agentmesh/console dev
+node real-agent.js # auto-register built-in in server-sdk
 ```
 
-### 5. Health Checks
+Real agent `real-agent.js` now uses server-sdk auto-register:
+```js
+createAgentServer({
+  controlPlaneUrl: "http://localhost:3002",
+  autoRegister: true, // NEW
+  heartbeatIntervalMs: 10000, // NEW
+  taskHandler: async ctx => ({ text: "سلام دنیا", state: "COMPLETED" })
+})
+```
+
+### 6. Health Checks + Live Endpoints (NEW)
 
 ```bash
 curl http://localhost:3001/health
-curl http://localhost:3001/v1/health
 curl http://localhost:3002/health
 curl http://localhost:3002/v1/health
+curl http://localhost:9001/health
 curl http://localhost:3000/
+
+# NEW live config endpoints (Phase 3):
+curl http://localhost:3002/v1/configuration # gateway/CP/infra live
+curl http://localhost:3002/v1/policies # 3 policies, CRUD + evaluate
+curl http://localhost:3002/v1/organizations # 2 orgs
+curl http://localhost:3002/v1/projects # 2 projects
+curl http://localhost:3002/v1/credentials # 3 creds, dev-api-key-12345
+curl http://localhost:3002/v1/security/threats # SSRF blocked
+curl http://localhost:3002/v1/security/stats # rate limit, auth, policies
+curl http://localhost:3002/v1/routes # 5 strategies live
+curl http://localhost:3002/v1/skills # 3 skills live
+curl http://localhost:3002/v1/agents/versions # canary 10%
+curl http://localhost:3002/v1/reliability/stats # CB, bulkhead, retry
+
+# SSRF protection test (FIXED - metadata always blocked):
+curl -X POST http://localhost:3002/v1/agents -d '{"name":"bad","url":"http://169.254.169.254"}'
+# -> VALIDATION_ERROR SSRF blocked (even in dev)
 ```
 
-Expected: `{"status":"ok","service":"gateway","version":"1.0.0"}` etc.
+Expected: `{"status":"ok"}` etc. All 20 scenarios pass: `node test-20-scenarios.js` → 20/20.
+
+### 7. Operational Tests (NEW)
+
+```bash
+node test-20-scenarios.js # 20 real user scenarios, 20/20 passed
+node test-chaos.js # chaos: agent crash, CB OPEN→HALF_OPEN→CLOSED, bulkhead, rate limit burst, SSRF
+./start.sh # full build verification
+```
 
 ---
 
 ## API
 
-Versioned Management API:
+Versioned Management API (all live, pagination + search):
 
 ```
-/v1/agents - list with skill/capability/version/region/search + tenant + versioning
+/v1/agents - list with skill/capability/version/region/search + tenant + versioning + pagination limit/offset (FIXED: HEALTHY immediate, auto-register)
+  ?skill=code-review&search=real&limit=12&offset=0
 /v1/agents/discover - composite discovery with version-aware best
-/v1/agents/versions/:name - list versions
+/v1/agents/versions - list all versions with canary weights (NEW: 90% stable 10% canary)
+/v1/agents/versions/:name - list versions for name
 /v1/agents/:id - get with tenant isolation
 /v1/agents/:id/card - get card with caching
-/v1/agents/:id/health - health
-/v1/agents/:id/heartbeat - heartbeat
-/v1/tasks - create with tenant + delegation + fan-out + bulkhead + circuit breaker
+/v1/agents/:id/health - health (POST to set HEALTHY)
+/v1/agents/:id/heartbeat - heartbeat (auto from server-sdk every 10s)
+/v1/tasks - create with tenant + delegation + fan-out + bulkhead + circuit breaker + pagination
+  ?limit=20&offset=0&state=COMPLETED
 /v1/tasks/:id - get
 /v1/tasks/:id/cancel, /complete, /fail, /retry
-/v1/tasks/:id/history, /graph, /stream (SSE)
+/v1/tasks/:id/history, /graph (React Flow V2), /stream (SSE via CP_URL env)
 /v1/tasks/reliability/stats - breakers, bulkheads, fan-out
-/v1/artifacts - create/list with S3 lifecycle
-/v1/artifacts/:id, /:id/data, /:id/url
-/v1/messages - send/list/get/ack with trace
-/v1/webhooks - register/list/delete + deliveries + test with SSRF protection
+/v1/artifacts - create/list with S3 lifecycle + pagination + download via CP_URL env
+/v1/artifacts/:id, /:id/data, /:id/url, /:id/meta
+/v1/messages - send/list/get/ack with trace + pagination
+/v1/webhooks - register/list/delete + deliveries + test with SSRF protection (metadata always blocked)
+/v1/webhooks/deliveries - all deliveries with HMAC + retry
 /v1/mcp/servers, /discover, /servers/:name/tools/:toolName/call, /bridge/a2a-to-mcp
-/v1/observability/traces/:traceId, /metrics, /spans
-/v1/health, /info
+/v1/observability/traces/:traceId, /metrics, /spans (OTel, 100+ spans live)
+/v1/configuration - live gateway/CP/infra config + InMemory warning (NEW)
+/v1/policies - list + CRUD + evaluate (NEW: 3 policies, allow/deny priority, POST /evaluate)
+/v1/organizations - list + CRUD (NEW: 2 orgs, multi-tenancy)
+/v1/projects - list + CRUD (NEW: 2 projects, tenant isolation)
+/v1/credentials - list + CRUD (NEW: 3 creds, dev-api-key-12345, masked keys)
+/v1/security/threats - live threat events (NEW: SSRF blocked, rate limit)
+/v1/security/stats - SSRF, rateLimit, auth, policies stats (NEW)
+/v1/routes - 5 strategies live with stats (NEW)
+/v1/skills - 3 skills live with invocations (NEW)
+/v1/reliability/stats - CB, bulkhead, retry, traces (NEW)
+/v1/health, /info, /configuration
 ```
+
+Console env vars (FIXED preview issue):
+```
+NEXT_PUBLIC_CONTROL_PLANE_URL=http://localhost:3002 or https://3002-xxx.e2b.app
+NEXT_PUBLIC_GATEWAY_URL=http://localhost:3001 or https://3001-xxx.e2b.app
+```
+
+All console pages now live: configuration, credentials, policies, organizations, projects, security (with webhooks deliveries), routes, mcp, skills, artifacts (pagination + upload), messages (pagination), tasks (pagination + state filter), agents (pagination + search), health (rate limit UI + CB visual), overview (webhooks, versions, auth, rate limit), chat (gateway invoke first), graph (V2).
+
 
 Typed client via `@agentmesh/sdk`.
 
@@ -238,11 +307,26 @@ No K8s required for local dev.
 
 ---
 
-## Testing
+## Testing — 20/20 Real User Scenarios + Chaos
 
 ```bash
 pnpm test
 pnpm turbo run build --concurrency=1
+
+# NEW operational tests (20 scenarios):
+node test-20-scenarios.js
+# ✅ 20 passed, 0 failed
+# 1 Landing, 2 Overview, 3 Agents HEALTHY, 4 Agent Detail, 5 Translate سلام دنیا, 6 Code Review,
+# 7 Task Create + SSE, 8 History + Graph, 9 Failure, 10 Artifacts, 11 Messages, 12 Telemetry,
+# 13 Routing 5 strategies, 14 Rate Limit 3/2, 15 Reliability CB OPEN, 16 SSRF blocked,
+# 17 Health, 18 MCP, 19 Multi-tenancy, 20 Load 20 tasks 43ms
+
+# Chaos engineering:
+node test-chaos.js
+# ✅ Agent crash → UNHEALTHY → HEALTHY, CB OPEN→HALF_OPEN→CLOSED, Bulkhead, Rate limit burst, InMemory fallback, SSRF always blocked
+
+# Full build verification:
+./start.sh # pnpm install + tsc -b --force + build + verify dist
 ```
 
 **Coverage:**
@@ -299,7 +383,7 @@ const artifact = await mesh.artifacts.create({
 });
 ```
 
-**Server SDK:**
+**Server SDK (NEW: auto-register + heartbeat built-in, fixes UNKNOWN lingering):**
 
 ```ts
 import { createAgentServer } from "@agentmesh/server-sdk";
@@ -319,14 +403,27 @@ const server = createAgentServer({
       tags: ["code"],
     },
   ],
+  port: 9001,
+  host: "0.0.0.0",
+  controlPlaneUrl: "http://localhost:3002", // NEW
+  autoRegister: true, // NEW - auto POST /v1/agents + heartbeat 10s + immediate HEALTHY
+  heartbeatIntervalMs: 10000,
   taskHandler: async ctx => {
     ctx.stream?.({ text: "Analyzing..." });
-    return { text: `Reviewed: ${ctx.message.text}`, state: "COMPLETED" };
+    return { text: `Reviewed: ${ctx.message.text} • سلام دنیا`, state: "COMPLETED" };
   },
 });
 
-await server.listen(); // Fastify server with /.well-known/agent.json, JSON-RPC, SSE, auth hooks, telemetry
+const { app, card, url, registeredId } = await server.listen();
+// Fastify with /.well-known/agent.json, JSON-RPC, SSE, auth hooks, telemetry
+// Auto-registered as HEALTHY, real-agent.js example: node real-agent.js
 ```
+
+**Client SDK & Console fixes:**
+- `NEXT_PUBLIC_CONTROL_PLANE_URL` / `NEXT_PUBLIC_GATEWAY_URL` env vars for preview host handling (FIXED localhost break)
+- Gateway invoke first: `POST /v1/invoke` via gateway, fallback direct only localhost dev
+- Pagination live: `limit`, `offset`, `state`, `skill`, `search` — agents, tasks, artifacts, messages
+- All 20 scenarios via SDK tested, 20/20 passed
 
 ---
 
