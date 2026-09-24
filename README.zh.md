@@ -1,6 +1,6 @@
 # AgentMesh
 
-> 🌍 **语言:** [English](./README.md) | [Русский](./README.ru.md) | [中文](./README.zh.md) | [العربية](./README.ar.md) | [فارسی](./README.fa.md)
+> 🌍 **Languages:** [English](./README.md) | [Русский](./README.ru.md) | [中文](./README.zh.md) | [العربية](./README.ar.md) | [فارسی](./README.fa.md) | [Türkçe](./README.tr.md) | [Español](./README.es.md)
 
 **生产级 AI Agent 基础设施网关与控制平面**
 
@@ -207,11 +207,20 @@ const result = await mesh.tasks.poll(task.task.id);
 
 ---
 
-## 支持
+## 支持与捐赠
 
 完全免费开源，无附加条件。一人维护，捐赠用于真实基础设施成本：服务器、测量、生产流量。
 
-查看 [DONATE.md](./DONATE.md) — 加密地址 BTC, BNB, SOL, Tron。Solana 和 Tron 手续费最低。
+**加密捐赠 — 100% 用于基础设施：**
+
+- **BTC (比特币):** `bc1q36uzqlkaav3lkscknhemcem0lcjtkhepdqckul`
+- **BNB (BSC):** `0x57902d3955D5F1C0fbCaEA0a12A7D691c792487E`
+- **SOL (Solana):** `4hCYetZjvK8mkuobRvPYXyRnM84aTj3q8LZ1GpiTK8HR` — 手续费最低
+- **TRON (TRC20):** `TVFZKSwMYNw1jiCyKKtKoVG3HbpB4DhsA5` — 手续费最低
+
+查看 [DONATE.md](./DONATE.md) 了解详情。Solana 和 Tron 手续费最低。
+
+---
 
 ---
 

@@ -1,6 +1,6 @@
 # AgentMesh
 
-> 🌍 **Languages:** [English](./README.md) | [Русский](./README.ru.md) | [中文](./README.zh.md) | [العربية](./README.ar.md) | [فارسی](./README.fa.md)
+> 🌍 **Languages:** [English](./README.md) | [Русский](./README.ru.md) | [中文](./README.zh.md) | [العربية](./README.ar.md) | [فارسی](./README.fa.md) | [Türkçe](./README.tr.md) | [Español](./README.es.md)
 
 **Production-grade Infrastructure Gateway and Control Plane for AI Agents**
 
@@ -530,11 +530,18 @@ await server.listen();
 
 ---
 
-## Support
+## Support & Donate
 
 AgentMesh is free and open - no strings. One person maintains this, and donations go to real infrastructure costs: servers, measurement, production traffic.
 
-See [DONATE.md](./DONATE.md) for crypto addresses (BTC, BNB, SOL, Tron) - network fees lowest on Solana and Tron.
+**Crypto Donations — 100% goes to infra:**
+
+- **BTC (Bitcoin):** `bc1q36uzqlkaav3lkscknhemcem0lcjtkhepdqckul`
+- **BNB (BSC):** `0x57902d3955D5F1C0fbCaEA0a12A7D691c792487E`
+- **SOL (Solana):** `4hCYetZjvK8mkuobRvPYXyRnM84aTj3q8LZ1GpiTK8HR` — lowest fees
+- **TRON (TRC20):** `TVFZKSwMYNw1jiCyKKtKoVG3HbpB4DhsA5` — lowest fees
+
+See [DONATE.md](./DONATE.md) for details. Network fees lowest on Solana and Tron.
 
 ---
 

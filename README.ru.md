@@ -1,6 +1,6 @@
 # AgentMesh
 
-> 🌍 **Языки:** [English](./README.md) | [Русский](./README.ru.md) | [中文](./README.zh.md) | [العربية](./README.ar.md) | [فارسی](./README.fa.md)
+> 🌍 **Languages:** [English](./README.md) | [Русский](./README.ru.md) | [中文](./README.zh.md) | [العربية](./README.ar.md) | [فارسی](./README.fa.md) | [Türkçe](./README.tr.md) | [Español](./README.es.md)
 
 **Production-grade Infrastructure Gateway и Control Plane для AI-агентов**
 
@@ -220,11 +220,20 @@ const result = await mesh.tasks.poll(task.task.id);
 
 ---
 
-## Поддержка
+## Поддержка и Донаты
 
 Бесплатно и открыто — без условий. Один человек поддерживает проект, донаты идут на реальную инфраструктуру: серверы, измерения, продакшн трафик.
 
-См. [DONATE.md](./DONATE.md) — крипто адреса BTC, BNB, SOL, Tron. Минимальные комиссии на Solana и Tron.
+**Крипто-донаты — 100% на инфраструктуру:**
+
+- **BTC (Bitcoin):** `bc1q36uzqlkaav3lkscknhemcem0lcjtkhepdqckul`
+- **BNB (BSC):** `0x57902d3955D5F1C0fbCaEA0a12A7D691c792487E`
+- **SOL (Solana):** `4hCYetZjvK8mkuobRvPYXyRnM84aTj3q8LZ1GpiTK8HR` — минимальные комиссии
+- **TRON (TRC20):** `TVFZKSwMYNw1jiCyKKtKoVG3HbpB4DhsA5` — минимальные комиссии
+
+См. [DONATE.md](./DONATE.md) для деталей. Минимальные комиссии на Solana и Tron.
+
+---
 
 ---
 

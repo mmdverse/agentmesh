@@ -1,6 +1,6 @@
 # AgentMesh
 
-> 🌍 **اللغات:** [English](./README.md) | [Русский](./README.ru.md) | [中文](./README.zh.md) | [العربية](./README.ar.md) | [فارسی](./README.fa.md)
+> 🌍 **Languages:** [English](./README.md) | [Русский](./README.ru.md) | [中文](./README.zh.md) | [العربية](./README.ar.md) | [فارسی](./README.fa.md) | [Türkçe](./README.tr.md) | [Español](./README.es.md)
 
 **بوابة بنية تحتية ومنصة تحكم إنتاجية لوكلاء الذكاء الاصطناعي**
 
@@ -206,11 +206,20 @@ const result = await mesh.tasks.poll(task.task.id);
 
 ---
 
-## الدعم
+## الدعم والتبرع
 
 مجاني ومفتوح تماماً — بدون شروط. شخص واحد يصون المشروع, التبرعات تذهب لتكاليف بنية تحتية حقيقية: خوادم, قياس, ترافيك إنتاجي.
 
-انظر [DONATE.md](./DONATE.md) — عناوين تشفير BTC, BNB, SOL, Tron. أقل رسوم على Solana و Tron.
+**التبرعات المشفرة — 100% للبنية التحتية:**
+
+- **BTC (بيتكوين):** `bc1q36uzqlkaav3lkscknhemcem0lcjtkhepdqckul`
+- **BNB (BSC):** `0x57902d3955D5F1C0fbCaEA0a12A7D691c792487E`
+- **SOL (سولانا):** `4hCYetZjvK8mkuobRvPYXyRnM84aTj3q8LZ1GpiTK8HR` — أقل رسوم
+- **TRON (TRC20):** `TVFZKSwMYNw1jiCyKKtKoVG3HbpB4DhsA5` — أقل رسوم
+
+انظر [DONATE.md](./DONATE.md) للتفاصيل. أقل رسوم على Solana و Tron.
+
+---
 
 ---
 

@@ -1,6 +1,6 @@
 # AgentMesh
 
-> 🌍 **زبان‌ها:** [English](./README.md) | [Русский](./README.ru.md) | [中文](./README.zh.md) | [العربية](./README.ar.md) | [فارسی](./README.fa.md)
+> 🌍 **Languages:** [English](./README.md) | [Русский](./README.ru.md) | [中文](./README.zh.md) | [العربية](./README.ar.md) | [فارسی](./README.fa.md) | [Türkçe](./README.tr.md) | [Español](./README.es.md)
 
 **درگاه زیرساخت و صفحه کنترل تولیدی برای ایجنت‌های هوش مصنوعی**
 
@@ -228,11 +228,20 @@ await server.listen();
 
 ---
 
-## حمایت
+## حمایت و دونیت
 
 AgentMesh کاملاً رایگان و بازه — بدون قید. یک نفر نگهداری می‌کنه و دونیت‌ها میره برای هزینه‌های واقعی زیرساخت: سرورها، اندازه‌گیری، ترافیک تولیدی.
 
-ببین [DONATE.md](./DONATE.md) برای آدرس‌های کریپتو (BTC, BNB, SOL, Tron) — کمترین کارمزد روی Solana و Tron.
+**دونیت کریپتو — 100% برای زیرساخت:**
+
+- **BTC (بیت‌کوین):** `bc1q36uzqlkaav3lkscknhemcem0lcjtkhepdqckul`
+- **BNB (BSC):** `0x57902d3955D5F1C0fbCaEA0a12A7D691c792487E`
+- **SOL (سولانا):** `4hCYetZjvK8mkuobRvPYXyRnM84aTj3q8LZ1GpiTK8HR` — کمترین کارمزد
+- **TRON (TRC20):** `TVFZKSwMYNw1jiCyKKtKoVG3HbpB4DhsA5` — کمترین کارمزد
+
+ببین [DONATE.md](./DONATE.md) برای جزئیات. کمترین کارمزد روی Solana و Tron.
+
+---
 
 ---
 
