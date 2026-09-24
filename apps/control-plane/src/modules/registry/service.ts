@@ -5,7 +5,13 @@ import { createEventBus, type AgentMeshEvent } from "@agentmesh/events";
 import type { RegisterAgentInput, AgentFilter, AgentRecord } from "./types.js";
 import { ValidationError, NotFoundError, AuthorizationError } from "@agentmesh/core";
 import { AgentCardSchema } from "@agentmesh/a2a-protocol";
-import { getVersionResolver, type VersionConstraint, compareSemVer, isStableVersion, satisfiesRange } from "@agentmesh/versioning";
+import {
+  getVersionResolver,
+  type VersionConstraint,
+  compareSemVer,
+  isStableVersion,
+  satisfiesRange,
+} from "@agentmesh/versioning";
 import { getTenantManager, type TenantContext } from "@agentmesh/tenancy";
 import { DEFAULT_RESOURCE_LIMITS, checkResourceLimits } from "@agentmesh/rate-limit";
 import { getRegistryService as _unused } from "./service.js"; // placeholder to keep import graph
@@ -13,14 +19,19 @@ import { getRegistryService as _unused } from "./service.js"; // placeholder to 
 export class RegistryService {
   private repo = getRegistryRepository();
   private cache = getRegistryCache();
-  private eventBus = createEventBus({ serviceName: "control-plane-registry", url: process.env.NATS_URL });
+  private eventBus = createEventBus({
+    serviceName: "control-plane-registry",
+    url: process.env.NATS_URL,
+  });
   private versionResolver = getVersionResolver();
   private tenantManager = getTenantManager();
 
   async register(input: RegisterAgentInput & { tenant?: TenantContext }): Promise<AgentRecord> {
     // Resource limits check - message size etc is handled at gateway, but validate metadata size
     const metadataSize = JSON.stringify(input.metadata ?? {}).length;
-    const resourceCheck = checkResourceLimits(DEFAULT_RESOURCE_LIMITS, { messageSize: metadataSize });
+    const resourceCheck = checkResourceLimits(DEFAULT_RESOURCE_LIMITS, {
+      messageSize: metadataSize,
+    });
     if (!resourceCheck.allowed) {
       throw new ValidationError(resourceCheck.reason ?? "Resource limit exceeded");
     }
@@ -29,7 +40,11 @@ export class RegistryService {
     if (input.tenant) {
       this.tenantManager.validateContext(input.tenant);
       // Enforce that organizationId/projectId in input matches tenant context if provided
-      if (input.tenant.organizationId && input.organizationId && input.tenant.organizationId !== input.organizationId) {
+      if (
+        input.tenant.organizationId &&
+        input.organizationId &&
+        input.tenant.organizationId !== input.organizationId
+      ) {
         throw new AuthorizationError("Organization mismatch between tenant context and input");
       }
       if (input.tenant.projectId && input.projectId && input.tenant.projectId !== input.projectId) {
@@ -59,7 +74,9 @@ export class RegistryService {
         fetchedUrl = result.url;
         console.log(`[registry] fetched card from ${fetchedUrl} for ${card.name}`);
       } catch (err) {
-        console.warn(`[registry] failed to fetch card from ${input.url}: ${(err as Error).message}, proceeding with manual registration`);
+        console.warn(
+          `[registry] failed to fetch card from ${input.url}: ${(err as Error).message}, proceeding with manual registration`
+        );
       }
     }
 
@@ -67,7 +84,10 @@ export class RegistryService {
     if (card) {
       const parsed = AgentCardSchema.safeParse(card);
       if (!parsed.success) {
-        throw new ValidationError(`Invalid Agent Card: ${parsed.error.message}`, parsed.error.flatten());
+        throw new ValidationError(
+          `Invalid Agent Card: ${parsed.error.message}`,
+          parsed.error.flatten()
+        );
       }
       card = parsed.data;
     }
@@ -97,12 +117,20 @@ export class RegistryService {
     await this.cache.invalidateDiscovery();
 
     // Event with tenant context
-    await this.publishEvent("agent.registered", record.id, { agent: record, fetchedFrom: fetchedUrl }, input.tenant);
+    await this.publishEvent(
+      "agent.registered",
+      record.id,
+      { agent: record, fetchedFrom: fetchedUrl },
+      input.tenant
+    );
 
     return record;
   }
 
-  async getById(id: string, opts: { useCache?: boolean; includeCard?: boolean; tenant?: TenantContext } = {}): Promise<AgentRecord> {
+  async getById(
+    id: string,
+    opts: { useCache?: boolean; includeCard?: boolean; tenant?: TenantContext } = {}
+  ): Promise<AgentRecord> {
     const useCache = opts.useCache ?? true;
 
     let agent: AgentRecord | null = null;
@@ -152,7 +180,9 @@ export class RegistryService {
     return agent;
   }
 
-  async list(filter: AgentFilter & { tenant?: TenantContext; versionConstraint?: VersionConstraint }): Promise<{ agents: AgentRecord[]; total: number }> {
+  async list(
+    filter: AgentFilter & { tenant?: TenantContext; versionConstraint?: VersionConstraint }
+  ): Promise<{ agents: AgentRecord[]; total: number }> {
     // Enforce tenant isolation - if tenant provided, filter by it
     if (filter.tenant) {
       // Merge tenant filter into agent filter
@@ -184,19 +214,30 @@ export class RegistryService {
       // If filtering by name, resolve versions per name group
       if (filter.name) {
         const resolved = this.versionResolver.resolveAll(
-          all.agents.map((a) => ({ id: a.id, name: a.name, version: a.version, createdAt: a.createdAt })),
+          all.agents.map(a => ({
+            id: a.id,
+            name: a.name,
+            version: a.version,
+            createdAt: a.createdAt,
+          })),
           filter.versionConstraint
         );
-        const resolvedIds = new Set(resolved.map((r) => r.id));
-        const agents = all.agents.filter((a) => resolvedIds.has(a.id));
+        const resolvedIds = new Set(resolved.map(r => r.id));
+        const agents = all.agents.filter(a => resolvedIds.has(a.id));
         result = { agents, total: agents.length };
       } else {
         // For general list, apply version constraint as filter
-        const agents = all.agents.filter((a) => {
-          if (filter.versionConstraint?.strategy === "specific" && filter.versionConstraint.version) {
+        const agents = all.agents.filter(a => {
+          if (
+            filter.versionConstraint?.strategy === "specific" &&
+            filter.versionConstraint.version
+          ) {
             return a.version === filter.versionConstraint.version;
           }
-          if (filter.versionConstraint?.strategy === "minimum" && filter.versionConstraint.version) {
+          if (
+            filter.versionConstraint?.strategy === "minimum" &&
+            filter.versionConstraint.version
+          ) {
             return compareSemVer(a.version, filter.versionConstraint.version) >= 0;
           }
           if (filter.versionConstraint?.strategy === "stable") {
@@ -227,7 +268,7 @@ export class RegistryService {
 
     // Additional version filtering if filter.version is simple string
     if (filter.version && !filter.versionConstraint) {
-      result.agents = result.agents.filter((a) => a.version === filter.version);
+      result.agents = result.agents.filter(a => a.version === filter.version);
       result.total = result.agents.length;
     }
 
@@ -240,28 +281,31 @@ export class RegistryService {
     constraint?: VersionConstraint,
     tenant?: TenantContext
   ): Promise<AgentRecord | null> {
-    const filter: AgentFilter & { tenant?: TenantContext; versionConstraint?: VersionConstraint } = {
-      skill,
-      tenant,
-      versionConstraint: constraint,
-    };
+    const filter: AgentFilter & { tenant?: TenantContext; versionConstraint?: VersionConstraint } =
+      {
+        skill,
+        tenant,
+        versionConstraint: constraint,
+      };
 
     const { agents } = await this.list(filter);
     if (agents.length === 0) return null;
 
     if (constraint) {
       const resolved = this.versionResolver.resolve(
-        agents.map((a) => ({ id: a.id, name: a.name, version: a.version, createdAt: a.createdAt })),
+        agents.map(a => ({ id: a.id, name: a.name, version: a.version, createdAt: a.createdAt })),
         constraint
       );
       if (!resolved) return null;
-      return agents.find((a) => a.id === resolved.id) ?? null;
+      return agents.find(a => a.id === resolved.id) ?? null;
     }
 
     // Default: latest stable
-    const stable = agents.filter((a) => isStableVersion(a.version));
+    const stable = agents.filter(a => isStableVersion(a.version));
     const candidates = stable.length > 0 ? stable : agents;
-    const latest = candidates.reduce((prev, curr) => (compareSemVer(curr.version, prev.version) > 0 ? curr : prev));
+    const latest = candidates.reduce((prev, curr) =>
+      compareSemVer(curr.version, prev.version) > 0 ? curr : prev
+    );
     return latest;
   }
 
@@ -272,11 +316,14 @@ export class RegistryService {
   ): Promise<{ versions: string[]; agents: AgentRecord[] }> {
     const filter: AgentFilter & { tenant?: TenantContext } = { name, tenant, limit: 100 };
     const { agents } = await this.list(filter);
-    const versions = [...new Set(agents.map((a) => a.version))].sort((a, b) => compareSemVer(b, a));
+    const versions = [...new Set(agents.map(a => a.version))].sort((a, b) => compareSemVer(b, a));
     return { versions, agents };
   }
 
-  async update(id: string, input: Partial<RegisterAgentInput> & { tenant?: TenantContext }): Promise<AgentRecord> {
+  async update(
+    id: string,
+    input: Partial<RegisterAgentInput> & { tenant?: TenantContext }
+  ): Promise<AgentRecord> {
     const existing = await this.getById(id, { useCache: false, tenant: input.tenant });
     if (!existing) throw new NotFoundError("Agent", id);
 
@@ -341,7 +388,10 @@ export class RegistryService {
     await this.publishEvent("agent.deleted", id, { agentId: id }, tenant);
   }
 
-  async getCard(id: string, opts: { forceRefresh?: boolean; tenant?: TenantContext } = {}): Promise<{ card: any; fetchedAt: string; fromCache: boolean }> {
+  async getCard(
+    id: string,
+    opts: { forceRefresh?: boolean; tenant?: TenantContext } = {}
+  ): Promise<{ card: any; fetchedAt: string; fromCache: boolean }> {
     const agent = await this.getById(id, { useCache: true, tenant: opts.tenant });
 
     if (!opts.forceRefresh) {
@@ -358,11 +408,17 @@ export class RegistryService {
     } catch (err) {
       const cached = await this.cache.getCard(id);
       if (cached) return { card: cached.card, fetchedAt: cached.fetchedAt, fromCache: true };
-      throw new ValidationError(`Failed to fetch Agent Card from ${agent.url}: ${(err as Error).message}`);
+      throw new ValidationError(
+        `Failed to fetch Agent Card from ${agent.url}: ${(err as Error).message}`
+      );
     }
   }
 
-  async updateHealth(id: string, health: "HEALTHY" | "DEGRADED" | "UNHEALTHY" | "UNKNOWN", latencyMs?: number): Promise<void> {
+  async updateHealth(
+    id: string,
+    health: "HEALTHY" | "DEGRADED" | "UNHEALTHY" | "UNKNOWN",
+    latencyMs?: number
+  ): Promise<void> {
     await this.repo.updateHealth(id, health);
     await this.cache.setAgent({ ...(await this.getById(id, { useCache: false })), health } as any);
     const cache = getRegistryCache();
@@ -379,7 +435,12 @@ export class RegistryService {
     await this.updateHealth(id, "HEALTHY");
   }
 
-  private async publishEvent(type: AgentMeshEvent["type"], subject: string, data: unknown, tenant?: TenantContext): Promise<void> {
+  private async publishEvent(
+    type: AgentMeshEvent["type"],
+    subject: string,
+    data: unknown,
+    tenant?: TenantContext
+  ): Promise<void> {
     try {
       const event: AgentMeshEvent = {
         id: `evt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,

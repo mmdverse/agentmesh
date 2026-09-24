@@ -5,7 +5,9 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? "postgresql://agentmesh:agentmesh_secret@localhost:5432/agentmesh",
+    url:
+      process.env.DATABASE_URL ??
+      "postgresql://agentmesh:agentmesh_secret@localhost:5432/agentmesh",
   },
   verbose: true,
   strict: true,

@@ -37,13 +37,19 @@ async function rateLimitPluginInternal(app: FastifyInstance, opts: RateLimitPlug
     const result = await limiter.check(ctx);
 
     if (!result.allowed) {
-      const retryAfter = result.result?.resetAt ? Math.ceil((result.result.resetAt - Date.now()) / 1000) : 60;
+      const retryAfter = result.result?.resetAt
+        ? Math.ceil((result.result.resetAt - Date.now()) / 1000)
+        : 60;
       reply.header("Retry-After", String(retryAfter));
       reply.header("X-RateLimit-Limit", String(result.limit?.limit ?? 0));
       reply.header("X-RateLimit-Remaining", "0");
       reply.header("X-RateLimit-Reset", String(result.result?.resetAt ?? Date.now() + 60000));
       return reply.status(429).send({
-        error: { code: "RATE_LIMIT_EXCEEDED", message: result.reason ?? "Rate limit exceeded", retryAfter },
+        error: {
+          code: "RATE_LIMIT_EXCEEDED",
+          message: result.reason ?? "Rate limit exceeded",
+          retryAfter,
+        },
       });
     }
 

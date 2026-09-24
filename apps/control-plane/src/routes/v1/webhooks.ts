@@ -14,7 +14,7 @@ const RegisterWebhookSchema = z.object({
 export async function webhooksRoutes(app: FastifyInstance) {
   const service = getWebhookService();
 
-  app.get("/", async (req) => {
+  app.get("/", async req => {
     const { organizationId, projectId } = req.query as any;
     const tenant = (req as any).tenant ?? {};
     const endpoints = await service.list({ organizationId, projectId, tenant });
@@ -25,7 +25,13 @@ export async function webhooksRoutes(app: FastifyInstance) {
     try {
       const parsed = RegisterWebhookSchema.safeParse(req.body);
       if (!parsed.success) {
-        return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "Invalid input", details: parsed.error.flatten() } });
+        return reply.status(400).send({
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid input",
+            details: parsed.error.flatten(),
+          },
+        });
       }
 
       const tenant = (req as any).tenant ?? {};
@@ -34,7 +40,9 @@ export async function webhooksRoutes(app: FastifyInstance) {
       return reply.status(201).send({ webhook: endpoint });
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 400).send({ error: { code: e.code ?? "REGISTER_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 400)
+        .send({ error: { code: e.code ?? "REGISTER_FAILED", message: e.message } });
     }
   });
 
@@ -46,7 +54,9 @@ export async function webhooksRoutes(app: FastifyInstance) {
       return { success: true, id };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "DELETE_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "DELETE_FAILED", message: e.message } });
     }
   });
 
@@ -70,7 +80,9 @@ export async function webhooksRoutes(app: FastifyInstance) {
     const { deliveryId } = req.params as { deliveryId: string };
     const delivery = await service.getDelivery(deliveryId);
     if (!delivery) {
-      return reply.status(404).send({ error: { code: "NOT_FOUND", message: `Delivery ${deliveryId} not found` } });
+      return reply
+        .status(404)
+        .send({ error: { code: "NOT_FOUND", message: `Delivery ${deliveryId} not found` } });
     }
     return { delivery };
   });

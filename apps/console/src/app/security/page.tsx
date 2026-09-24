@@ -14,15 +14,22 @@ export default async function SecurityPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Security Events</h1>
-      <p className="text-sm text-muted-foreground">Threat Model • Auth Events • Policy Denials • Webhook Deliveries</p>
+      <p className="text-sm text-muted-foreground">
+        Threat Model • Auth Events • Policy Denials • Webhook Deliveries
+      </p>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Threat Model Coverage</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Threat Model Coverage</CardTitle>
+          </CardHeader>
           <CardContent className="text-xs space-y-1">
             <div>• Malicious agent - Trust levels UNTRUSTED/EXTERNAL/VERIFIED/ORG/SYSTEM</div>
             <div>• Compromised agent - Circuit breaker OPEN, health UNHEALTHY</div>
-            <div>• Malicious Agent Card - Schema validation, signature verification, blind trust prevention</div>
+            <div>
+              • Malicious Agent Card - Schema validation, signature verification, blind trust
+              prevention
+            </div>
             <div>• Spoofed identity - Auth providers with verification</div>
             <div>• Replay - Webhook timestamp tolerance, idempotency keys</div>
             <div>• Task hijacking - Tenant isolation, delegation chain</div>
@@ -34,7 +41,9 @@ export default async function SecurityPage() {
             <div>• Artifact access violations - Access control private/org/project/public</div>
             <div>• Message injection - Content-type validation, size limits</div>
             <div>• Oversized payloads - 1MB message, 100MB artifact limits</div>
-            <div>• Denial of service - Rate limiting multi-dimensional, bulkhead, fan-out limiter</div>
+            <div>
+              • Denial of service - Rate limiting multi-dimensional, bulkhead, fan-out limiter
+            </div>
             <div>• Retry storms - Exponential backoff with jitter, circuit breaker</div>
             <div>• Credential leakage - Env-based, no logging</div>
             <div>• Malicious extension - Plugin interface with sandbox</div>
@@ -43,12 +52,16 @@ export default async function SecurityPage() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Webhooks ({webhooks.total ?? webhooks.webhooks?.length ?? 0})</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Webhooks ({webhooks.total ?? webhooks.webhooks?.length ?? 0})</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2">
             {webhooks.webhooks?.map((wh: any) => (
               <div key={wh.id} className="border rounded p-2 text-xs">
                 <div>{wh.url}</div>
-                <div className="text-muted-foreground">Events: {wh.events?.join(", ")} • Active: {String(wh.isActive)}</div>
+                <div className="text-muted-foreground">
+                  Events: {wh.events?.join(", ")} • Active: {String(wh.isActive)}
+                </div>
               </div>
             ))}
           </CardContent>
@@ -56,12 +69,33 @@ export default async function SecurityPage() {
       </div>
 
       <Card>
-        <CardHeader><CardTitle>Recent Deliveries ({deliveries.total ?? deliveries.deliveries?.length ?? 0})</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>
+            Recent Deliveries ({deliveries.total ?? deliveries.deliveries?.length ?? 0})
+          </CardTitle>
+        </CardHeader>
         <CardContent className="space-y-1 max-h-96 overflow-auto">
           {deliveries.deliveries?.slice(-20).map((d: any) => (
             <div key={d.id} className="border rounded p-2 text-xs">
-              <div className="flex justify-between"><span>{d.eventType} → {d.url.slice(0, 40)}</span><span className={d.status === "SUCCESS" ? "text-green-600" : d.status === "FAILED" ? "text-red-600" : ""}>{d.status}</span></div>
-              <div className="text-muted-foreground">Attempt {d.attempt} • {d.createdAt} • Status: {d.responseStatus ?? "pending"}</div>
+              <div className="flex justify-between">
+                <span>
+                  {d.eventType} → {d.url.slice(0, 40)}
+                </span>
+                <span
+                  className={
+                    d.status === "SUCCESS"
+                      ? "text-green-600"
+                      : d.status === "FAILED"
+                        ? "text-red-600"
+                        : ""
+                  }
+                >
+                  {d.status}
+                </span>
+              </div>
+              <div className="text-muted-foreground">
+                Attempt {d.attempt} • {d.createdAt} • Status: {d.responseStatus ?? "pending"}
+              </div>
               {d.error && <div className="text-red-500">{d.error.slice(0, 200)}</div>}
             </div>
           ))}

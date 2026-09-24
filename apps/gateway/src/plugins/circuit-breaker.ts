@@ -8,7 +8,10 @@ export interface CircuitBreakerPluginOptions {
   maxConcurrent?: number;
 }
 
-async function circuitBreakerPluginInternal(app: FastifyInstance, opts: CircuitBreakerPluginOptions = {}) {
+async function circuitBreakerPluginInternal(
+  app: FastifyInstance,
+  opts: CircuitBreakerPluginOptions = {}
+) {
   const breakers = new Map<string, CircuitBreaker>();
   const bulkheads = new Map<string, Bulkhead>();
 
@@ -101,7 +104,10 @@ async function circuitBreakerPluginInternal(app: FastifyInstance, opts: CircuitB
   });
 }
 
-export const circuitBreakerPlugin = fp(circuitBreakerPluginInternal, { name: "circuit-breaker", fastify: "5.x" });
+export const circuitBreakerPlugin = fp(circuitBreakerPluginInternal, {
+  name: "circuit-breaker",
+  fastify: "5.x",
+});
 
 declare module "fastify" {
   interface FastifyInstance {

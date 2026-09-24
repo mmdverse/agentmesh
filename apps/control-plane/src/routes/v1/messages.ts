@@ -11,7 +11,9 @@ const SendMessageSchema = z.object({
   traceId: z.string().optional(),
   correlationId: z.string().optional(),
   parentMessageId: z.string().optional(),
-  contentType: z.enum(["text", "json", "binary", "multipart", "a2a-message", "stream-chunk"]).optional(),
+  contentType: z
+    .enum(["text", "json", "binary", "multipart", "a2a-message", "stream-chunk"])
+    .optional(),
   content: z.record(z.unknown()),
   metadata: z.record(z.unknown()).optional(),
   organizationId: z.string().optional(),
@@ -22,8 +24,20 @@ const SendMessageSchema = z.object({
 export async function messagesRoutes(app: FastifyInstance) {
   const service = getMessageService();
 
-  app.get("/", async (req) => {
-    const { taskId, contextId, sessionId, traceId, sender, receiver, organizationId, projectId, correlationId, limit = "50", offset = "0" } = req.query as any;
+  app.get("/", async req => {
+    const {
+      taskId,
+      contextId,
+      sessionId,
+      traceId,
+      sender,
+      receiver,
+      organizationId,
+      projectId,
+      correlationId,
+      limit = "50",
+      offset = "0",
+    } = req.query as any;
     const tenant = (req as any).tenant ?? {};
 
     const { messages, total } = await service.list({
@@ -52,7 +66,9 @@ export async function messagesRoutes(app: FastifyInstance) {
       return { message };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 404).send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 404)
+        .send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
     }
   });
 
@@ -60,19 +76,27 @@ export async function messagesRoutes(app: FastifyInstance) {
     try {
       const parsed = SendMessageSchema.safeParse(req.body);
       if (!parsed.success) {
-        return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "Invalid input", details: parsed.error.flatten() } });
+        return reply.status(400).send({
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid input",
+            details: parsed.error.flatten(),
+          },
+        });
       }
 
       const tenant = (req as any).tenant ?? {};
-      const message = await service.send(
-        { ...parsed.data, tenant } as any,
-        { mode: parsed.data.deliveryMode ?? "async", requireAck: parsed.data.deliveryMode === "sync" }
-      );
+      const message = await service.send({ ...parsed.data, tenant } as any, {
+        mode: parsed.data.deliveryMode ?? "async",
+        requireAck: parsed.data.deliveryMode === "sync",
+      });
 
       return reply.status(201).send({ message });
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "SEND_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "SEND_FAILED", message: e.message } });
     }
   });
 
@@ -82,7 +106,9 @@ export async function messagesRoutes(app: FastifyInstance) {
     const tenant = (req as any).tenant ?? {};
 
     if (!receiver) {
-      return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "receiver required for ack" } });
+      return reply
+        .status(400)
+        .send({ error: { code: "VALIDATION_ERROR", message: "receiver required for ack" } });
     }
 
     try {
@@ -90,7 +116,9 @@ export async function messagesRoutes(app: FastifyInstance) {
       return { success: true, messageId: id, receiver };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "ACK_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "ACK_FAILED", message: e.message } });
     }
   });
 }

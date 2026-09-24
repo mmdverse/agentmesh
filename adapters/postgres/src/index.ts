@@ -14,7 +14,10 @@ export interface PostgresConfig {
   connectTimeout?: number;
 }
 
-export function createPostgresClient(config: PostgresConfig): { client: ReturnType<typeof postgres>; db: Database } {
+export function createPostgresClient(config: PostgresConfig): {
+  client: ReturnType<typeof postgres>;
+  db: Database;
+} {
   const client = postgres(config.url, {
     max: config.max ?? 10,
     idle_timeout: config.idleTimeout ?? 20,
@@ -29,7 +32,10 @@ export function createPostgresClient(config: PostgresConfig): { client: ReturnTy
 
 export function getDb(config?: PostgresConfig): Database {
   if (dbInstance) return dbInstance;
-  const url = config?.url ?? process.env.DATABASE_URL ?? "postgresql://agentmesh:agentmesh_secret@localhost:5432/agentmesh";
+  const url =
+    config?.url ??
+    process.env.DATABASE_URL ??
+    "postgresql://agentmesh:agentmesh_secret@localhost:5432/agentmesh";
   const { client, db } = createPostgresClient({ url, ...config });
   clientInstance = client;
   dbInstance = db;

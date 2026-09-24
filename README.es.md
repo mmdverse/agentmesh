@@ -2,6 +2,25 @@
 
 > 🌍 **Languages:** [English](./README.md) | [Русский](./README.ru.md) | [中文](./README.zh.md) | [العربية](./README.ar.md) | [فارسی](./README.fa.md) | [Türkçe](./README.tr.md) | [Español](./README.es.md)
 
+[![AgentMesh Banner](./docs/assets/agentmesh-banner.svg)](./docs/assets/agentmesh-banner.svg)
+
+[![Next.js 14](https://img.shields.io/badge/Next.js-14-000000?logo=nextdotjs&logoColor=white)](./apps/console)
+[![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](./tsconfig.base.json)
+[![Fastify](https://img.shields.io/badge/Fastify-5-000000?logo=fastify&logoColor=white)](./apps/gateway)
+[![A2A Protocol](https://img.shields.io/badge/A2A-first--class-6366f1)](./packages/a2a-protocol)
+[![MCP Bridge](https://img.shields.io/badge/MCP-bridge-8b5cf6)](./packages/mcp-bridge)
+[![Tests](https://img.shields.io/badge/tests-28%20packages-2ea043)](./packages)
+[![Languages](https://img.shields.io/badge/languages-7%20%E2%80%A2%20RTL%20%2B%20LTR-1f6feb)](./README.fa.md)
+[![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker&logoColor=white)](./infra/docker-compose.yml)
+[![License](https://img.shields.io/badge/license-free-lightgrey)](./DONATE.md)
+[![Version](https://img.shields.io/badge/version-1.0.0-6366f1)](./package.json)
+
+⭐ **[Dale estrella](https://github.com/mmdverse/agentmesh/stargazers)** si es útil · 💛 **[Apoya el proyecto](#soporte-y-donaciones)**
+
+_Gateway de infraestructura y plano de control autoalojado para agentes de IA — con A2A como primera clase, puente MCP y consola que muestra el grafo vivo de delegación._
+
+---
+
 **Gateway de Infraestructura y Plano de Control de Grado de Producción para Agentes de IA**
 
 > API Gateway + Service Mesh + Service Discovery + Message Broker + Observability — construido específicamente para cargas de trabajo agénticas.
@@ -61,6 +80,7 @@ packages/
 ## Inicio Rápido
 
 ### Requisitos
+
 - Node.js 20+, pnpm 9+
 - Docker & Docker Compose
 - Opcional: kubectl, helm
@@ -108,44 +128,57 @@ curl http://localhost:3002/health
 ## Características
 
 ### A2A como Protocolo de Primera Clase
+
 - Agent Cards: caché, validación, seguimiento de versiones, firma, políticas de confianza
 - Discovery: Direct URL, Well-Known, Local Registry, Enterprise, DNS, Dynamic, Manual
 - Soporte: Messages, Tasks, Artifacts, Streaming (SSE), Push Notifications, Cancelación
 
 ### Registro
+
 ID, Name, Description, Organization, Version, Endpoints, Skills, Capabilities, Security Schemes, Health, Region, Tags, Trust Status. Ranking configurable vía plugins RoutingStrategy, sin ranking AI hardcodeado.
 
 ### Versionado
+
 Múltiples versiones: CodeAgent v1, v2, v3. Estrategias: latest, stable, specific, minimum, canary, max_satisfying (semver `^1.0.0`). Versionado por tenant.
 
 ### Multi-Tenancy
+
 ```
 Organization -> Projects -> Agents, Tasks, Policies
 ```
+
 Aislamiento estricto — mismatch de org → 403. Extraído de `X-Organization-Id`, `X-Project-Id`, JWT.
 
 ### Orquestación de Tareas
+
 `SUBMITTED → WORKING → INPUT_REQUIRED/AUTH_REQUIRED → COMPLETED/FAILED/CANCELED`. Estado persistente, árbol de delegación con limitador fan-out 10, profundidad 10. Grafo vivo con React Flow.
 
 ### Confiabilidad
+
 Reintentos con exponential backoff + jitter, deadlines, Circuit Breakers CLOSED/OPEN/HALF_OPEN, Bulkheads, Idempotency 24h, Deduplicación, sin reintentos ciegos.
 
 ### Seguridad (Threat Model Implementado)
+
 Agente malicioso, agente comprometido, Agent Card malicioso, suplantación de identidad, replay, secuestro de tareas, confused deputy, SSRF (bloqueo de IP privadas, solo https en prod), abuso de webhook, bypass de autorización, breakout de tenant, acceso a artefactos, inyección de mensajes, DoS, tormentas de reintento, fuga de credenciales.
 
 ### Autenticación y Autorización
+
 ApiKey, JWT (jose), OIDC (JWKS), mTLS, Workload, Composite. RBAC/ABAC, `deny-overrides-allow`, coincidencia glob, verificación de que los scopes hijos son subconjunto del padre contra escalada de privilegios.
 
 ### Artefactos, Mensajes, MCP Bridge
+
 S3 (MinIO/AWS) + checksum sha256, URLs prefirmadas. Mensajes sync/async/streaming con traceId. MCP Tool ↔ A2A Skill conversión bidireccional.
 
 ### Event Bus y Webhooks
+
 NATS JetStream stream `AGENTMESH` con fallback InMemory. Webhooks firmados HMAC sha256, reintentos, protección SSRF, dead-letter.
 
 ### Rate Limiting y Observabilidad
+
 Multidimensional: org 500/s, project 200/s, agent 50/s, IP 100/s, global 1000/s. Token bucket, sliding window. Trazado OTel User→Agent→Tool, métricas latency, errores.
 
 ### Consola
+
 Next.js 14, 19 páginas: Agents, Tasks con grafo vivo, Artifacts, Messages, MCP, Security, Telemetry, etc.
 
 ---
@@ -166,6 +199,7 @@ Next.js 14, 19 páginas: Agents, Tasks con grafo vivo, Artifacts, Messages, MCP,
 ## Despliegue
 
 ### Docker Compose
+
 ```bash
 pnpm docker:up
 pnpm docker:logs
@@ -173,11 +207,13 @@ pnpm docker:down
 ```
 
 ### Kubernetes
+
 ```bash
 kubectl apply -f infra/k8s/
 ```
 
 ### Helm
+
 ```bash
 helm install agentmesh infra/helm/agentmesh -n agentmesh --create-namespace
 ```
@@ -199,9 +235,15 @@ Unit, Integration, A2A Conformance, MCP Bridge, Routing, Task Lifecycle, Failure
 ## SDK
 
 ```ts
-const mesh = new AgentMeshClient({ endpoint: "http://localhost:3002", gatewayEndpoint: "http://localhost:3001" });
+const mesh = new AgentMeshClient({
+  endpoint: "http://localhost:3002",
+  gatewayEndpoint: "http://localhost:3001",
+});
 const agents = await mesh.discovery.find({ skill: "code-review" });
-const task = await mesh.tasks.create({ agentId: agents.agents[0].id, message: { text: "Revisa este PR" } });
+const task = await mesh.tasks.create({
+  agentId: agents.agents[0].id,
+  message: { text: "Revisa este PR" },
+});
 const result = await mesh.tasks.poll(task.task.id);
 ```
 
@@ -211,14 +253,35 @@ const result = await mesh.tasks.poll(task.task.id);
 
 AgentMesh es gratis y abierto — sin condiciones. Una persona mantiene esto, y las donaciones van a costos reales de infraestructura: servidores, medición, tráfico de producción.
 
-**Donaciones Cripto — 100% va a infra:**
+### Direcciones
 
-- **BTC (Bitcoin):** `bc1q36uzqlkaav3lkscknhemcem0lcjtkhepdqckul`
-- **BNB (BSC):** `0x57902d3955D5F1C0fbCaEA0a12A7D691c792487E`
-- **SOL (Solana):** `4hCYetZjvK8mkuobRvPYXyRnM84aTj3q8LZ1GpiTK8HR` — comisiones más bajas
-- **TRON (TRC20):** `TVFZKSwMYNw1jiCyKKtKoVG3HbpB4DhsA5` — comisiones más bajas
+Escanea una tarjeta con tu app de billetera, o usa el botón de copiar debajo. Verifica la dirección en tu billetera antes de enviar — comisiones más bajas en Solana y Tron.
 
-Ver [DONATE.md](./DONATE.md) para detalles. Comisiones más bajas en Solana y Tron.
+[![Bitcoin · BTC mainnet](./docs/assets/donate/donate-bitcoin.svg)](./docs/assets/donate/donate-bitcoin.svg)
+
+```
+bc1q36uzqlkaav3lkscknhemcem0lcjtkhepdqckul
+```
+
+[![BNB Smart Chain · BEP-20](./docs/assets/donate/donate-bnb.svg)](./docs/assets/donate/donate-bnb.svg)
+
+```
+0x57902d3955D5F1C0fbCaEA0a12A7D691c792487E
+```
+
+[![Solana · SOL mainnet](./docs/assets/donate/donate-solana.svg)](./docs/assets/donate/donate-solana.svg)
+
+```
+4hCYetZjvK8mkuobRvPYXyRnM84aTj3q8LZ1GpiTK8HR
+```
+
+[![Tron · TRC-20](./docs/assets/donate/donate-tron.svg)](./docs/assets/donate/donate-tron.svg)
+
+```
+TVFZKSwMYNw1jiCyKKtKoVG3HbpB4DhsA5
+```
+
+**¿No eres persona de dinero?** Un caso de prueba fallido, una nueva estrategia de enrutamiento o un perfil de latencia medido vale más que la mayoría de PRs.
 
 ---
 

@@ -31,7 +31,8 @@ export async function v1Routes(app: FastifyInstance) {
   app.get("/info", async () => {
     return {
       name: "AgentMesh Control Plane",
-      description: "Registry, Policies, Configuration, Identity, Artifacts, Messaging, Webhooks, MCP Bridge, Observability",
+      description:
+        "Registry, Policies, Configuration, Identity, Artifacts, Messaging, Webhooks, MCP Bridge, Observability",
       version: app.config.VERSION,
       dataPlane: "Gateway cluster (separate) with circuit breakers, bulkheads, rate limiting",
       storage: {
@@ -70,15 +71,19 @@ export async function v1Routes(app: FastifyInstance) {
       const obs = getObservability();
       const trace = obs.getTrace(traceId);
       if (trace.length === 0) {
-        return reply.status(404).send({ error: { code: "NOT_FOUND", message: `Trace ${traceId} not found` } });
+        return reply
+          .status(404)
+          .send({ error: { code: "NOT_FOUND", message: `Trace ${traceId} not found` } });
       }
       return { traceId, spans: trace, total: trace.length };
     } catch (err) {
-      return reply.status(500).send({ error: { code: "FETCH_FAILED", message: (err as Error).message } });
+      return reply
+        .status(500)
+        .send({ error: { code: "FETCH_FAILED", message: (err as Error).message } });
     }
   });
 
-  app.get("/observability/metrics", async (req) => {
+  app.get("/observability/metrics", async req => {
     const { name } = req.query as any;
     const { getObservability } = await import("@agentmesh/observability");
     const obs = getObservability();
@@ -96,7 +101,11 @@ export async function v1Routes(app: FastifyInstance) {
   // Legacy placeholders
   app.get("/registry", async () => ({ message: "Use /v1/agents for registry - Phase 4" }));
   app.get("/routes", async () => ({ message: "Routing via gateway /v1/route - Phase 4" }));
-  app.get("/policies", async () => ({ message: "Policies enforced via authorization plugin - Phase 3+4" }));
+  app.get("/policies", async () => ({
+    message: "Policies enforced via authorization plugin - Phase 3+4",
+  }));
   app.get("/events", async () => ({ message: "Events via NATS JetStream - Phase 4" }));
-  app.get("/organizations", async () => ({ message: "Multi-tenancy via tenant plugin - Phase 3+4" }));
+  app.get("/organizations", async () => ({
+    message: "Multi-tenancy via tenant plugin - Phase 3+4",
+  }));
 }

@@ -1,5 +1,9 @@
-const CONTROL_PLANE_URL = process.env.NEXT_PUBLIC_CONTROL_PLANE_URL || process.env.CONTROL_PLANE_URL || "http://localhost:3002";
-const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || process.env.GATEWAY_URL || "http://localhost:3001";
+const CONTROL_PLANE_URL =
+  process.env.NEXT_PUBLIC_CONTROL_PLANE_URL ||
+  process.env.CONTROL_PLANE_URL ||
+  "http://localhost:3002";
+const GATEWAY_URL =
+  process.env.NEXT_PUBLIC_GATEWAY_URL || process.env.GATEWAY_URL || "http://localhost:3001";
 
 async function fetchApi(base: string, path: string, opts: RequestInit = {}): Promise<any> {
   const url = `${base.replace(/\/$/, "")}${path}`;
@@ -26,7 +30,8 @@ export const api = {
       },
       get: (id: string) => fetchApi(CONTROL_PLANE_URL, `/v1/agents/${id}`),
       getCard: (id: string) => fetchApi(CONTROL_PLANE_URL, `/v1/agents/${id}/card`),
-      versions: (name: string) => fetchApi(CONTROL_PLANE_URL, `/v1/agents/versions/${encodeURIComponent(name)}`),
+      versions: (name: string) =>
+        fetchApi(CONTROL_PLANE_URL, `/v1/agents/versions/${encodeURIComponent(name)}`),
       discover: (params?: Record<string, string>) => {
         const q = params ? `?${new URLSearchParams(params).toString()}` : "";
         return fetchApi(CONTROL_PLANE_URL, `/v1/agents/discover${q}`);
@@ -61,22 +66,27 @@ export const api = {
     },
     mcp: {
       servers: () => fetchApi(CONTROL_PLANE_URL, `/v1/mcp/servers`),
-      discover: (skill?: string) => fetchApi(CONTROL_PLANE_URL, `/v1/mcp/discover${skill ? `?skill=${skill}` : ""}`),
+      discover: (skill?: string) =>
+        fetchApi(CONTROL_PLANE_URL, `/v1/mcp/discover${skill ? `?skill=${skill}` : ""}`),
     },
     observability: {
-      traces: (traceId: string) => fetchApi(CONTROL_PLANE_URL, `/v1/observability/traces/${traceId}`),
-      metrics: (name?: string) => fetchApi(CONTROL_PLANE_URL, `/v1/observability/metrics${name ? `?name=${name}` : ""}`),
+      traces: (traceId: string) =>
+        fetchApi(CONTROL_PLANE_URL, `/v1/observability/traces/${traceId}`),
+      metrics: (name?: string) =>
+        fetchApi(CONTROL_PLANE_URL, `/v1/observability/metrics${name ? `?name=${name}` : ""}`),
       spans: () => fetchApi(CONTROL_PLANE_URL, `/v1/observability/spans`),
     },
   },
   gateway: {
     health: () => fetchApi(GATEWAY_URL, "/v1/health"),
     info: () => fetchApi(GATEWAY_URL, "/v1/info"),
-    route: (body: any) => fetchApi(GATEWAY_URL, "/v1/route", { method: "POST", body: JSON.stringify(body) }),
+    route: (body: any) =>
+      fetchApi(GATEWAY_URL, "/v1/route", { method: "POST", body: JSON.stringify(body) }),
     reliability: () => fetchApi(GATEWAY_URL, "/v1/reliability/stats"),
     observability: {
       traces: (traceId: string) => fetchApi(GATEWAY_URL, `/v1/observability/traces/${traceId}`),
-      metrics: (name?: string) => fetchApi(GATEWAY_URL, `/v1/observability/metrics${name ? `?name=${name}` : ""}`),
+      metrics: (name?: string) =>
+        fetchApi(GATEWAY_URL, `/v1/observability/metrics${name ? `?name=${name}` : ""}`),
     },
   },
 };

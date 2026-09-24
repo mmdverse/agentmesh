@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="1200" height="360" role="img" aria-label="AgentMesh — Infrastructure Gateway and Control Plane for AI Agents">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a0a0b"/>
+      <stop offset="0.55" stop-color="#121214"/>
+      <stop offset="1" stop-color="#0a0a0b"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#6366f1" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#6366f1" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6366f1"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0v40" fill="none" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="360" rx="20" fill="url(#bg)"/>
+  <rect width="1200" height="360" rx="20" fill="url(#grid)"/>
+  <rect x="0.5" y="0.5" width="1199" height="359" rx="19.5" fill="none" stroke="#ffffff" stroke-opacity="0.08"/>
+
+  <!-- Top accent line -->
+  <rect x="0" y="0" width="1200" height="2" rx="1" fill="url(#edge)"/>
+
+  <!-- Logo icon -->
+  <g transform="translate(80 80)">
+    <rect width="80" height="80" rx="20" fill="#1a1a1e" stroke="#ffffff" stroke-opacity="0.1"/>
+    <rect width="80" height="80" rx="20" fill="url(#accent)" opacity="0.15"/>
+    <g transform="translate(20 20)">
+      <!-- Mesh nodes -->
+      <circle cx="8" cy="8" r="4" fill="#6366f1"/>
+      <circle cx="32" cy="8" r="4" fill="#8b5cf6"/>
+      <circle cx="8" cy="32" r="4" fill="#6366f1"/>
+      <circle cx="32" cy="32" r="4" fill="#8b5cf6"/>
+      <circle cx="20" cy="20" r="5" fill="#ffffff" opacity="0.9"/>
+      <!-- Connections -->
+      <line x1="8" y1="8" x2="20" y2="20" stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+      <line x1="32" y1="8" x2="20" y2="20" stroke="#8b5cf6" stroke-width="1.5" opacity="0.6"/>
+      <line x1="8" y1="32" x2="20" y2="20" stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+      <line x1="32" y1="32" x2="20" y2="20" stroke="#8b5cf6" stroke-width="1.5" opacity="0.6"/>
+      <line x1="8" y1="8" x2="32" y2="8" stroke="#ffffff" stroke-width="1" opacity="0.2" stroke-dasharray="3 3"/>
+      <line x1="8" y1="32" x2="32" y2="32" stroke="#ffffff" stroke-width="1" opacity="0.2" stroke-dasharray="3 3"/>
+    </g>
+  </g>
+
+  <!-- Title -->
+  <text x="180" y="130" font-family="ui-sans-serif,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+        font-size="52" font-weight="800" fill="#f5f5f5" letter-spacing="-1.5">AgentMesh</text>
+
+  <!-- Subtitle -->
+  <text x="180" y="170" font-family="ui-sans-serif,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+        font-size="18" font-weight="400" fill="#a1a1aa" letter-spacing="0.2">Infrastructure Gateway &amp; Control Plane for AI Agents</text>
+
+  <!-- Tags -->
+  <g transform="translate(180 200)">
+    <rect width="110" height="28" rx="14" fill="#1e1e22" stroke="#6366f1" stroke-opacity="0.3"/>
+    <text x="55" y="18" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace"
+          font-size="12" font-weight="600" fill="#a5b4fc" letter-spacing="0.5">A2A • FIRST CLASS</text>
+  </g>
+  <g transform="translate(300 200)">
+    <rect width="90" height="28" rx="14" fill="#1e1e22" stroke="#8b5cf6" stroke-opacity="0.3"/>
+    <text x="45" y="18" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace"
+          font-size="12" font-weight="600" fill="#c4b5fd" letter-spacing="0.5">MCP BRIDGE</text>
+  </g>
+  <g transform="translate(400 200)">
+    <rect width="120" height="28" rx="14" fill="#1e1e22" stroke="#ffffff" stroke-opacity="0.15"/>
+    <text x="60" y="18" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace"
+          font-size="12" font-weight="600" fill="#d4d4d8" letter-spacing="0.5">SERVICE MESH</text>
+  </g>
+
+  <!-- Bottom stats -->
+  <g transform="translate(80 280)">
+    <text font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#71717a" letter-spacing="1">16 PACKAGES • 4 ADAPTERS • 3 APPS • 19 CONSOLE PAGES • 5 ROUTING STRATEGIES • v1.0.0</text>
+  </g>
+
+  <!-- Right side - architecture mini -->
+  <g transform="translate(800 60)">
+    <rect width="320" height="240" rx="16" fill="#111113" stroke="#ffffff" stroke-opacity="0.08"/>
+    <text x="20" y="30" font-family="ui-monospace,monospace" font-size="11" fill="#71717a" letter-spacing="1">CONTROL PLANE</text>
+    <rect x="20" y="40" width="280" height="40" rx="8" fill="#1a1a1e" stroke="#6366f1" stroke-opacity="0.2"/>
+    <text x="30" y="55" font-family="ui-monospace,monospace" font-size="10" fill="#a5b4fc">REGISTRY • POLICIES • ARTIFACTS • MCP</text>
+    <text x="30" y="68" font-family="ui-monospace,monospace" font-size="9" fill="#71717a">Postgres • Redis • NATS • S3</text>
+
+    <line x1="160" y1="80" x2="160" y2="100" stroke="#6366f1" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+
+    <text x="20" y="115" font-family="ui-monospace,monospace" font-size="11" fill="#71717a" letter-spacing="1">DATA PLANE • GATEWAY CLUSTER</text>
+    <rect x="20" y="125" width="85" height="50" rx="8" fill="#1a1a1e" stroke="#ffffff" stroke-opacity="0.08"/>
+    <rect x="115" y="125" width="85" height="50" rx="8" fill="#1a1a1e" stroke="#ffffff" stroke-opacity="0.08"/>
+    <rect x="210" y="125" width="85" height="50" rx="8" fill="#1a1a1e" stroke="#8b5cf6" stroke-opacity="0.3"/>
+    <text x="32" y="145" font-family="ui-monospace,monospace" font-size="9" fill="#d4d4d8">GATEWAY-1</text>
+    <text x="32" y="155" font-family="ui-monospace,monospace" font-size="8" fill="#71717a">3001 • 3 REPLICAS</text>
+    <text x="127" y="145" font-family="ui-monospace,monospace" font-size="9" fill="#d4d4d8">GATEWAY-2</text>
+    <text x="127" y="155" font-family="ui-monospace,monospace" font-size="8" fill="#71717a">HA • HPA 3-10</text>
+    <text x="222" y="145" font-family="ui-monospace,monospace" font-size="9" fill="#c4b5fd">CONSOLE</text>
+    <text x="222" y="155" font-family="ui-monospace,monospace" font-size="8" fill="#71717a">NEXT.JS • 19 PAGES</text>
+
+    <text x="20" y="200" font-family="ui-monospace,monospace" font-size="9" fill="#52525b">○ Circuit Breaker • Bulkhead • Rate Limit • OTel • SSRF Protection</text>
+  </g>
+</svg>

@@ -31,7 +31,10 @@ export interface AgentMeshEvent<T = unknown> {
 
 export interface EventBus {
   publish<T>(event: AgentMeshEvent<T>): Promise<void>;
-  subscribe<T>(type: AgentMeshEventType | "*", handler: (event: AgentMeshEvent<T>) => Promise<void> | void): Promise<{ unsubscribe: () => Promise<void> }>;
+  subscribe<T>(
+    type: AgentMeshEventType | "*",
+    handler: (event: AgentMeshEvent<T>) => Promise<void> | void
+  ): Promise<{ unsubscribe: () => Promise<void> }>;
   close(): Promise<void>;
 }
 
@@ -60,7 +63,10 @@ export class InMemoryEventBus implements EventBus {
     }
   }
 
-  async subscribe<T>(type: AgentMeshEventType | "*", handler: (event: AgentMeshEvent<T>) => Promise<void> | void) {
+  async subscribe<T>(
+    type: AgentMeshEventType | "*",
+    handler: (event: AgentMeshEvent<T>) => Promise<void> | void
+  ) {
     const key = type;
     if (!this.handlers.has(key)) this.handlers.set(key, new Set());
     this.handlers.get(key)!.add(handler as any);
@@ -132,7 +138,9 @@ export class NatsJetStreamEventBus implements EventBus {
       this.isConnected = true;
       console.log(`[events:nats] connected to ${url} as ${this.config.serviceName}`);
     } catch (err) {
-      console.warn(`[events:nats] failed to connect to ${url}, falling back to in-memory: ${(err as Error).message}`);
+      console.warn(
+        `[events:nats] failed to connect to ${url}, falling back to in-memory: ${(err as Error).message}`
+      );
       throw err;
     }
   }
@@ -169,7 +177,10 @@ export class NatsJetStreamEventBus implements EventBus {
     }
   }
 
-  async subscribe<T>(type: AgentMeshEventType | "*", handler: (event: AgentMeshEvent<T>) => Promise<void> | void) {
+  async subscribe<T>(
+    type: AgentMeshEventType | "*",
+    handler: (event: AgentMeshEvent<T>) => Promise<void> | void
+  ) {
     const key = type;
     if (!this.handlers.has(key)) this.handlers.set(key, new Set());
     this.handlers.get(key)!.add(handler as any);
@@ -238,10 +249,13 @@ export class NatsJetStreamEventBus implements EventBus {
 
 export function createEventBus(config: EventBusConfig): EventBus {
   // If URL is NATS and useNats not explicitly false, try NATS JetStream
-  const shouldUseNats = config.url?.startsWith("nats://") || config.url?.startsWith("tls://") || config.useNats;
+  const shouldUseNats =
+    config.url?.startsWith("nats://") || config.url?.startsWith("tls://") || config.useNats;
 
   if (shouldUseNats) {
-    console.log(`[events] using NATS JetStream event bus for ${config.serviceName} at ${config.url}`);
+    console.log(
+      `[events] using NATS JetStream event bus for ${config.serviceName} at ${config.url}`
+    );
     return new NatsJetStreamEventBus(config);
   }
 

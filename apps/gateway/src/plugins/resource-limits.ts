@@ -1,17 +1,26 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import fp from "fastify-plugin";
-import { checkResourceLimits, type ResourceLimits, DEFAULT_RESOURCE_LIMITS } from "@agentmesh/rate-limit";
+import {
+  checkResourceLimits,
+  type ResourceLimits,
+  DEFAULT_RESOURCE_LIMITS,
+} from "@agentmesh/rate-limit";
 
 export interface ResourceLimitsPluginOptions {
   limits?: ResourceLimits;
 }
 
-async function resourceLimitsPluginInternal(app: FastifyInstance, opts: ResourceLimitsPluginOptions = {}) {
+async function resourceLimitsPluginInternal(
+  app: FastifyInstance,
+  opts: ResourceLimitsPluginOptions = {}
+) {
   const limits = { ...DEFAULT_RESOURCE_LIMITS, ...opts.limits };
 
   app.addHook("onRequest", async (req: FastifyRequest, reply: FastifyReply) => {
     // Check content-length header
-    const contentLength = req.headers["content-length"] ? parseInt(req.headers["content-length"] as string, 10) : 0;
+    const contentLength = req.headers["content-length"]
+      ? parseInt(req.headers["content-length"] as string, 10)
+      : 0;
 
     if (contentLength > limits.maxMessageSize) {
       return reply.status(413).send({
@@ -53,4 +62,7 @@ async function resourceLimitsPluginInternal(app: FastifyInstance, opts: Resource
   });
 }
 
-export const resourceLimitsPlugin = fp(resourceLimitsPluginInternal, { name: "resource-limits", fastify: "5.x" });
+export const resourceLimitsPlugin = fp(resourceLimitsPluginInternal, {
+  name: "resource-limits",
+  fastify: "5.x",
+});

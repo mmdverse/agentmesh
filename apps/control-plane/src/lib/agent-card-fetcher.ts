@@ -1,4 +1,9 @@
-import { fetchAgentCard, fetchWellKnownCard, buildDiscoveryUrls, type AgentCard } from "@agentmesh/a2a-protocol";
+import {
+  fetchAgentCard,
+  fetchWellKnownCard,
+  buildDiscoveryUrls,
+  type AgentCard,
+} from "@agentmesh/a2a-protocol";
 import { assertUrlSafe } from "./ssrf.js";
 
 export interface CardFetchResult {
@@ -8,7 +13,10 @@ export interface CardFetchResult {
   fetchedAt: string;
 }
 
-export async function fetchCardFromUrl(url: string, opts: { timeoutMs?: number; allowPrivate?: boolean } = {}): Promise<CardFetchResult> {
+export async function fetchCardFromUrl(
+  url: string,
+  opts: { timeoutMs?: number; allowPrivate?: boolean } = {}
+): Promise<CardFetchResult> {
   assertUrlSafe(url, { allowPrivate: opts.allowPrivate, allowLoopback: opts.allowPrivate });
   return fetchAgentCard(url, {
     timeoutMs: opts.timeoutMs ?? 10000,
@@ -17,7 +25,10 @@ export async function fetchCardFromUrl(url: string, opts: { timeoutMs?: number; 
   });
 }
 
-export async function fetchCardWithDiscovery(baseUrl: string, opts: { timeoutMs?: number; allowPrivate?: boolean } = {}): Promise<CardFetchResult> {
+export async function fetchCardWithDiscovery(
+  baseUrl: string,
+  opts: { timeoutMs?: number; allowPrivate?: boolean } = {}
+): Promise<CardFetchResult> {
   assertUrlSafe(baseUrl, { allowPrivate: opts.allowPrivate, allowLoopback: opts.allowPrivate });
   const urls = buildDiscoveryUrls(baseUrl);
   let lastErr: Error | null = null;
@@ -41,7 +52,10 @@ export async function fetchCardWithDiscovery(baseUrl: string, opts: { timeoutMs?
   throw lastErr ?? new Error(`Failed to fetch card from any discovery URL for ${baseUrl}`);
 }
 
-export async function fetchWellKnown(baseUrl: string, opts: { timeoutMs?: number; allowPrivate?: boolean } = {}): Promise<CardFetchResult> {
+export async function fetchWellKnown(
+  baseUrl: string,
+  opts: { timeoutMs?: number; allowPrivate?: boolean } = {}
+): Promise<CardFetchResult> {
   assertUrlSafe(baseUrl, { allowPrivate: opts.allowPrivate, allowLoopback: opts.allowPrivate });
   return fetchWellKnownCard(baseUrl, {
     timeoutMs: opts.timeoutMs ?? 8000,

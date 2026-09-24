@@ -8,9 +8,14 @@ export interface AuthorizationPluginOptions {
   publicRoutes?: string[];
 }
 
-async function authorizationPluginInternal(app: FastifyInstance, opts: AuthorizationPluginOptions = {}) {
+async function authorizationPluginInternal(
+  app: FastifyInstance,
+  opts: AuthorizationPluginOptions = {}
+) {
   const policyEngine = createPolicyEngine(opts.policies);
-  const publicRoutes = new Set(opts.publicRoutes ?? ["/health", "/ready", "/v1/health", "/v1/info"]);
+  const publicRoutes = new Set(
+    opts.publicRoutes ?? ["/health", "/ready", "/v1/health", "/v1/info"]
+  );
 
   if (!app.hasDecorator("policyEngine")) {
     app.decorate("policyEngine", policyEngine);
@@ -75,7 +80,10 @@ async function authorizationPluginInternal(app: FastifyInstance, opts: Authoriza
       } catch (err) {
         const e = err as any;
         return reply.status(e.statusCode ?? 403).send({
-          error: { code: e.code ?? "FORBIDDEN", message: e.message ?? `Not allowed to invoke skill ${skill}` },
+          error: {
+            code: e.code ?? "FORBIDDEN",
+            message: e.message ?? `Not allowed to invoke skill ${skill}`,
+          },
         });
       }
     }
@@ -99,16 +107,25 @@ async function authorizationPluginInternal(app: FastifyInstance, opts: Authoriza
       // Only deny if explicit deny
       if (e.statusCode === 403) {
         return reply.status(403).send({
-          error: { code: e.code ?? "FORBIDDEN", message: e.message ?? `Not allowed to ${action} on ${resource}` },
+          error: {
+            code: e.code ?? "FORBIDDEN",
+            message: e.message ?? `Not allowed to ${action} on ${resource}`,
+          },
         });
       }
       // For other errors, log and allow (fail open in dev)
-      app.log.warn({ err, resource, action, identity: identity?.id }, "authorization check failed, allowing in dev");
+      app.log.warn(
+        { err, resource, action, identity: identity?.id },
+        "authorization check failed, allowing in dev"
+      );
     }
   });
 }
 
-export const authorizationPlugin = fp(authorizationPluginInternal, { name: "authorization", fastify: "5.x" });
+export const authorizationPlugin = fp(authorizationPluginInternal, {
+  name: "authorization",
+  fastify: "5.x",
+});
 
 declare module "fastify" {
   interface FastifyInstance {

@@ -7,7 +7,10 @@ const PortSchema = z.coerce.number().int().min(1).max(65535);
 
 // Shared infra
 export const InfraConfigSchema = z.object({
-  DATABASE_URL: z.string().min(1).default("postgresql://agentmesh:agentmesh_secret@localhost:5432/agentmesh"),
+  DATABASE_URL: z
+    .string()
+    .min(1)
+    .default("postgresql://agentmesh:agentmesh_secret@localhost:5432/agentmesh"),
   REDIS_URL: z.string().min(1).default("redis://localhost:6379"),
   NATS_URL: z.string().min(1).default("nats://localhost:4222"),
   S3_ENDPOINT: z.string().min(1).default("http://localhost:9000"),
@@ -70,7 +73,9 @@ export const ControlPlaneConfigSchema = InfraConfigSchema.extend({
 
 export type ControlPlaneConfig = z.infer<typeof ControlPlaneConfigSchema>;
 
-export function loadGatewayConfig(env: Record<string, string | undefined> = process.env): GatewayConfig {
+export function loadGatewayConfig(
+  env: Record<string, string | undefined> = process.env
+): GatewayConfig {
   const parsed = GatewayConfigSchema.safeParse(env);
   if (!parsed.success) {
     console.error("Invalid gateway config:", parsed.error.flatten());
@@ -79,7 +84,9 @@ export function loadGatewayConfig(env: Record<string, string | undefined> = proc
   return parsed.data;
 }
 
-export function loadControlPlaneConfig(env: Record<string, string | undefined> = process.env): ControlPlaneConfig {
+export function loadControlPlaneConfig(
+  env: Record<string, string | undefined> = process.env
+): ControlPlaneConfig {
   const parsed = ControlPlaneConfigSchema.safeParse(env);
   if (!parsed.success) {
     console.error("Invalid control-plane config:", parsed.error.flatten());

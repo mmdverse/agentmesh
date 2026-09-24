@@ -1,4 +1,12 @@
-import { connect, type NatsConnection, type JetStreamClient, type JetStreamManager, StringCodec, RetentionPolicy, type Subscription } from "nats";
+import {
+  connect,
+  type NatsConnection,
+  type JetStreamClient,
+  type JetStreamManager,
+  StringCodec,
+  RetentionPolicy,
+  type Subscription,
+} from "nats";
 
 export interface NatsConfig {
   url: string;
@@ -11,7 +19,9 @@ let jetstreamManager: JetStreamManager | null = null;
 
 const sc = StringCodec();
 
-export async function createNatsConnection(config: NatsConfig): Promise<{ nc: NatsConnection; js: JetStreamClient; jsm: JetStreamManager }> {
+export async function createNatsConnection(
+  config: NatsConfig
+): Promise<{ nc: NatsConnection; js: JetStreamClient; jsm: JetStreamManager }> {
   const nc = await connect({ servers: config.url, name: config.name ?? "agentmesh" });
   console.log(`[nats] connected to ${config.url}`);
   const js = nc.jetstream();
@@ -19,7 +29,9 @@ export async function createNatsConnection(config: NatsConfig): Promise<{ nc: Na
   return { nc, js, jsm };
 }
 
-export async function getNats(config?: NatsConfig): Promise<{ nc: NatsConnection; js: JetStreamClient; jsm: JetStreamManager }> {
+export async function getNats(
+  config?: NatsConfig
+): Promise<{ nc: NatsConnection; js: JetStreamClient; jsm: JetStreamManager }> {
   if (connection && jetstream && jetstreamManager) {
     return { nc: connection, js: jetstream, jsm: jetstreamManager };
   }
@@ -64,7 +76,10 @@ export class NatsEventBus {
     await this.js.publish(subject, payload);
   }
 
-  async subscribe(subject: string, handler: (data: unknown) => void): Promise<{ unsubscribe: () => Promise<void> }> {
+  async subscribe(
+    subject: string,
+    handler: (data: unknown) => void
+  ): Promise<{ unsubscribe: () => Promise<void> }> {
     // Phase 1 will implement proper consumer groups
     console.log(`[nats] subscribe stub for ${subject}`);
     return { unsubscribe: async () => {} };

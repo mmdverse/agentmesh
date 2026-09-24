@@ -1,4 +1,13 @@
-import { TaskState, canTransition, nowIso, type TaskId, type AgentId, type ContextId, type SessionId, type TraceId } from "@agentmesh/core";
+import {
+  TaskState,
+  canTransition,
+  nowIso,
+  type TaskId,
+  type AgentId,
+  type ContextId,
+  type SessionId,
+  type TraceId,
+} from "@agentmesh/core";
 import { z } from "zod";
 
 export const TaskSchema = z.object({
@@ -12,7 +21,9 @@ export const TaskSchema = z.object({
   state: z.nativeEnum(TaskState),
   input: z.record(z.unknown()).optional(),
   output: z.record(z.unknown()).optional(),
-  error: z.object({ code: z.string(), message: z.string(), details: z.unknown().optional() }).optional(),
+  error: z
+    .object({ code: z.string(), message: z.string(), details: z.unknown().optional() })
+    .optional(),
   metadata: z.record(z.unknown()).optional(),
   organizationId: z.string().optional(),
   projectId: z.string().optional(),
@@ -80,7 +91,11 @@ export class TaskStateMachine {
     };
   }
 
-  static transition(task: Task, to: Task["state"], opts?: { reason?: string; output?: Record<string, unknown>; error?: Task["error"] }): Task {
+  static transition(
+    task: Task,
+    to: Task["state"],
+    opts?: { reason?: string; output?: Record<string, unknown>; error?: Task["error"] }
+  ): Task {
     if (!canTransition(task.state, to)) {
       throw new Error(`Invalid transition ${task.state} -> ${to} for task ${task.id}`);
     }
@@ -100,7 +115,9 @@ export class TaskStateMachine {
   }
 
   static isRetryable(task: Task): boolean {
-    return (task.state === "FAILED" || task.state === "TIMEOUT") && task.attempts < task.maxAttempts;
+    return (
+      (task.state === "FAILED" || task.state === "TIMEOUT") && task.attempts < task.maxAttempts
+    );
   }
 }
 
@@ -111,7 +128,7 @@ export interface DelegationNode {
 }
 
 export function buildDelegationTree(tasks: Task[], edges: TaskEdge[]): DelegationNode[] {
-  const taskMap = new Map<string, Task>(tasks.map((t) => [t.id, t]));
+  const taskMap = new Map<string, Task>(tasks.map(t => [t.id, t]));
   const childrenMap = new Map<string, string[]>();
 
   for (const edge of edges) {
@@ -132,6 +149,6 @@ export function buildDelegationTree(tasks: Task[], edges: TaskEdge[]): Delegatio
     return { task, children };
   }
 
-  const roots = tasks.filter((t) => t.id === t.rootTaskId);
-  return roots.map((r) => buildNode(r.id)).filter(Boolean) as DelegationNode[];
+  const roots = tasks.filter(t => t.id === t.rootTaskId);
+  return roots.map(r => buildNode(r.id)).filter(Boolean) as DelegationNode[];
 }

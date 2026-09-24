@@ -32,7 +32,8 @@ export async function v1Routes(app: FastifyInstance) {
   app.get("/info", async () => {
     return {
       name: "AgentMesh Gateway",
-      description: "Data Plane - Handles message forwarding, routing, streaming, artifacts, messaging",
+      description:
+        "Data Plane - Handles message forwarding, routing, streaming, artifacts, messaging",
       version: app.config.VERSION,
       capabilities: {
         routing: ["round_robin", "least_loaded", "latency_aware", "weighted", "capability_match"],
@@ -52,8 +53,16 @@ export async function v1Routes(app: FastifyInstance) {
     };
   });
 
-  app.get("/agents", async (req) => {
-    const { skill, capability, region, search, limit = "20", versionStrategy, version } = req.query as any;
+  app.get("/agents", async req => {
+    const {
+      skill,
+      capability,
+      region,
+      search,
+      limit = "20",
+      versionStrategy,
+      version,
+    } = req.query as any;
     const tenant = (req as any).tenant ?? {};
 
     const agents = await registry.discover({
@@ -67,17 +76,28 @@ export async function v1Routes(app: FastifyInstance) {
     // Apply tenant filter
     let filtered = agents;
     if (tenant.organizationId) {
-      filtered = filtered.filter((a: any) => !a.organizationId || a.organizationId === tenant.organizationId);
+      filtered = filtered.filter(
+        (a: any) => !a.organizationId || a.organizationId === tenant.organizationId
+      );
     }
 
-    return { agents: filtered, total: filtered.length, source: "gateway->control-plane", tenant, versionStrategy, version };
+    return {
+      agents: filtered,
+      total: filtered.length,
+      source: "gateway->control-plane",
+      tenant,
+      versionStrategy,
+      version,
+    };
   });
 
   app.get("/agents/:id", async (req, reply) => {
     const { id } = req.params as { id: string };
     const agent = await registry.getAgent(id);
     if (!agent) {
-      return reply.status(404).send({ error: { code: "AGENT_NOT_FOUND", message: `Agent not found: ${id}` } });
+      return reply
+        .status(404)
+        .send({ error: { code: "AGENT_NOT_FOUND", message: `Agent not found: ${id}` } });
     }
     return { agent };
   });
@@ -93,13 +113,17 @@ export async function v1Routes(app: FastifyInstance) {
     const agent = await registry.getAgent(id);
     if (!agent) {
       obs.endSpan(span.id, { error: new Error(`Agent ${id} not found`) });
-      return reply.status(404).send({ error: { code: "AGENT_NOT_FOUND", message: `Agent not found: ${id}` } });
+      return reply
+        .status(404)
+        .send({ error: { code: "AGENT_NOT_FOUND", message: `Agent not found: ${id}` } });
     }
 
     const body = req.body as any;
     if (!body || !body.method) {
       obs.endSpan(span.id, { error: new Error("Invalid JSON-RPC") });
-      return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "Invalid JSON-RPC request, missing method" } });
+      return reply.status(400).send({
+        error: { code: "VALIDATION_ERROR", message: "Invalid JSON-RPC request, missing method" },
+      });
     }
 
     try {
@@ -127,7 +151,12 @@ export async function v1Routes(app: FastifyInstance) {
           type: "message.sent",
           source: "gateway",
           subject: `agent.${id}`,
-          data: { agentId: id, method: body.method, status: result.status, latencyMs: result.latencyMs },
+          data: {
+            agentId: id,
+            method: body.method,
+            status: result.status,
+            latencyMs: result.latencyMs,
+          },
           timestamp: new Date().toISOString(),
           traceId: req.traceId,
           organizationId: tenant.organizationId,
@@ -140,7 +169,9 @@ export async function v1Routes(app: FastifyInstance) {
       const e = err as Error;
       obs.endSpan(span.id, { error: e });
       app.log.error({ err: e, agentId: id, traceId: req.traceId }, "A2A proxy failed");
-      return reply.status(502).send({ error: { code: "PROXY_FAILED", message: e.message, agentId: id, traceId: req.traceId } });
+      return reply.status(502).send({
+        error: { code: "PROXY_FAILED", message: e.message, agentId: id, traceId: req.traceId },
+      });
     }
   });
 
@@ -148,7 +179,9 @@ export async function v1Routes(app: FastifyInstance) {
     const { id } = req.params as { id: string; "*": string };
     const agent = await registry.getAgent(id);
     if (!agent) {
-      return reply.status(404).send({ error: { code: "AGENT_NOT_FOUND", message: `Agent not found: ${id}` } });
+      return reply
+        .status(404)
+        .send({ error: { code: "AGENT_NOT_FOUND", message: `Agent not found: ${id}` } });
     }
 
     const extraPath = (req.params as any)["*"] ?? "";
@@ -176,31 +209,46 @@ export async function v1Routes(app: FastifyInstance) {
       return reply.status(result.status).send(result.body);
     } catch (err) {
       const e = err as Error;
-      return reply.status(502).send({ error: { code: "PROXY_FAILED", message: e.message, agentId: id } });
+      return reply
+        .status(502)
+        .send({ error: { code: "PROXY_FAILED", message: e.message, agentId: id } });
     }
   });
 
-  app.post("/route", async (req) => {
-    const { skill, capability, region, strategy = "capability_match", versionStrategy, version } = req.body as any;
+  app.post("/route", async req => {
+    const {
+      skill,
+      capability,
+      region,
+      strategy = "capability_match",
+      versionStrategy,
+      version,
+    } = req.body as any;
     const tenant = (req as any).tenant ?? {};
     const candidates = await registry.discover({ skill, capability, region, limit: 50 });
 
     let filtered = candidates;
     if (tenant.organizationId) {
-      filtered = filtered.filter((a: any) => !a.organizationId || a.organizationId === tenant.organizationId);
+      filtered = filtered.filter(
+        (a: any) => !a.organizationId || a.organizationId === tenant.organizationId
+      );
     }
 
     if (filtered.length === 0) {
       return { agent: null, candidates: [], message: "No agents found for criteria" };
     }
 
-    const routingCandidates = filtered.map((a) => ({
+    const routingCandidates = filtered.map(a => ({
       agent: a as any,
       health: (a as any).health ?? "UNKNOWN",
       score: 1,
     }));
 
-    const selected = app.routingEngine.route(routingCandidates as any, { skill, capability, region, tenant }, strategy);
+    const selected = app.routingEngine.route(
+      routingCandidates as any,
+      { skill, capability, region, tenant },
+      strategy
+    );
 
     return {
       agent: selected?.agent ?? null,
@@ -230,7 +278,9 @@ export async function v1Routes(app: FastifyInstance) {
       const data = await res.json();
       return reply.status(res.status).send(data);
     } catch (err) {
-      return reply.status(502).send({ error: { code: "PROXY_FAILED", message: (err as Error).message } });
+      return reply
+        .status(502)
+        .send({ error: { code: "PROXY_FAILED", message: (err as Error).message } });
     }
   });
 
@@ -249,19 +299,21 @@ export async function v1Routes(app: FastifyInstance) {
       const data = await res.json();
       return reply.status(res.status).send(data);
     } catch (err) {
-      return reply.status(502).send({ error: { code: "PROXY_FAILED", message: (err as Error).message } });
+      return reply
+        .status(502)
+        .send({ error: { code: "PROXY_FAILED", message: (err as Error).message } });
     }
   });
 
   // Observability - traces via gateway
-  app.get("/observability/traces/:traceId", async (req) => {
+  app.get("/observability/traces/:traceId", async req => {
     const { traceId } = req.params as { traceId: string };
     const obs = getObservability();
     const trace = obs.getTrace(traceId);
     return { traceId, spans: trace, total: trace.length, source: "gateway" };
   });
 
-  app.get("/observability/metrics", async (req) => {
+  app.get("/observability/metrics", async req => {
     const { name } = req.query as any;
     const obs = getObservability();
     const metrics = obs.getMetrics(name);
@@ -281,7 +333,9 @@ export async function v1Routes(app: FastifyInstance) {
       const data = await res.json();
       return reply.status(res.status).send(data);
     } catch (err) {
-      return reply.status(502).send({ error: { code: "PROXY_FAILED", message: (err as Error).message } });
+      return reply
+        .status(502)
+        .send({ error: { code: "PROXY_FAILED", message: (err as Error).message } });
     }
   });
 }

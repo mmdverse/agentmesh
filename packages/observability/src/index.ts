@@ -41,9 +41,18 @@ class InMemoryTracer {
   private spans = new Map<string, Span>();
   private metrics: Metric[] = [];
 
-  startSpan(name: string, opts: { parentSpanId?: string; traceId?: string; kind?: Span["kind"]; attributes?: Record<string, unknown> } = {}): Span {
+  startSpan(
+    name: string,
+    opts: {
+      parentSpanId?: string;
+      traceId?: string;
+      kind?: Span["kind"];
+      attributes?: Record<string, unknown>;
+    } = {}
+  ): Span {
     const id = `span_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-    const traceId = opts.traceId ?? `trace_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    const traceId =
+      opts.traceId ?? `trace_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
     const span: Span = {
       id,
@@ -61,7 +70,10 @@ class InMemoryTracer {
     return span;
   }
 
-  endSpan(spanId: string, opts: { status?: Span["status"]; error?: Error; attributes?: Record<string, unknown> } = {}): Span | null {
+  endSpan(
+    spanId: string,
+    opts: { status?: Span["status"]; error?: Error; attributes?: Record<string, unknown> } = {}
+  ): Span | null {
     const span = this.spans.get(spanId);
     if (!span) return null;
 
@@ -106,7 +118,7 @@ class InMemoryTracer {
   }
 
   getTrace(traceId: string): Span[] {
-    return Array.from(this.spans.values()).filter((s) => s.traceId === traceId);
+    return Array.from(this.spans.values()).filter(s => s.traceId === traceId);
   }
 
   recordMetric(metric: Metric): void {
@@ -115,7 +127,7 @@ class InMemoryTracer {
 
   getMetrics(filter?: { name?: string }): Metric[] {
     if (!filter?.name) return this.metrics;
-    return this.metrics.filter((m) => m.name === filter.name);
+    return this.metrics.filter(m => m.name === filter.name);
   }
 
   // For testing: get all spans
@@ -174,35 +186,93 @@ export class Observability {
     this.tracer.endSpan(spanId, opts);
   }
 
-  recordTaskMetrics(taskId: string, metrics: { durationMs?: number; queueTimeMs?: number; retries?: number; success?: boolean; agentId?: string }): void {
+  recordTaskMetrics(
+    taskId: string,
+    metrics: {
+      durationMs?: number;
+      queueTimeMs?: number;
+      retries?: number;
+      success?: boolean;
+      agentId?: string;
+    }
+  ): void {
     const now = Date.now();
-    const labels = { taskId, agentId: metrics.agentId ?? "unknown", success: String(metrics.success ?? true) };
+    const labels = {
+      taskId,
+      agentId: metrics.agentId ?? "unknown",
+      success: String(metrics.success ?? true),
+    };
 
     if (metrics.durationMs !== undefined) {
-      this.tracer.recordMetric({ name: "task_duration", value: metrics.durationMs, timestamp: now, labels, type: "histogram" });
+      this.tracer.recordMetric({
+        name: "task_duration",
+        value: metrics.durationMs,
+        timestamp: now,
+        labels,
+        type: "histogram",
+      });
     }
     if (metrics.queueTimeMs !== undefined) {
-      this.tracer.recordMetric({ name: "queue_time", value: metrics.queueTimeMs, timestamp: now, labels, type: "histogram" });
+      this.tracer.recordMetric({
+        name: "queue_time",
+        value: metrics.queueTimeMs,
+        timestamp: now,
+        labels,
+        type: "histogram",
+      });
     }
     if (metrics.retries !== undefined) {
-      this.tracer.recordMetric({ name: "task_retries", value: metrics.retries, timestamp: now, labels, type: "counter" });
+      this.tracer.recordMetric({
+        name: "task_retries",
+        value: metrics.retries,
+        timestamp: now,
+        labels,
+        type: "counter",
+      });
     }
 
-    this.tracer.recordMetric({ name: "task_completed", value: 1, timestamp: now, labels, type: "counter" });
+    this.tracer.recordMetric({
+      name: "task_completed",
+      value: 1,
+      timestamp: now,
+      labels,
+      type: "counter",
+    });
   }
 
-  recordAgentMetrics(agentId: string, metrics: { latencyMs?: number; utilization?: number; error?: boolean }): void {
+  recordAgentMetrics(
+    agentId: string,
+    metrics: { latencyMs?: number; utilization?: number; error?: boolean }
+  ): void {
     const now = Date.now();
     const labels = { agentId };
 
     if (metrics.latencyMs !== undefined) {
-      this.tracer.recordMetric({ name: "agent_latency", value: metrics.latencyMs, timestamp: now, labels, type: "histogram" });
+      this.tracer.recordMetric({
+        name: "agent_latency",
+        value: metrics.latencyMs,
+        timestamp: now,
+        labels,
+        type: "histogram",
+      });
     }
     if (metrics.utilization !== undefined) {
-      this.tracer.recordMetric({ name: "agent_utilization", value: metrics.utilization, timestamp: now, labels, type: "gauge" });
+      this.tracer.recordMetric({
+        name: "agent_utilization",
+        value: metrics.utilization,
+        timestamp: now,
+        labels,
+        type: "gauge",
+      });
     }
     if (metrics.error) {
-      this.tracer.recordMetric({ name: "agent_errors", value: 1, timestamp: now, labels, type: "counter" });
+      this.tracer.recordMetric({
+        name: "agent_errors",
+        value: 1,
+        timestamp: now,
+        labels,
+        type: "counter",
+      });
     }
   }
 
@@ -242,7 +312,9 @@ export function createTracingHook() {
 
   return {
     onRequest: (req: any) => {
-      const traceId = req.headers["x-trace-id"] ?? `trace_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+      const traceId =
+        req.headers["x-trace-id"] ??
+        `trace_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
       const span = obs["tracer"].startSpan(`http.${req.method} ${req.url}`, {
         traceId,
         kind: "server",
@@ -254,7 +326,10 @@ export function createTracingHook() {
     onResponse: (req: any, reply: any) => {
       if (req.spanId) {
         obs.endSpan(req.spanId, {
-          attributes: { "http.status_code": reply.statusCode, "http.duration": Date.now() - obs["tracer"].getSpan(req.spanId)?.startTime! },
+          attributes: {
+            "http.status_code": reply.statusCode,
+            "http.duration": Date.now() - obs["tracer"].getSpan(req.spanId)?.startTime!,
+          },
         });
       }
     },

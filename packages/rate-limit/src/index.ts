@@ -99,9 +99,14 @@ export interface FixedWindowConfig {
 }
 
 export class FixedWindowRateLimiter {
-  constructor(private store: RateLimitStore, private config: FixedWindowConfig) {}
+  constructor(
+    private store: RateLimitStore,
+    private config: FixedWindowConfig
+  ) {}
 
-  async isAllowed(key: string): Promise<{ allowed: boolean; remaining: number; resetAt: number; count: number }> {
+  async isAllowed(
+    key: string
+  ): Promise<{ allowed: boolean; remaining: number; resetAt: number; count: number }> {
     const { count, resetAt } = await this.store.incr(key, this.config.windowMs);
     const allowed = count <= this.config.limit;
     const remaining = Math.max(0, this.config.limit - count);
@@ -116,12 +121,14 @@ export class SlidingWindowRateLimiter {
 
   constructor(private config: FixedWindowConfig) {}
 
-  async isAllowed(key: string): Promise<{ allowed: boolean; remaining: number; resetAt: number; count: number }> {
+  async isAllowed(
+    key: string
+  ): Promise<{ allowed: boolean; remaining: number; resetAt: number; count: number }> {
     const now = Date.now();
     const windowStart = now - this.config.windowMs;
 
     let timestamps = this.windows.get(key) ?? [];
-    timestamps = timestamps.filter((t) => t > windowStart);
+    timestamps = timestamps.filter(t => t > windowStart);
 
     const allowed = timestamps.length < this.config.limit;
     const remaining = Math.max(0, this.config.limit - timestamps.length - (allowed ? 1 : 0));
@@ -131,7 +138,8 @@ export class SlidingWindowRateLimiter {
       this.windows.set(key, timestamps);
     }
 
-    const resetAt = timestamps.length > 0 ? timestamps[0] + this.config.windowMs : now + this.config.windowMs;
+    const resetAt =
+      timestamps.length > 0 ? timestamps[0] + this.config.windowMs : now + this.config.windowMs;
 
     return { allowed, remaining, resetAt, count: timestamps.length };
   }
@@ -139,7 +147,16 @@ export class SlidingWindowRateLimiter {
 
 // Multi-dimensional Rate Limiter - supports org, project, agent, skill, etc.
 
-export type RateLimitDimension = "organization" | "project" | "agent" | "identity" | "skill" | "endpoint" | "task" | "ip" | "global";
+export type RateLimitDimension =
+  | "organization"
+  | "project"
+  | "agent"
+  | "identity"
+  | "skill"
+  | "endpoint"
+  | "task"
+  | "ip"
+  | "global";
 
 export interface RateLimitRule {
   dimension: RateLimitDimension;
@@ -172,13 +189,21 @@ export class MultiDimensionalRateLimiter {
     this.rules.push(rule);
     const key = this.ruleKey(rule);
     if (rule.strategy === "sliding_window") {
-      this.limiters.set(key, new SlidingWindowRateLimiter({ limit: rule.limit, windowMs: rule.windowMs }));
+      this.limiters.set(
+        key,
+        new SlidingWindowRateLimiter({ limit: rule.limit, windowMs: rule.windowMs })
+      );
     } else {
-      this.limiters.set(key, new FixedWindowRateLimiter(this.store, { limit: rule.limit, windowMs: rule.windowMs }));
+      this.limiters.set(
+        key,
+        new FixedWindowRateLimiter(this.store, { limit: rule.limit, windowMs: rule.windowMs })
+      );
     }
   }
 
-  async check(ctx: RateLimitContext): Promise<{ allowed: boolean; reason?: string; limit?: RateLimitRule; result?: any }> {
+  async check(
+    ctx: RateLimitContext
+  ): Promise<{ allowed: boolean; reason?: string; limit?: RateLimitRule; result?: any }> {
     for (const rule of this.rules) {
       const dimensionKey = this.getDimensionKey(rule.dimension, ctx);
       if (!dimensionKey) continue; // skip if dimension not present in context
@@ -282,23 +307,38 @@ export const DEFAULT_RESOURCE_LIMITS: Required<ResourceLimits> = {
   maxRetries: 3,
 };
 
-export function checkResourceLimits(limits: ResourceLimits, usage: Partial<ResourceLimits> & { messageSize?: number; artifactSize?: number }): { allowed: boolean; reason?: string } {
+export function checkResourceLimits(
+  limits: ResourceLimits,
+  usage: Partial<ResourceLimits> & { messageSize?: number; artifactSize?: number }
+): { allowed: boolean; reason?: string } {
   const merged = { ...DEFAULT_RESOURCE_LIMITS, ...limits };
 
   if (usage.messageSize && usage.messageSize > merged.maxMessageSize) {
-    return { allowed: false, reason: `Message size ${usage.messageSize} exceeds limit ${merged.maxMessageSize}` };
+    return {
+      allowed: false,
+      reason: `Message size ${usage.messageSize} exceeds limit ${merged.maxMessageSize}`,
+    };
   }
 
   if (usage.artifactSize && usage.artifactSize > merged.maxArtifactSize) {
-    return { allowed: false, reason: `Artifact size ${usage.artifactSize} exceeds limit ${merged.maxArtifactSize}` };
+    return {
+      allowed: false,
+      reason: `Artifact size ${usage.artifactSize} exceeds limit ${merged.maxArtifactSize}`,
+    };
   }
 
   if (usage.maxConcurrentTasks && usage.maxConcurrentTasks > merged.maxConcurrentTasks) {
-    return { allowed: false, reason: `Concurrent tasks ${usage.maxConcurrentTasks} exceeds limit ${merged.maxConcurrentTasks}` };
+    return {
+      allowed: false,
+      reason: `Concurrent tasks ${usage.maxConcurrentTasks} exceeds limit ${merged.maxConcurrentTasks}`,
+    };
   }
 
   if (usage.maxFanOut && usage.maxFanOut > merged.maxFanOut) {
-    return { allowed: false, reason: `Fan-out ${usage.maxFanOut} exceeds limit ${merged.maxFanOut}` };
+    return {
+      allowed: false,
+      reason: `Fan-out ${usage.maxFanOut} exceeds limit ${merged.maxFanOut}`,
+    };
   }
 
   return { allowed: true };

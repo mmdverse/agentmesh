@@ -30,7 +30,7 @@ export async function mcpRoutes(app: FastifyInstance) {
     return { servers, total: servers.length, message: "MCP servers bridged as A2A agents" };
   });
 
-  app.get("/discover", async (req) => {
+  app.get("/discover", async req => {
     const { skill } = req.query as any;
     const result = await service.discover(skill);
     return { agents: result, total: result.length, skill };
@@ -40,7 +40,13 @@ export async function mcpRoutes(app: FastifyInstance) {
     try {
       const parsed = RegisterMCPServerSchema.safeParse(req.body);
       if (!parsed.success) {
-        return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "Invalid input", details: parsed.error.flatten() } });
+        return reply.status(400).send({
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid input",
+            details: parsed.error.flatten(),
+          },
+        });
       }
 
       const tenant = (req as any).tenant ?? {};
@@ -54,7 +60,9 @@ export async function mcpRoutes(app: FastifyInstance) {
       return reply.status(201).send(result);
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "REGISTER_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "REGISTER_FAILED", message: e.message } });
     }
   });
 
@@ -63,7 +71,13 @@ export async function mcpRoutes(app: FastifyInstance) {
     try {
       const parsed = CallToolSchema.safeParse(req.body);
       if (!parsed.success) {
-        return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "Invalid input", details: parsed.error.flatten() } });
+        return reply.status(400).send({
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid input",
+            details: parsed.error.flatten(),
+          },
+        });
       }
 
       const tenant = (req as any).tenant ?? {};
@@ -72,7 +86,9 @@ export async function mcpRoutes(app: FastifyInstance) {
       return { result, server: name, tool: toolName };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "CALL_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "CALL_FAILED", message: e.message } });
     }
   });
 
@@ -80,7 +96,9 @@ export async function mcpRoutes(app: FastifyInstance) {
   app.post("/bridge/a2a-to-mcp", async (req, reply) => {
     const { serverName, skillId, message, context } = (req.body as any) ?? {};
     if (!serverName || !skillId || !message) {
-      return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "serverName, skillId, message required" } });
+      return reply.status(400).send({
+        error: { code: "VALIDATION_ERROR", message: "serverName, skillId, message required" },
+      });
     }
 
     try {

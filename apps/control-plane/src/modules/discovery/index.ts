@@ -60,7 +60,12 @@ export class DirectUrlProvider implements DiscoveryProvider {
         updatedAt: new Date().toISOString(),
         lastSeenAt: new Date().toISOString(),
         ttlSeconds: null,
-        skills: result.card.skills.map((s) => ({ skillId: s.id, name: s.name, description: s.description, tags: s.tags })),
+        skills: result.card.skills.map(s => ({
+          skillId: s.id,
+          name: s.name,
+          description: s.description,
+          tags: s.tags,
+        })),
         card: result.card,
       };
       return [record];
@@ -95,14 +100,16 @@ export class ManualProvider implements DiscoveryProvider {
   async discover(query: DiscoveryQuery): Promise<AgentRecord[]> {
     let list = this.manualAgents;
     if (query.skill) {
-      list = list.filter((a) => a.skills?.some((s) => s.skillId === query.skill || s.name === query.skill));
+      list = list.filter(a =>
+        a.skills?.some(s => s.skillId === query.skill || s.name === query.skill)
+      );
     }
     if (query.region) {
-      list = list.filter((a) => a.region === query.region);
+      list = list.filter(a => a.region === query.region);
     }
     if (query.search) {
       const q = query.search.toLowerCase();
-      list = list.filter((a) => a.name.toLowerCase().includes(q));
+      list = list.filter(a => a.name.toLowerCase().includes(q));
     }
     return list.slice(0, query.limit ?? 20);
   }
@@ -121,7 +128,9 @@ export class CompositeDiscovery {
     this.providers.push(provider);
   }
 
-  async discover(query: DiscoveryQuery & { url?: string; baseUrl?: string }): Promise<AgentRecord[]> {
+  async discover(
+    query: DiscoveryQuery & { url?: string; baseUrl?: string }
+  ): Promise<AgentRecord[]> {
     const results: AgentRecord[] = [];
     const seen = new Set<string>();
 

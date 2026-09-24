@@ -18,7 +18,12 @@ export interface TaskHandlerContext {
 export interface TaskHandlerResult {
   text?: string;
   data?: Record<string, unknown>;
-  artifacts?: Array<{ name: string; mimeType: string; data: string | Buffer; description?: string }>;
+  artifacts?: Array<{
+    name: string;
+    mimeType: string;
+    data: string | Buffer;
+    description?: string;
+  }>;
   state?: "COMPLETED" | "INPUT_REQUIRED" | "FAILED";
   metadata?: Record<string, unknown>;
 }
@@ -47,7 +52,7 @@ export function createAgentServer(config: AgentServerConfig) {
     addSkill: (skill: AgentSkill, handler: TaskHandler) => {
       handlers.set(skill.id, handler);
       if (!config.skills) config.skills = [];
-      if (!config.skills.find((s) => s.id === skill.id)) {
+      if (!config.skills.find(s => s.id === skill.id)) {
         config.skills.push(skill);
       }
     },
@@ -77,7 +82,11 @@ export function createAgentServer(config: AgentServerConfig) {
 
       // Health
       app.get("/health", async () => ({ status: "ok", agent: card.name, version: card.version }));
-      app.get("/", async () => ({ name: card.name, version: card.version, description: card.description }));
+      app.get("/", async () => ({
+        name: card.name,
+        version: card.version,
+        description: card.description,
+      }));
       app.get("/.well-known/agent.json", async () => card);
       app.get("/.well-known/agent-card.json", async () => card);
 
@@ -96,12 +105,16 @@ export function createAgentServer(config: AgentServerConfig) {
             const authResult = await config.onAuth(req as any);
             if (!authResult.allowed) {
               obs.endSpan(span.id, { error: new Error("Unauthorized") });
-              return reply.status(401).send({ error: { code: "UNAUTHORIZED", message: "Not allowed" } });
+              return reply
+                .status(401)
+                .send({ error: { code: "UNAUTHORIZED", message: "Not allowed" } });
             }
           }
 
           if (!body || !body.method) {
-            return reply.status(400).send({ error: { code: "INVALID_REQUEST", message: "Missing method" } });
+            return reply
+              .status(400)
+              .send({ error: { code: "INVALID_REQUEST", message: "Missing method" } });
           }
 
           // Handle A2A methods
@@ -117,7 +130,11 @@ export function createAgentServer(config: AgentServerConfig) {
               contextId,
               sessionId,
               traceId,
-              message: { text: message.text ?? message.parts?.[0]?.text ?? "Hello", role: message.role ?? "user", parts: message.parts },
+              message: {
+                text: message.text ?? message.parts?.[0]?.text ?? "Hello",
+                role: message.role ?? "user",
+                parts: message.parts,
+              },
               metadata: params.metadata,
               organizationId: req.headers["x-organization-id"] as string,
               projectId: req.headers["x-project-id"] as string,
@@ -127,13 +144,18 @@ export function createAgentServer(config: AgentServerConfig) {
               const authz = await config.onAuthorize(ctx);
               if (!authz.allowed) {
                 obs.endSpan(span.id, { error: new Error(authz.reason ?? "Forbidden") });
-                return reply.status(403).send({ error: { code: "FORBIDDEN", message: authz.reason ?? "Not allowed" } });
+                return reply
+                  .status(403)
+                  .send({ error: { code: "FORBIDDEN", message: authz.reason ?? "Not allowed" } });
               }
             }
 
-            const handler = handlers.get(params.skillId) ?? handlers.get("__default__") ?? config.taskHandler;
+            const handler =
+              handlers.get(params.skillId) ?? handlers.get("__default__") ?? config.taskHandler;
             if (!handler) {
-              return reply.status(500).send({ error: { code: "NO_HANDLER", message: "No task handler registered" } });
+              return reply
+                .status(500)
+                .send({ error: { code: "NO_HANDLER", message: "No task handler registered" } });
             }
 
             const result = await handler(ctx);
@@ -150,7 +172,11 @@ export function createAgentServer(config: AgentServerConfig) {
                 sessionId,
                 state: result.state ?? "COMPLETED",
                 message: { role: "agent", parts: [{ type: "text", text: result.text ?? "" }] },
-                artifacts: result.artifacts?.map((a) => ({ name: a.name, mimeType: a.mimeType, description: a.description })),
+                artifacts: result.artifacts?.map(a => ({
+                  name: a.name,
+                  mimeType: a.mimeType,
+                  description: a.description,
+                })),
                 data: result.data,
                 metadata: result.metadata,
               },
@@ -174,7 +200,7 @@ export function createAgentServer(config: AgentServerConfig) {
               traceId,
               message: { text: params.message?.text ?? "Hello", role: "user" },
               metadata: params.metadata,
-              stream: (chunk) => {
+              stream: chunk => {
                 reply.raw.write(`data: ${JSON.stringify(chunk)}\n\n`);
               },
             };
@@ -182,7 +208,9 @@ export function createAgentServer(config: AgentServerConfig) {
             const handler = handlers.get("__default__") ?? config.taskHandler;
             if (handler) {
               const result = await handler(ctx);
-              reply.raw.write(`data: ${JSON.stringify({ state: result.state ?? "COMPLETED", text: result.text })}\n\n`);
+              reply.raw.write(
+                `data: ${JSON.stringify({ state: result.state ?? "COMPLETED", text: result.text })}\n\n`
+              );
             }
 
             reply.raw.end();
@@ -194,7 +222,11 @@ export function createAgentServer(config: AgentServerConfig) {
           const e = err as Error;
           obs.endSpan(span.id, { error: e });
           config.onError?.(e);
-          return reply.status(500).send({ jsonrpc: "2.0", id: (req.body as any)?.id, error: { code: -32603, message: e.message } });
+          return reply.status(500).send({
+            jsonrpc: "2.0",
+            id: (req.body as any)?.id,
+            error: { code: -32603, message: e.message },
+          });
         }
       });
 
@@ -222,7 +254,9 @@ export function createAgentServer(config: AgentServerConfig) {
       const port = config.port ?? 3003;
 
       await app.listen({ host, port });
-      console.log(`[server-sdk] Agent ${card.name} v${card.version} listening at http://${host}:${port}`);
+      console.log(
+        `[server-sdk] Agent ${card.name} v${card.version} listening at http://${host}:${port}`
+      );
       console.log(`[server-sdk] Card: http://${host}:${port}/.well-known/agent.json`);
 
       return { app, card, url: `http://${host}:${port}`, handlers: Array.from(handlers.keys()) };

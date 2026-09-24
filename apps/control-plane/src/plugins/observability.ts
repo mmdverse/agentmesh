@@ -6,7 +6,10 @@ export interface ObservabilityPluginOptions {
   serviceName?: string;
 }
 
-async function observabilityPluginInternal(app: FastifyInstance, opts: ObservabilityPluginOptions = {}) {
+async function observabilityPluginInternal(
+  app: FastifyInstance,
+  opts: ObservabilityPluginOptions = {}
+) {
   const obs = getObservability();
 
   if (!app.hasDecorator("observability")) {
@@ -14,7 +17,9 @@ async function observabilityPluginInternal(app: FastifyInstance, opts: Observabi
   }
 
   app.addHook("onRequest", async (req: FastifyRequest) => {
-    const traceId = (req.headers["x-trace-id"] as string) ?? `trace_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    const traceId =
+      (req.headers["x-trace-id"] as string) ??
+      `trace_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     const span = obs["tracer"].startSpan(`http.${req.method} ${req.url}`, {
       traceId,
       kind: "server",
@@ -40,7 +45,10 @@ async function observabilityPluginInternal(app: FastifyInstance, opts: Observabi
   });
 }
 
-export const observabilityPlugin = fp(observabilityPluginInternal, { name: "observability", fastify: "5.x" });
+export const observabilityPlugin = fp(observabilityPluginInternal, {
+  name: "observability",
+  fastify: "5.x",
+});
 
 declare module "fastify" {
   interface FastifyInstance {

@@ -114,15 +114,15 @@ class InMemoryMessageStore {
   async list(filter: MessageFilter): Promise<{ messages: Message[]; total: number }> {
     let list = Array.from(this.messages.values());
 
-    if (filter.taskId) list = list.filter((m) => m.taskId === filter.taskId);
-    if (filter.contextId) list = list.filter((m) => m.contextId === filter.contextId);
-    if (filter.sessionId) list = list.filter((m) => m.sessionId === filter.sessionId);
-    if (filter.traceId) list = list.filter((m) => m.traceId === filter.traceId);
-    if (filter.sender) list = list.filter((m) => m.sender === filter.sender);
-    if (filter.receiver) list = list.filter((m) => m.receiver === filter.receiver);
-    if (filter.organizationId) list = list.filter((m) => m.organizationId === filter.organizationId);
-    if (filter.projectId) list = list.filter((m) => m.projectId === filter.projectId);
-    if (filter.correlationId) list = list.filter((m) => m.correlationId === filter.correlationId);
+    if (filter.taskId) list = list.filter(m => m.taskId === filter.taskId);
+    if (filter.contextId) list = list.filter(m => m.contextId === filter.contextId);
+    if (filter.sessionId) list = list.filter(m => m.sessionId === filter.sessionId);
+    if (filter.traceId) list = list.filter(m => m.traceId === filter.traceId);
+    if (filter.sender) list = list.filter(m => m.sender === filter.sender);
+    if (filter.receiver) list = list.filter(m => m.receiver === filter.receiver);
+    if (filter.organizationId) list = list.filter(m => m.organizationId === filter.organizationId);
+    if (filter.projectId) list = list.filter(m => m.projectId === filter.projectId);
+    if (filter.correlationId) list = list.filter(m => m.correlationId === filter.correlationId);
 
     list.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
@@ -141,7 +141,10 @@ export class MessageRouter {
   private eventBus = createEventBus({ serviceName: "message-router", url: process.env.NATS_URL });
   private store = memStore;
 
-  async send(input: SendMessageInput, opts: MessageDeliveryOptions = { mode: "async" }): Promise<Message> {
+  async send(
+    input: SendMessageInput,
+    opts: MessageDeliveryOptions = { mode: "async" }
+  ): Promise<Message> {
     const id = generateId("msg");
     const now = nowIso();
 
@@ -174,7 +177,8 @@ export class MessageRouter {
     await this.store.save(message);
 
     // Publish event based on delivery mode
-    const eventType: AgentMeshEvent["type"] = opts.mode === "streaming" ? "message.sent" : "message.sent";
+    const eventType: AgentMeshEvent["type"] =
+      opts.mode === "streaming" ? "message.sent" : "message.sent";
 
     try {
       const event: AgentMeshEvent = {
@@ -223,7 +227,7 @@ export class MessageRouter {
           yield msg;
         }
       }
-      await new Promise((r) => setTimeout(r, interval));
+      await new Promise(r => setTimeout(r, interval));
     }
   }
 
@@ -271,7 +275,9 @@ export interface MessageTransport {
 export class InMemoryTransport implements MessageTransport {
   readonly name = "inmemory";
   async send(message: Message): Promise<void> {
-    console.log(`[transport:inmemory] ${message.sender} -> ${message.receiver}: ${JSON.stringify(message.content).slice(0, 100)}`);
+    console.log(
+      `[transport:inmemory] ${message.sender} -> ${message.receiver}: ${JSON.stringify(message.content).slice(0, 100)}`
+    );
   }
   async close(): Promise<void> {}
 }

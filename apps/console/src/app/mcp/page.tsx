@@ -11,7 +11,9 @@ export default async function MCPPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">MCP Bridge</h1>
-      <p className="text-sm text-muted-foreground">A2A Agent | AgentMesh | MCP Server/Tool • MCP Agent | AgentMesh | A2A Agent</p>
+      <p className="text-sm text-muted-foreground">
+        A2A Agent | AgentMesh | MCP Server/Tool • MCP Agent | AgentMesh | A2A Agent
+      </p>
 
       <Card>
         <CardHeader>
@@ -20,7 +22,7 @@ export default async function MCPPage() {
         </CardHeader>
         <CardContent>
           <pre className="text-xs bg-secondary p-4 rounded">
-{`A2A Agent -> AgentMesh Gateway -> MCP Bridge -> MCP Server/Tool
+            {`A2A Agent -> AgentMesh Gateway -> MCP Bridge -> MCP Server/Tool
 MCP Tool -> AgentMesh -> A2A Agent
 
 Translation:
@@ -44,7 +46,9 @@ Translation:
               <div className="text-sm">Skills: {s.card?.skills?.length}</div>
               <div className="flex flex-wrap gap-1">
                 {s.card?.skills?.map((skill: any) => (
-                  <Badge key={skill.id} variant="outline" className="text-[10px]">{skill.name}</Badge>
+                  <Badge key={skill.id} variant="outline" className="text-[10px]">
+                    {skill.name}
+                  </Badge>
                 ))}
               </div>
             </CardContent>
@@ -52,7 +56,11 @@ Translation:
         ))}
       </div>
 
-      {servers.servers?.length === 0 && <div className="text-sm text-muted-foreground">No MCP servers bridged yet. POST /v1/mcp/servers to register.</div>}
+      {servers.servers?.length === 0 && (
+        <div className="text-sm text-muted-foreground">
+          No MCP servers bridged yet. POST /v1/mcp/servers to register.
+        </div>
+      )}
     </div>
   );
 }

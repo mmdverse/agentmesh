@@ -23,34 +23,42 @@ AgentMesh is not a toy proxy or a dashboard over an API. It is a full platform:
 
 Running this in production costs real money: Postgres, Redis, NATS, S3, multiple gateway nodes, telemetry storage, CI, and continuous testing against real agent workloads. Donations keep the infrastructure honest.
 
+- **Vantage points.** VPS instances, so the gateway cluster runs with real latency and failure modes, not loopback.
+- **Bigger samples.** Real artifact sizes, real streaming durations, real fan-out explosions measured in production.
+- **Keeping it alive.** CI, test machines, and the maintenance hours.
+
 ### Addresses
 
-**Bitcoin · BTC mainnet**
+Scan a card with your wallet app, or use the copy button under it. Check the address in your wallet before sending — network fees are lowest on Solana and Tron.
+
+[![Bitcoin · BTC mainnet](./docs/assets/donate/donate-bitcoin.svg)](./docs/assets/donate/donate-bitcoin.svg)
 
 ```
 bc1q36uzqlkaav3lkscknhemcem0lcjtkhepdqckul
 ```
 
-**BNB Smart Chain · BEP-20**
+[![BNB Smart Chain · BEP-20](./docs/assets/donate/donate-bnb.svg)](./docs/assets/donate/donate-bnb.svg)
 
 ```
 0x57902d3955D5F1C0fbCaEA0a12A7D691c792487E
 ```
 
-**Solana · SOL mainnet**
+[![Solana · SOL mainnet](./docs/assets/donate/donate-solana.svg)](./docs/assets/donate/donate-solana.svg)
 
 ```
 4hCYetZjvK8mkuobRvPYXyRnM84aTj3q8LZ1GpiTK8HR
 ```
 
-**Tron · TRC-20**
+[![Tron · TRC-20](./docs/assets/donate/donate-tron.svg)](./docs/assets/donate/donate-tron.svg)
 
 ```
 TVFZKSwMYNw1jiCyKKtKoVG3HbpB4DhsA5
 ```
 
-Scan a card with your wallet app, or use the copy button under it. Check the address in your wallet before sending — network fees are lowest on Solana and Tron.
-
 No platform takes a cut. Funds go directly to the maintainer.
 
+**Not a money person?** A failing test case, a new routing strategy, or a measured latency profile is worth more than most PRs.
+
 Made ❤️ by Mohammad @llllxyz — https://t.me/llllxyz
+
+Infrastructure for the agentic future.

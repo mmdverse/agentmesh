@@ -1,4 +1,10 @@
-import { getMessageRouter, type SendMessageInput, type MessageFilter, type Message, type MessageDeliveryOptions } from "@agentmesh/messaging";
+import {
+  getMessageRouter,
+  type SendMessageInput,
+  type MessageFilter,
+  type Message,
+  type MessageDeliveryOptions,
+} from "@agentmesh/messaging";
 import { getTenantManager, type TenantContext } from "@agentmesh/tenancy";
 import { ValidationError, NotFoundError } from "@agentmesh/core";
 
@@ -6,7 +12,10 @@ export class MessageService {
   private router = getMessageRouter();
   private tenantManager = getTenantManager();
 
-  async send(input: SendMessageInput & { tenant?: TenantContext }, opts?: MessageDeliveryOptions): Promise<Message> {
+  async send(
+    input: SendMessageInput & { tenant?: TenantContext },
+    opts?: MessageDeliveryOptions
+  ): Promise<Message> {
     if (input.tenant) {
       input.organizationId = input.organizationId ?? input.tenant.organizationId;
       input.projectId = input.projectId ?? input.tenant.projectId;
@@ -34,7 +43,9 @@ export class MessageService {
     return msg;
   }
 
-  async list(filter: MessageFilter & { tenant?: TenantContext }): Promise<{ messages: Message[]; total: number }> {
+  async list(
+    filter: MessageFilter & { tenant?: TenantContext }
+  ): Promise<{ messages: Message[]; total: number }> {
     if (filter.tenant) {
       filter.organizationId = filter.organizationId ?? filter.tenant.organizationId;
       filter.projectId = filter.projectId ?? filter.tenant.projectId;

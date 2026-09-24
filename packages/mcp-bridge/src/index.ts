@@ -106,7 +106,10 @@ export function a2aSkillToMCPTool(skill: A2ASkill): MCPTool {
 export interface MCPClient {
   readonly serverInfo: MCPServerInfo;
   listTools(): Promise<MCPTool[]>;
-  callTool(name: string, args: Record<string, unknown>): Promise<{ content: unknown; isError?: boolean }>;
+  callTool(
+    name: string,
+    args: Record<string, unknown>
+  ): Promise<{ content: unknown; isError?: boolean }>;
   listResources(): Promise<MCPResource[]>;
   readResource(uri: string): Promise<{ contents: unknown }>;
   close(): Promise<void>;
@@ -117,7 +120,13 @@ export interface MCPClient {
 export class InMemoryMCPClient implements MCPClient {
   serverInfo: MCPServerInfo;
 
-  constructor(serverInfo: MCPServerInfo, private toolHandlers: Map<string, (args: Record<string, unknown>) => Promise<unknown>> = new Map()) {
+  constructor(
+    serverInfo: MCPServerInfo,
+    private toolHandlers: Map<
+      string,
+      (args: Record<string, unknown>) => Promise<unknown>
+    > = new Map()
+  ) {
     this.serverInfo = serverInfo;
   }
 
@@ -125,7 +134,10 @@ export class InMemoryMCPClient implements MCPClient {
     return this.serverInfo.tools;
   }
 
-  async callTool(name: string, args: Record<string, unknown>): Promise<{ content: unknown; isError?: boolean }> {
+  async callTool(
+    name: string,
+    args: Record<string, unknown>
+  ): Promise<{ content: unknown; isError?: boolean }> {
     const handler = this.toolHandlers.get(name);
     if (!handler) {
       return { content: { error: `Tool ${name} not found` }, isError: true };
@@ -143,14 +155,17 @@ export class InMemoryMCPClient implements MCPClient {
   }
 
   async readResource(uri: string): Promise<{ contents: unknown }> {
-    const resource = this.serverInfo.resources.find((r) => r.uri === uri);
+    const resource = this.serverInfo.resources.find(r => r.uri === uri);
     if (!resource) throw new Error(`Resource ${uri} not found`);
     return { contents: { uri, text: `Content of ${uri}` } };
   }
 
   async close(): Promise<void> {}
 
-  registerToolHandler(name: string, handler: (args: Record<string, unknown>) => Promise<unknown>): void {
+  registerToolHandler(
+    name: string,
+    handler: (args: Record<string, unknown>) => Promise<unknown>
+  ): void {
     this.toolHandlers.set(name, handler);
   }
 }
@@ -177,20 +192,28 @@ export class MCPBridge {
     this.mcpClients.set(name, client);
     const card = mcpServerToA2ACard(client.serverInfo, endpoint);
     this.a2aCards.set(name, card);
-    console.log(`[mcp-bridge] registered MCP server ${name} with ${card.skills.length} skills as A2A agent`);
+    console.log(
+      `[mcp-bridge] registered MCP server ${name} with ${card.skills.length} skills as A2A agent`
+    );
   }
 
   // A2A Agent wants to use MCP tool - translate A2A task to MCP tool call
-  async a2aToMCP(agentId: string, skillId: string, input: { message: string; context?: Record<string, unknown> }): Promise<{ output: unknown; isError?: boolean }> {
+  async a2aToMCP(
+    agentId: string,
+    skillId: string,
+    input: { message: string; context?: Record<string, unknown> }
+  ): Promise<{ output: unknown; isError?: boolean }> {
     // Find which MCP server provides this skill
     for (const [serverName, card] of this.a2aCards.entries()) {
-      const skill = card.skills.find((s) => s.id === skillId || s.name === skillId);
+      const skill = card.skills.find(s => s.id === skillId || s.name === skillId);
       if (skill) {
         const client = this.mcpClients.get(serverName);
         if (!client) continue;
 
         const mcpToolName = (skill.metadata as any)?.mcpTool ?? skill.name;
-        console.log(`[mcp-bridge] A2A skill ${skillId} -> MCP tool ${mcpToolName} on server ${serverName}`);
+        console.log(
+          `[mcp-bridge] A2A skill ${skillId} -> MCP tool ${mcpToolName} on server ${serverName}`
+        );
 
         // Translate A2A input to MCP args
         const mcpArgs = {
@@ -207,7 +230,11 @@ export class MCPBridge {
   }
 
   // MCP Agent wants to call A2A Agent - translate MCP tool call to A2A task
-  async mcpToA2A(mcpToolName: string, args: Record<string, unknown>, a2aAgentCaller: (agentId: string, skillId: string, message: string) => Promise<unknown>): Promise<unknown> {
+  async mcpToA2A(
+    mcpToolName: string,
+    args: Record<string, unknown>,
+    a2aAgentCaller: (agentId: string, skillId: string, message: string) => Promise<unknown>
+  ): Promise<unknown> {
     // mcpToolName is actually an A2A skill ID in this direction
     // We need to find A2A agent that provides this skill - caller provides lookup
     // For Phase 4, we expect a2aAgentCaller to handle discovery
@@ -235,7 +262,9 @@ export class MCPBridge {
       if (!skill) {
         result.push({ card, serverName });
       } else {
-        const matchingSkills = card.skills.filter((s) => s.id === skill || s.name === skill || s.tags.includes(skill));
+        const matchingSkills = card.skills.filter(
+          s => s.id === skill || s.name === skill || s.tags.includes(skill)
+        );
         if (matchingSkills.length > 0) {
           result.push({ card: { ...card, skills: matchingSkills }, serverName });
         }
@@ -261,9 +290,24 @@ export const ExampleMCPServer: MCPServerInfo = {
   name: "example-tools",
   version: "1.0.0",
   tools: [
-    { name: "read_file", description: "Read a file", inputSchema: { type: "object", properties: { path: { type: "string" } } } },
-    { name: "write_file", description: "Write a file", inputSchema: { type: "object", properties: { path: { type: "string" }, content: { type: "string" } } } },
-    { name: "search", description: "Search", inputSchema: { type: "object", properties: { query: { type: "string" } } } },
+    {
+      name: "read_file",
+      description: "Read a file",
+      inputSchema: { type: "object", properties: { path: { type: "string" } } },
+    },
+    {
+      name: "write_file",
+      description: "Write a file",
+      inputSchema: {
+        type: "object",
+        properties: { path: { type: "string" }, content: { type: "string" } },
+      },
+    },
+    {
+      name: "search",
+      description: "Search",
+      inputSchema: { type: "object", properties: { query: { type: "string" } } },
+    },
   ],
   resources: [{ uri: "file:///tmp", name: "tmp", description: "Temp files" }],
 };

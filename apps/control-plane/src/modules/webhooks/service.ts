@@ -6,7 +6,15 @@ export class WebhookService {
   private manager = getWebhookManager();
   private tenantManager = getTenantManager();
 
-  async register(input: { url: string; events?: string[]; organizationId?: string; projectId?: string; headers?: Record<string, string>; secret?: string; tenant?: TenantContext }): Promise<WebhookEndpoint> {
+  async register(input: {
+    url: string;
+    events?: string[];
+    organizationId?: string;
+    projectId?: string;
+    headers?: Record<string, string>;
+    secret?: string;
+    tenant?: TenantContext;
+  }): Promise<WebhookEndpoint> {
     if (input.tenant) {
       input.organizationId = input.organizationId ?? input.tenant.organizationId;
       input.projectId = input.projectId ?? input.tenant.projectId;
@@ -24,7 +32,11 @@ export class WebhookService {
     });
   }
 
-  async list(filter: { organizationId?: string; projectId?: string; tenant?: TenantContext }): Promise<WebhookEndpoint[]> {
+  async list(filter: {
+    organizationId?: string;
+    projectId?: string;
+    tenant?: TenantContext;
+  }): Promise<WebhookEndpoint[]> {
     if (filter.tenant) {
       filter.organizationId = filter.organizationId ?? filter.tenant.organizationId;
       filter.projectId = filter.projectId ?? filter.tenant.projectId;
@@ -34,7 +46,7 @@ export class WebhookService {
 
   async delete(id: string, tenant?: TenantContext): Promise<void> {
     const endpoints = await this.manager.listEndpoints();
-    const ep = endpoints.find((e) => e.id === id);
+    const ep = endpoints.find(e => e.id === id);
     if (!ep) throw new NotFoundError("Webhook", id);
 
     if (tenant && ep.organizationId) {
@@ -47,7 +59,11 @@ export class WebhookService {
     await this.manager.deleteEndpoint(id);
   }
 
-  async deliver(eventType: string, payload: Record<string, unknown>, tenant?: TenantContext): Promise<WebhookDelivery[]> {
+  async deliver(
+    eventType: string,
+    payload: Record<string, unknown>,
+    tenant?: TenantContext
+  ): Promise<WebhookDelivery[]> {
     return this.manager.deliver(eventType, payload, {
       organizationId: tenant?.organizationId,
       projectId: tenant?.projectId,

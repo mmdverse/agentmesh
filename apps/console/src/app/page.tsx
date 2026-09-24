@@ -22,7 +22,11 @@ export default async function OverviewPage() {
   } catch {}
 
   const stats = [
-    { label: "Agents", value: agents.total ?? agents.agents?.length ?? 0, desc: "Registered agents" },
+    {
+      label: "Agents",
+      value: agents.total ?? agents.agents?.length ?? 0,
+      desc: "Registered agents",
+    },
     { label: "Tasks", value: tasks.total ?? tasks.tasks?.length ?? 0, desc: "Total tasks" },
     { label: "Version", value: health?.version ?? "0.1.0-phase4", desc: "Control Plane" },
     { label: "Status", value: health?.status ?? "unknown", desc: "System health" },
@@ -36,7 +40,7 @@ export default async function OverviewPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        {stats.map((s) => (
+        {stats.map(s => (
           <Card key={s.label}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">{s.label}</CardTitle>
@@ -56,11 +60,26 @@ export default async function OverviewPage() {
             <CardDescription>Registry, Policies, Identity, Artifacts</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between"><span>Service</span><Badge>{health?.service ?? "control-plane"}</Badge></div>
-            <div className="flex justify-between"><span>Version</span><span>{health?.version ?? "phase4"}</span></div>
-            <div className="flex justify-between"><span>Registry</span><Badge variant="secondary">Phase 1+3</Badge></div>
-            <div className="flex justify-between"><span>Tasks</span><Badge variant="secondary">Phase 2+3+4</Badge></div>
-            <div className="flex justify-between"><span>Events</span><Badge variant="secondary">NATS JetStream</Badge></div>
+            <div className="flex justify-between">
+              <span>Service</span>
+              <Badge>{health?.service ?? "control-plane"}</Badge>
+            </div>
+            <div className="flex justify-between">
+              <span>Version</span>
+              <span>{health?.version ?? "phase4"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Registry</span>
+              <Badge variant="secondary">Phase 1+3</Badge>
+            </div>
+            <div className="flex justify-between">
+              <span>Tasks</span>
+              <Badge variant="secondary">Phase 2+3+4</Badge>
+            </div>
+            <div className="flex justify-between">
+              <span>Events</span>
+              <Badge variant="secondary">NATS JetStream</Badge>
+            </div>
           </CardContent>
         </Card>
 
@@ -70,11 +89,26 @@ export default async function OverviewPage() {
             <CardDescription>Gateway, Routing, Streaming, Reliability</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between"><span>Gateway</span><Badge>Active</Badge></div>
-            <div className="flex justify-between"><span>Routing</span><span>5 strategies</span></div>
-            <div className="flex justify-between"><span>Reliability</span><span>CircuitBreaker, Bulkhead</span></div>
-            <div className="flex justify-between"><span>Security</span><span>Auth, RateLimit, Policy</span></div>
-            <div className="flex justify-between"><span>Observability</span><span>OTel + Tracing</span></div>
+            <div className="flex justify-between">
+              <span>Gateway</span>
+              <Badge>Active</Badge>
+            </div>
+            <div className="flex justify-between">
+              <span>Routing</span>
+              <span>5 strategies</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Reliability</span>
+              <span>CircuitBreaker, Bulkhead</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Security</span>
+              <span>Auth, RateLimit, Policy</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Observability</span>
+              <span>OTel + Tracing</span>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -86,7 +120,7 @@ export default async function OverviewPage() {
         </CardHeader>
         <CardContent>
           <pre className="text-xs bg-secondary p-4 rounded overflow-auto">
-{`User -> Gateway Cluster (Data Plane)
+            {`User -> Gateway Cluster (Data Plane)
   -> Routing Engine (capability_match, round_robin, etc)
   -> Circuit Breaker / Bulkhead / Rate Limiter
   -> A2A Proxy -> Agent
@@ -105,11 +139,15 @@ Observability: OTel traces User -> Agent A -> Agent B -> Tool
 
       {info?.features && (
         <Card>
-          <CardHeader><CardTitle>Features</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Features</CardTitle>
+          </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {info.features.map((f: string) => (
-                <Badge key={f} variant="outline">{f}</Badge>
+                <Badge key={f} variant="outline">
+                  {f}
+                </Badge>
               ))}
             </div>
           </CardContent>

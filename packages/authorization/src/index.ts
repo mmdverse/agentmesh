@@ -49,7 +49,11 @@ export interface AuthZResult {
 
 export interface PolicyProvider {
   readonly name: string;
-  listPolicies(filter?: { organizationId?: string; projectId?: string; isActive?: boolean }): Promise<Policy[]>;
+  listPolicies(filter?: {
+    organizationId?: string;
+    projectId?: string;
+    isActive?: boolean;
+  }): Promise<Policy[]>;
   getPolicy(id: string): Promise<Policy | null>;
 }
 
@@ -67,11 +71,17 @@ export class InMemoryPolicyProvider implements PolicyProvider {
     this.policies.set(policy.id, policy);
   }
 
-  async listPolicies(filter?: { organizationId?: string; projectId?: string; isActive?: boolean }): Promise<Policy[]> {
+  async listPolicies(filter?: {
+    organizationId?: string;
+    projectId?: string;
+    isActive?: boolean;
+  }): Promise<Policy[]> {
     let list = Array.from(this.policies.values());
-    if (filter?.organizationId) list = list.filter((p) => !p.organizationId || p.organizationId === filter.organizationId);
-    if (filter?.projectId) list = list.filter((p) => !p.projectId || p.projectId === filter.projectId);
-    if (filter?.isActive !== undefined) list = list.filter((p) => p.isActive === filter.isActive);
+    if (filter?.organizationId)
+      list = list.filter(p => !p.organizationId || p.organizationId === filter.organizationId);
+    if (filter?.projectId)
+      list = list.filter(p => !p.projectId || p.projectId === filter.projectId);
+    if (filter?.isActive !== undefined) list = list.filter(p => p.isActive === filter.isActive);
     // Sort by priority desc
     list.sort((a, b) => b.priority - a.priority);
     return list;
@@ -97,20 +107,34 @@ export class PolicyEngine {
     // First, check for explicit deny (deny overrides allow)
     for (const policy of policies) {
       if (policy.effect === "deny" && this.matches(policy, req)) {
-        return { allowed: false, reason: `Denied by policy ${policy.name} (${policy.id})`, matchedPolicy: policy, decision: "deny" };
+        return {
+          allowed: false,
+          reason: `Denied by policy ${policy.name} (${policy.id})`,
+          matchedPolicy: policy,
+          decision: "deny",
+        };
       }
     }
 
     // Then check for allow
     for (const policy of policies) {
       if (policy.effect === "allow" && this.matches(policy, req)) {
-        return { allowed: true, reason: `Allowed by policy ${policy.name} (${policy.id})`, matchedPolicy: policy, decision: "allow" };
+        return {
+          allowed: true,
+          reason: `Allowed by policy ${policy.name} (${policy.id})`,
+          matchedPolicy: policy,
+          decision: "allow",
+        };
       }
     }
 
     // No matching policy - default deny for security, but allow for development if no policies exist
     if (policies.length === 0) {
-      return { allowed: true, reason: "No policies configured, default allow (dev mode)", decision: "no_match" };
+      return {
+        allowed: true,
+        reason: "No policies configured, default allow (dev mode)",
+        decision: "no_match",
+      };
     }
 
     return { allowed: false, reason: "No matching allow policy", decision: "no_match" };
@@ -126,19 +150,23 @@ export class PolicyEngine {
   private matches(policy: Policy, req: AuthZRequest): boolean {
     // Check subject
     if (policy.subjects.length > 0) {
-      const subjectMatch = policy.subjects.some((pattern) => this.matchPattern(pattern, this.identityToSubject(req.identity)));
+      const subjectMatch = policy.subjects.some(pattern =>
+        this.matchPattern(pattern, this.identityToSubject(req.identity))
+      );
       if (!subjectMatch) return false;
     }
 
     // Check resource
     if (policy.resources.length > 0) {
-      const resourceMatch = policy.resources.some((pattern) => this.matchPattern(pattern, req.resource));
+      const resourceMatch = policy.resources.some(pattern =>
+        this.matchPattern(pattern, req.resource)
+      );
       if (!resourceMatch) return false;
     }
 
     // Check action
     if (policy.actions.length > 0) {
-      const actionMatch = policy.actions.some((pattern) => this.matchPattern(pattern, req.action));
+      const actionMatch = policy.actions.some(pattern => this.matchPattern(pattern, req.action));
       if (!actionMatch) return false;
     }
 
@@ -264,11 +292,15 @@ export interface Delegation {
 export class DelegationManager {
   private delegations = new Map<string, Delegation>();
 
-  createDelegation(input: Omit<Delegation, "id" | "isRevoked" | "chain"> & { chain?: string[] }): Delegation {
+  createDelegation(
+    input: Omit<Delegation, "id" | "isRevoked" | "chain"> & { chain?: string[] }
+  ): Delegation {
     // Prevent privilege escalation - delegated scopes must be subset of parent's scopes
     const parentScopes = input.parentIdentity.scopes ?? [];
     if (parentScopes.length > 0) {
-      const invalid = input.scopes.filter((s) => !parentScopes.includes(s) && !parentScopes.includes("*"));
+      const invalid = input.scopes.filter(
+        s => !parentScopes.includes(s) && !parentScopes.includes("*")
+      );
       if (invalid.length > 0) {
         throw new Error(`Privilege escalation: parent does not have scopes ${invalid.join(", ")}`);
       }
@@ -295,11 +327,15 @@ export class DelegationManager {
     if (del) del.isRevoked = true;
   }
 
-  verify(id: string, requiredScope?: string): { valid: boolean; reason?: string; delegation?: Delegation } {
+  verify(
+    id: string,
+    requiredScope?: string
+  ): { valid: boolean; reason?: string; delegation?: Delegation } {
     const del = this.delegations.get(id);
     if (!del) return { valid: false, reason: "Delegation not found" };
     if (del.isRevoked) return { valid: false, reason: "Delegation revoked" };
-    if (new Date(del.expiration).getTime() < Date.now()) return { valid: false, reason: "Delegation expired" };
+    if (new Date(del.expiration).getTime() < Date.now())
+      return { valid: false, reason: "Delegation expired" };
     if (requiredScope && !del.scopes.includes(requiredScope) && !del.scopes.includes("*")) {
       return { valid: false, reason: `Scope ${requiredScope} not in delegation` };
     }

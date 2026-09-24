@@ -15,7 +15,8 @@ export class RegistryClient {
   private cacheTtl: number;
 
   constructor(config: RegistryClientConfig = {}) {
-    this.controlPlaneUrl = config.controlPlaneUrl ?? process.env.CONTROL_PLANE_URL ?? "http://localhost:3002";
+    this.controlPlaneUrl =
+      config.controlPlaneUrl ?? process.env.CONTROL_PLANE_URL ?? "http://localhost:3002";
     this.cacheTtl = config.cacheTtlSeconds ?? 60;
 
     try {
@@ -25,9 +26,15 @@ export class RegistryClient {
       const mem = new Map<string, string>();
       const fakeRedis = {
         get: async (k: string) => mem.get(k) ?? null,
-        set: async (k: string, v: string) => { mem.set(k, v); },
-        setex: async (k: string, _ttl: number, v: string) => { mem.set(k, v); },
-        del: async (k: string) => { mem.delete(k); },
+        set: async (k: string, v: string) => {
+          mem.set(k, v);
+        },
+        setex: async (k: string, _ttl: number, v: string) => {
+          mem.set(k, v);
+        },
+        del: async (k: string) => {
+          mem.delete(k);
+        },
         exists: async (k: string) => (mem.has(k) ? 1 : 0),
       } as any;
       this.cache = new RedisCache(fakeRedis, "agentmesh:agent:");
@@ -42,7 +49,9 @@ export class RegistryClient {
 
     // Try control-plane HTTP
     try {
-      const res = await fetch(`${this.controlPlaneUrl}/v1/agents/${id}`, { signal: AbortSignal.timeout(5000) });
+      const res = await fetch(`${this.controlPlaneUrl}/v1/agents/${id}`, {
+        signal: AbortSignal.timeout(5000),
+      });
       if (res.ok) {
         const data = (await res.json()) as any;
         const agent = data.agent;
@@ -52,13 +61,17 @@ export class RegistryClient {
         }
       }
     } catch (err) {
-      console.warn(`[registry-client] failed to fetch agent ${id} from control-plane: ${(err as Error).message}`);
+      console.warn(
+        `[registry-client] failed to fetch agent ${id} from control-plane: ${(err as Error).message}`
+      );
     }
 
     return null;
   }
 
-  async listAgents(filter: { skill?: string; capability?: string; region?: string; limit?: number } = {}): Promise<AgentRecord[]> {
+  async listAgents(
+    filter: { skill?: string; capability?: string; region?: string; limit?: number } = {}
+  ): Promise<AgentRecord[]> {
     const params = new URLSearchParams();
     if (filter.skill) params.set("skill", filter.skill);
     if (filter.capability) params.set("capability", filter.capability);
@@ -66,7 +79,9 @@ export class RegistryClient {
     if (filter.limit) params.set("limit", String(filter.limit));
 
     try {
-      const res = await fetch(`${this.controlPlaneUrl}/v1/agents?${params.toString()}`, { signal: AbortSignal.timeout(5000) });
+      const res = await fetch(`${this.controlPlaneUrl}/v1/agents?${params.toString()}`, {
+        signal: AbortSignal.timeout(5000),
+      });
       if (res.ok) {
         const data = (await res.json()) as any;
         return data.agents ?? [];
@@ -78,7 +93,13 @@ export class RegistryClient {
     return [];
   }
 
-  async discover(filter: { skill?: string; capability?: string; region?: string; search?: string; limit?: number }): Promise<AgentRecord[]> {
+  async discover(filter: {
+    skill?: string;
+    capability?: string;
+    region?: string;
+    search?: string;
+    limit?: number;
+  }): Promise<AgentRecord[]> {
     const params = new URLSearchParams();
     if (filter.skill) params.set("skill", filter.skill);
     if (filter.capability) params.set("capability", filter.capability);
@@ -87,7 +108,9 @@ export class RegistryClient {
     if (filter.limit) params.set("limit", String(filter.limit));
 
     try {
-      const res = await fetch(`${this.controlPlaneUrl}/v1/agents/discover?${params.toString()}`, { signal: AbortSignal.timeout(5000) });
+      const res = await fetch(`${this.controlPlaneUrl}/v1/agents/discover?${params.toString()}`, {
+        signal: AbortSignal.timeout(5000),
+      });
       if (res.ok) {
         const data = (await res.json()) as any;
         return data.agents ?? [];

@@ -33,12 +33,26 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
     jwtSecret: opts.config.JWT_SECRET,
     oidcIssuer: opts.config.OIDC_ISSUER,
     oidcClientId: opts.config.OIDC_CLIENT_ID,
-    publicRoutes: ["/health", "/ready", "/v1/health", "/v1/info", "/v1/observability/*", "/v1/reliability/*"],
+    publicRoutes: [
+      "/health",
+      "/ready",
+      "/v1/health",
+      "/v1/info",
+      "/v1/observability/*",
+      "/v1/reliability/*",
+    ],
   });
   await app.register(tenantPlugin);
   await app.register(rateLimitPlugin, { enabled: true });
   await app.register(authorizationPlugin, {
-    publicRoutes: ["/health", "/ready", "/v1/health", "/v1/info", "/v1/observability/*", "/v1/reliability/*"],
+    publicRoutes: [
+      "/health",
+      "/ready",
+      "/v1/health",
+      "/v1/info",
+      "/v1/observability/*",
+      "/v1/reliability/*",
+    ],
   });
 
   const eventBus = createEventBus({ serviceName: "control-plane", url: opts.config.NATS_URL });
@@ -70,7 +84,11 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
     const code = err.code ?? "INTERNAL_ERROR";
     app.log.error({ err: error, status, code }, "request error");
     reply.status(status).send({
-      error: { code, message: err.message ?? "Internal Server Error", ...(process.env.NODE_ENV !== "production" ? { stack: err.stack } : {}) },
+      error: {
+        code,
+        message: err.message ?? "Internal Server Error",
+        ...(process.env.NODE_ENV !== "production" ? { stack: err.stack } : {}),
+      },
     });
   });
 

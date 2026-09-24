@@ -25,7 +25,9 @@ export class HealthChecker {
       return;
     }
 
-    console.log(`[health-checker] starting with interval ${this.config.intervalMs}ms, ttl ${this.config.ttlMs}ms`);
+    console.log(
+      `[health-checker] starting with interval ${this.config.intervalMs}ms, ttl ${this.config.ttlMs}ms`
+    );
 
     this.interval = setInterval(async () => {
       try {
@@ -70,14 +72,18 @@ export class HealthChecker {
 
       if (elapsed > ttl) {
         if (agent.health !== "UNHEALTHY") {
-          console.log(`[health-checker] marking agent ${agent.id} (${agent.name}) as UNHEALTHY - last seen ${Math.round(elapsed / 1000)}s ago`);
+          console.log(
+            `[health-checker] marking agent ${agent.id} (${agent.name}) as UNHEALTHY - last seen ${Math.round(elapsed / 1000)}s ago`
+          );
           await service.updateHealth(agent.id, "UNHEALTHY");
           unhealthyCount++;
         }
       } else if (elapsed < ttl / 2) {
         // If recently seen and currently unhealthy, mark healthy
         if (agent.health === "UNHEALTHY") {
-          console.log(`[health-checker] marking agent ${agent.id} (${agent.name}) as HEALTHY - recovered`);
+          console.log(
+            `[health-checker] marking agent ${agent.id} (${agent.name}) as HEALTHY - recovered`
+          );
           await service.updateHealth(agent.id, "HEALTHY");
           healthyCount++;
         }
@@ -85,7 +91,9 @@ export class HealthChecker {
     }
 
     if (unhealthyCount > 0 || healthyCount > 0) {
-      console.log(`[health-checker] check done: ${unhealthyCount} -> UNHEALTHY, ${healthyCount} -> HEALTHY, total ${agents.length}`);
+      console.log(
+        `[health-checker] check done: ${unhealthyCount} -> UNHEALTHY, ${healthyCount} -> HEALTHY, total ${agents.length}`
+      );
     }
   }
 }

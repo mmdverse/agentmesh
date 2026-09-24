@@ -8,8 +8,16 @@ export const SecuritySchemeSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("oauth2"),
     flows: z.object({
-      authorizationCode: z.object({ authorizationUrl: z.string(), tokenUrl: z.string(), scopes: z.record(z.string()) }).optional(),
-      clientCredentials: z.object({ tokenUrl: z.string(), scopes: z.record(z.string()) }).optional(),
+      authorizationCode: z
+        .object({
+          authorizationUrl: z.string(),
+          tokenUrl: z.string(),
+          scopes: z.record(z.string()),
+        })
+        .optional(),
+      clientCredentials: z
+        .object({ tokenUrl: z.string(), scopes: z.record(z.string()) })
+        .optional(),
     }),
     description: z.string().optional(),
   }),
@@ -100,7 +108,9 @@ export type AgentCard = z.infer<typeof AgentCardSchema>;
 // Extended card with internal registry fields
 export const RegisteredAgentCardSchema = AgentCardSchema.extend({
   id: z.string().min(1),
-  trustLevel: z.enum(["UNTRUSTED", "EXTERNAL", "VERIFIED", "ORGANIZATION", "SYSTEM"]).default("UNTRUSTED"),
+  trustLevel: z
+    .enum(["UNTRUSTED", "EXTERNAL", "VERIFIED", "ORGANIZATION", "SYSTEM"])
+    .default("UNTRUSTED"),
   health: z.enum(["UNKNOWN", "HEALTHY", "DEGRADED", "UNHEALTHY"]).default("UNKNOWN"),
   region: z.string().optional(),
   environment: z.enum(["development", "staging", "production"]).optional(),
@@ -118,7 +128,15 @@ export const MessageRoleSchema = z.enum(["user", "agent"]);
 
 export const MessagePartSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("text"), text: z.string() }),
-  z.object({ kind: z.literal("file"), file: z.object({ name: z.string().optional(), mimeType: z.string(), bytes: z.string().optional(), uri: z.string().optional() }) }),
+  z.object({
+    kind: z.literal("file"),
+    file: z.object({
+      name: z.string().optional(),
+      mimeType: z.string(),
+      bytes: z.string().optional(),
+      uri: z.string().optional(),
+    }),
+  }),
   z.object({ kind: z.literal("data"), data: z.record(z.unknown()) }),
 ]);
 
@@ -138,7 +156,17 @@ export type A2AMessage = z.infer<typeof MessageSchema>;
 
 // Task - A2A Task object
 export const TaskStatusSchema = z.object({
-  state: z.enum(["SUBMITTED", "WORKING", "INPUT_REQUIRED", "AUTH_REQUIRED", "COMPLETED", "FAILED", "CANCELED", "REJECTED", "TIMEOUT"]),
+  state: z.enum([
+    "SUBMITTED",
+    "WORKING",
+    "INPUT_REQUIRED",
+    "AUTH_REQUIRED",
+    "COMPLETED",
+    "FAILED",
+    "CANCELED",
+    "REJECTED",
+    "TIMEOUT",
+  ]),
   message: MessageSchema.optional(),
   timestamp: z.string().datetime(),
 });
@@ -181,13 +209,17 @@ export const JsonRpcResponseSchema = z.object({
   jsonrpc: z.literal("2.0"),
   id: z.union([z.string(), z.number(), z.null()]),
   result: z.unknown().optional(),
-  error: z.object({ code: z.number(), message: z.string(), data: z.unknown().optional() }).optional(),
+  error: z
+    .object({ code: z.number(), message: z.string(), data: z.unknown().optional() })
+    .optional(),
 });
 
 export type JsonRpcResponse = z.infer<typeof JsonRpcResponseSchema>;
 
 // Validation helpers
-export function validateAgentCard(data: unknown): { success: true; data: AgentCard } | { success: false; error: z.ZodError } {
+export function validateAgentCard(
+  data: unknown
+): { success: true; data: AgentCard } | { success: false; error: z.ZodError } {
   const result = AgentCardSchema.safeParse(data);
   if (result.success) return { success: true, data: result.data };
   return { success: false, error: result.error };
@@ -210,7 +242,10 @@ export function buildWellKnownUrl(baseUrl: string): string {
 export const SUPPORTED_A2A_VERSIONS = ["0.2", "0.1"] as const;
 export type SupportedA2AVersion = (typeof SUPPORTED_A2A_VERSIONS)[number];
 
-export function negotiateProtocolVersion(requested: string[], supported: readonly string[] = SUPPORTED_A2A_VERSIONS): string | null {
+export function negotiateProtocolVersion(
+  requested: string[],
+  supported: readonly string[] = SUPPORTED_A2A_VERSIONS
+): string | null {
   for (const v of requested) {
     if ((supported as readonly string[]).includes(v)) return v;
   }

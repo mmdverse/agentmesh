@@ -7,7 +7,10 @@ import { compareSemVer } from "@agentmesh/versioning";
 // In-memory fallback for Phase 0/1 when Postgres not available
 class InMemoryRepo {
   private agents = new Map<string, AgentRecord>();
-  private skills = new Map<string, Array<{ skillId: string; name: string; description?: string; tags: string[] }>>();
+  private skills = new Map<
+    string,
+    Array<{ skillId: string; name: string; description?: string; tags: string[] }>
+  >();
 
   async create(input: RegisterAgentInput & { card?: AgentCard }): Promise<AgentRecord> {
     const id = `agent_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -20,7 +23,8 @@ class InMemoryRepo {
       description: input.description ?? input.card?.description ?? null,
       version: input.version ?? input.card?.version ?? "0.1.0",
       url: input.url,
-      providerOrganization: input.providerOrganization ?? input.card?.provider?.organization ?? null,
+      providerOrganization:
+        input.providerOrganization ?? input.card?.provider?.organization ?? null,
       trustLevel: input.trustLevel ?? "UNTRUSTED",
       health: "UNKNOWN",
       region: input.region ?? null,
@@ -37,7 +41,12 @@ class InMemoryRepo {
     if (input.card?.skills) {
       this.skills.set(
         id,
-        input.card.skills.map((s) => ({ skillId: s.id, name: s.name, description: s.description, tags: s.tags }))
+        input.card.skills.map(s => ({
+          skillId: s.id,
+          name: s.name,
+          description: s.description,
+          tags: s.tags,
+        }))
       );
     }
     return record;
@@ -53,55 +62,66 @@ class InMemoryRepo {
     let list = Array.from(this.agents.values());
 
     if (filter.name) {
-      list = list.filter((a) => a.name.toLowerCase().includes(filter.name!.toLowerCase()));
+      list = list.filter(a => a.name.toLowerCase().includes(filter.name!.toLowerCase()));
     }
     if (filter.region) {
-      list = list.filter((a) => a.region === filter.region);
+      list = list.filter(a => a.region === filter.region);
     }
     if (filter.health) {
-      list = list.filter((a) => a.health === filter.health);
+      list = list.filter(a => a.health === filter.health);
     }
     if (filter.trustLevel) {
-      list = list.filter((a) => a.trustLevel === filter.trustLevel);
+      list = list.filter(a => a.trustLevel === filter.trustLevel);
     }
     if (filter.organizationId) {
-      list = list.filter((a) => a.organizationId === filter.organizationId);
+      list = list.filter(a => a.organizationId === filter.organizationId);
     }
     if (filter.projectId) {
-      list = list.filter((a) => a.projectId === filter.projectId);
+      list = list.filter(a => a.projectId === filter.projectId);
     }
     if (filter.version) {
-      list = list.filter((a) => a.version === filter.version);
+      list = list.filter(a => a.version === filter.version);
     }
     if (filter.skill) {
-      list = list.filter((a) => {
+      list = list.filter(a => {
         const skills = this.skills.get(a.id) ?? [];
-        return skills.some((s) => s.skillId === filter.skill || s.name === filter.skill);
+        return skills.some(s => s.skillId === filter.skill || s.name === filter.skill);
       });
     }
     if (filter.search) {
       const q = filter.search.toLowerCase();
-      list = list.filter((a) => a.name.toLowerCase().includes(q) || (a.description ?? "").toLowerCase().includes(q));
+      list = list.filter(
+        a => a.name.toLowerCase().includes(q) || (a.description ?? "").toLowerCase().includes(q)
+      );
     }
 
     // Version strategy filtering
     if (filter.versionStrategy === "stable") {
-      list = list.filter((a) => {
+      list = list.filter(a => {
         const v = a.version.toLowerCase();
-        return !v.includes("canary") && !v.includes("beta") && !v.includes("alpha") && !v.includes("-dev");
+        return (
+          !v.includes("canary") &&
+          !v.includes("beta") &&
+          !v.includes("alpha") &&
+          !v.includes("-dev")
+        );
       });
     }
     if (filter.versionStrategy === "canary") {
-      list = list.filter((a) => a.version.toLowerCase().includes("canary"));
+      list = list.filter(a => a.version.toLowerCase().includes("canary"));
     }
     if (filter.versionStrategy === "minimum" && filter.minVersion) {
-      list = list.filter((a) => compareSemVer(a.version, filter.minVersion!) >= 0);
+      list = list.filter(a => compareSemVer(a.version, filter.minVersion!) >= 0);
     }
 
     const total = list.length;
 
     // Sort by version desc for latest-first, or createdAt
-    if (filter.versionStrategy === "latest" || filter.versionStrategy === "stable" || filter.versionStrategy === "canary") {
+    if (
+      filter.versionStrategy === "latest" ||
+      filter.versionStrategy === "stable" ||
+      filter.versionStrategy === "canary"
+    ) {
       list.sort((a, b) => compareSemVer(b.version, a.version));
     }
 
@@ -109,11 +129,14 @@ class InMemoryRepo {
     const limit = filter.limit ?? 20;
     list = list.slice(offset, offset + limit);
 
-    const enriched = list.map((a) => ({ ...a, skills: this.skills.get(a.id) ?? [] }));
+    const enriched = list.map(a => ({ ...a, skills: this.skills.get(a.id) ?? [] }));
     return { agents: enriched, total };
   }
 
-  async update(id: string, input: Partial<RegisterAgentInput> & { health?: string; lastSeenAt?: string }): Promise<AgentRecord | null> {
+  async update(
+    id: string,
+    input: Partial<RegisterAgentInput> & { health?: string; lastSeenAt?: string }
+  ): Promise<AgentRecord | null> {
     const existing = this.agents.get(id);
     if (!existing) return null;
     const now = new Date().toISOString();
@@ -163,7 +186,9 @@ export class RegistryRepository {
   constructor() {
     this.useMemory = process.env.USE_POSTGRES !== "true";
     if (this.useMemory) {
-      console.log("[registry-repo] Using InMemory repository (Phase 3 default, set USE_POSTGRES=true to use Postgres)");
+      console.log(
+        "[registry-repo] Using InMemory repository (Phase 3 default, set USE_POSTGRES=true to use Postgres)"
+      );
     } else {
       console.log("[registry-repo] Using Postgres repository");
     }
@@ -195,7 +220,7 @@ export class RegistryRepository {
 
     if (input.card?.skills?.length) {
       await db.insert(schema.skills).values(
-        input.card.skills.map((s) => ({
+        input.card.skills.map(s => ({
           agentId: agent.id,
           skillId: s.id,
           name: s.name,
@@ -221,7 +246,11 @@ export class RegistryRepository {
     if (this.useMemory) return memRepo.getById(id);
 
     const db = getDb();
-    const [agent] = await db.select().from(schema.agents).where(eq(schema.agents.id, id as any)).limit(1);
+    const [agent] = await db
+      .select()
+      .from(schema.agents)
+      .where(eq(schema.agents.id, id as any))
+      .limit(1);
     if (!agent) return null;
 
     const skills = await db.select().from(schema.skills).where(eq(schema.skills.agentId, agent.id));
@@ -246,7 +275,8 @@ export class RegistryRepository {
     if (filter.region) conditions.push(eq(schema.agents.region, filter.region));
     if (filter.health) conditions.push(eq(schema.agents.health, filter.health));
     if (filter.trustLevel) conditions.push(eq(schema.agents.trustLevel, filter.trustLevel));
-    if (filter.organizationId) conditions.push(eq(schema.agents.organizationId, filter.organizationId as any));
+    if (filter.organizationId)
+      conditions.push(eq(schema.agents.organizationId, filter.organizationId as any));
     if (filter.projectId) conditions.push(eq(schema.agents.projectId, filter.projectId as any));
     if (filter.version) conditions.push(eq(schema.agents.version, filter.version));
 
@@ -261,7 +291,7 @@ export class RegistryRepository {
       .where(conditions.length > 0 ? and(...conditions) : undefined);
 
     const enriched = await Promise.all(
-      agents.map(async (a) => {
+      agents.map(async a => {
         const skills = await db.select().from(schema.skills).where(eq(schema.skills.agentId, a.id));
         return this.mapToRecord(a, null, skills as any);
       })
@@ -269,21 +299,32 @@ export class RegistryRepository {
 
     let filtered = enriched;
     if (filter.skill) {
-      filtered = filtered.filter((a) => a.skills?.some((s) => s.skillId === filter.skill || s.name === filter.skill));
+      filtered = filtered.filter(a =>
+        a.skills?.some(s => s.skillId === filter.skill || s.name === filter.skill)
+      );
     }
     if (filter.search) {
       const q = filter.search.toLowerCase();
-      filtered = filtered.filter((a) => a.name.toLowerCase().includes(q) || (a.description ?? "").toLowerCase().includes(q));
+      filtered = filtered.filter(
+        a => a.name.toLowerCase().includes(q) || (a.description ?? "").toLowerCase().includes(q)
+      );
     }
 
     return { agents: filtered, total: Number(count) };
   }
 
-  async update(id: string, input: Partial<RegisterAgentInput> & { health?: string; lastSeenAt?: string }): Promise<AgentRecord | null> {
+  async update(
+    id: string,
+    input: Partial<RegisterAgentInput> & { health?: string; lastSeenAt?: string }
+  ): Promise<AgentRecord | null> {
     if (this.useMemory) return memRepo.update(id, input);
 
     const db = getDb();
-    const [existing] = await db.select().from(schema.agents).where(eq(schema.agents.id, id as any)).limit(1);
+    const [existing] = await db
+      .select()
+      .from(schema.agents)
+      .where(eq(schema.agents.id, id as any))
+      .limit(1);
     if (!existing) return null;
 
     const [updated] = await db
@@ -305,7 +346,10 @@ export class RegistryRepository {
       .where(eq(schema.agents.id, id as any))
       .returning();
 
-    const skills = await db.select().from(schema.skills).where(eq(schema.skills.agentId, updated.id));
+    const skills = await db
+      .select()
+      .from(schema.skills)
+      .where(eq(schema.skills.agentId, updated.id));
     return this.mapToRecord(updated, null, skills as any);
   }
 
@@ -313,7 +357,10 @@ export class RegistryRepository {
     if (this.useMemory) return memRepo.delete(id);
 
     const db = getDb();
-    const result = await db.delete(schema.agents).where(eq(schema.agents.id, id as any)).returning({ id: schema.agents.id });
+    const result = await db
+      .delete(schema.agents)
+      .where(eq(schema.agents.id, id as any))
+      .returning({ id: schema.agents.id });
     return result.length > 0;
   }
 
@@ -345,9 +392,16 @@ export class RegistryRepository {
       metadata: (agent.metadata as Record<string, unknown>) ?? {},
       createdAt: agent.createdAt instanceof Date ? agent.createdAt.toISOString() : agent.createdAt,
       updatedAt: agent.updatedAt instanceof Date ? agent.updatedAt.toISOString() : agent.updatedAt,
-      lastSeenAt: agent.lastSeenAt instanceof Date ? agent.lastSeenAt.toISOString() : agent.lastSeenAt,
+      lastSeenAt:
+        agent.lastSeenAt instanceof Date ? agent.lastSeenAt.toISOString() : agent.lastSeenAt,
       ttlSeconds: agent.ttlSeconds,
-      skills: skills?.map((s) => ({ skillId: s.skillId, name: s.name, description: s.description, tags: s.tags as string[] })) ?? [],
+      skills:
+        skills?.map(s => ({
+          skillId: s.skillId,
+          name: s.name,
+          description: s.description,
+          tags: s.tags as string[],
+        })) ?? [],
       card: card ?? null,
     };
   }

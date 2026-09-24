@@ -36,7 +36,10 @@ function validateUrl(urlString: string, opts: FetchCardOptions): void {
   }
 }
 
-export async function fetchAgentCard(url: string, opts: FetchCardOptions = {}): Promise<{ card: AgentCard; raw: unknown; url: string; fetchedAt: string }> {
+export async function fetchAgentCard(
+  url: string,
+  opts: FetchCardOptions = {}
+): Promise<{ card: AgentCard; raw: unknown; url: string; fetchedAt: string }> {
   const timeout = opts.timeoutMs ?? 10000;
   validateUrl(url, opts);
 
@@ -58,7 +61,11 @@ export async function fetchAgentCard(url: string, opts: FetchCardOptions = {}): 
     }
 
     const contentType = res.headers.get("content-type") ?? "";
-    if (!contentType.includes("application/json") && !contentType.includes("text/json") && !contentType.includes("+json")) {
+    if (
+      !contentType.includes("application/json") &&
+      !contentType.includes("text/json") &&
+      !contentType.includes("+json")
+    ) {
       // Some agents may return with text/plain, so we try anyway but warn
       console.warn(`[a2a] unexpected content-type ${contentType} for ${url}`);
     }
@@ -82,13 +89,19 @@ export async function fetchAgentCard(url: string, opts: FetchCardOptions = {}): 
   }
 }
 
-export async function fetchWellKnownCard(baseUrl: string, opts: FetchCardOptions = {}): Promise<{ card: AgentCard; raw: unknown; url: string; fetchedAt: string }> {
+export async function fetchWellKnownCard(
+  baseUrl: string,
+  opts: FetchCardOptions = {}
+): Promise<{ card: AgentCard; raw: unknown; url: string; fetchedAt: string }> {
   const base = new URL(baseUrl);
   const wellKnownUrl = `${base.origin}${WELL_KNOWN_AGENT_CARD_PATH}`;
   return fetchAgentCard(wellKnownUrl, opts);
 }
 
-export async function fetchCardWithFallbacks(urls: string[], opts: FetchCardOptions = {}): Promise<{ card: AgentCard; raw: unknown; url: string; fetchedAt: string }> {
+export async function fetchCardWithFallbacks(
+  urls: string[],
+  opts: FetchCardOptions = {}
+): Promise<{ card: AgentCard; raw: unknown; url: string; fetchedAt: string }> {
   let lastError: Error | null = null;
   for (const url of urls) {
     try {

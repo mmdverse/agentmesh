@@ -18,7 +18,7 @@ async function main() {
 
   // Graceful shutdown
   const signals: NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
-  signals.forEach((signal) => {
+  signals.forEach(signal => {
     process.on(signal, async () => {
       console.log(`[gateway] received ${signal}, shutting down...`);
       try {
@@ -36,7 +36,9 @@ async function main() {
     await app.listen({ port: config.GATEWAY_PORT, host: config.GATEWAY_HOST });
     console.log(`[gateway] listening on http://${config.GATEWAY_HOST}:${config.GATEWAY_PORT}`);
     console.log(`[gateway] health: http://${config.GATEWAY_HOST}:${config.GATEWAY_PORT}/health`);
-    console.log(`[gateway] v1 health: http://${config.GATEWAY_HOST}:${config.GATEWAY_PORT}/v1/health`);
+    console.log(
+      `[gateway] v1 health: http://${config.GATEWAY_HOST}:${config.GATEWAY_PORT}/v1/health`
+    );
   } catch (err) {
     app.log.error(err);
     process.exit(1);

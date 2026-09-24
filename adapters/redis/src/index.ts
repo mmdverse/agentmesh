@@ -21,7 +21,10 @@ export function createRedisClient(config: RedisConfig): Redis {
 
   if (config.keyPrefix) opts.keyPrefix = config.keyPrefix;
 
-  const client = config.url.startsWith("redis://") || config.url.startsWith("rediss://") ? new Redis(config.url, opts) : new Redis({ ...opts, host: config.url } as any);
+  const client =
+    config.url.startsWith("redis://") || config.url.startsWith("rediss://")
+      ? new Redis(config.url, opts)
+      : new Redis({ ...opts, host: config.url } as any);
 
   client.on("connect", () => console.log("[redis] connected"));
   client.on("ready", () => console.log("[redis] ready"));
@@ -64,7 +67,10 @@ export async function closeRedis(): Promise<void> {
 export class RedisCache {
   private fallback = new Map<string, { value: string; expiresAt?: number }>();
 
-  constructor(private redis: Redis, private prefix = "cache:") {}
+  constructor(
+    private redis: Redis,
+    private prefix = "cache:"
+  ) {}
 
   async get<T>(key: string): Promise<T | null> {
     const fullKey = this.prefix + key;
@@ -151,7 +157,11 @@ export class RedisCache {
 export class RedisRateLimiter {
   constructor(private redis: Redis) {}
 
-  async isAllowed(key: string, limit: number, windowSeconds: number): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
+  async isAllowed(
+    key: string,
+    limit: number,
+    windowSeconds: number
+  ): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
     try {
       const now = Date.now();
       const windowKey = `ratelimit:${key}:${Math.floor(now / 1000 / windowSeconds)}`;

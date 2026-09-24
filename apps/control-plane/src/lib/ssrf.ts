@@ -1,6 +1,9 @@
 import { validateUrlForSSRF } from "@agentmesh/core";
 
-export function assertUrlSafe(url: string, opts: { allowPrivate?: boolean; allowLoopback?: boolean } = {}): void {
+export function assertUrlSafe(
+  url: string,
+  opts: { allowPrivate?: boolean; allowLoopback?: boolean } = {}
+): void {
   const result = validateUrlForSSRF(url, {
     allowPrivate: opts.allowPrivate ?? process.env.NODE_ENV !== "production",
     allowLoopback: opts.allowLoopback ?? process.env.NODE_ENV !== "production",
@@ -10,7 +13,10 @@ export function assertUrlSafe(url: string, opts: { allowPrivate?: boolean; allow
   }
 }
 
-export function isUrlSafe(url: string, opts: { allowPrivate?: boolean; allowLoopback?: boolean } = {}): boolean {
+export function isUrlSafe(
+  url: string,
+  opts: { allowPrivate?: boolean; allowLoopback?: boolean } = {}
+): boolean {
   const result = validateUrlForSSRF(url, {
     allowPrivate: opts.allowPrivate ?? process.env.NODE_ENV !== "production",
     allowLoopback: opts.allowLoopback ?? process.env.NODE_ENV !== "production",

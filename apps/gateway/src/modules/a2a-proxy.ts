@@ -113,8 +113,10 @@ export class A2AProxy {
         lastErr = err as Error;
         if (attempt < retries) {
           const backoff = Math.min(1000 * 2 ** attempt, 5000);
-          await new Promise((r) => setTimeout(r, backoff));
-          console.warn(`[a2a-proxy] retry ${attempt + 1}/${retries} for ${req.url}: ${(err as Error).message}`);
+          await new Promise(r => setTimeout(r, backoff));
+          console.warn(
+            `[a2a-proxy] retry ${attempt + 1}/${retries} for ${req.url}: ${(err as Error).message}`
+          );
         }
       }
     }

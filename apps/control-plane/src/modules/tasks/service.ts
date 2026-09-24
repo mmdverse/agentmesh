@@ -2,7 +2,15 @@ import { getTaskRepository } from "./repository.js";
 import { getRegistryService } from "../registry/service.js";
 import { createEventBus, type AgentMeshEvent } from "@agentmesh/events";
 import type { CreateTaskInput, TaskRecord, TaskFilter } from "./types.js";
-import { TaskState, generateId, nowIso, canTransition, NotFoundError, ValidationError, AuthorizationError } from "@agentmesh/core";
+import {
+  TaskState,
+  generateId,
+  nowIso,
+  canTransition,
+  NotFoundError,
+  ValidationError,
+  AuthorizationError,
+} from "@agentmesh/core";
 import { getTenantManager, type TenantContext } from "@agentmesh/tenancy";
 import { DEFAULT_RESOURCE_LIMITS, checkResourceLimits } from "@agentmesh/rate-limit";
 import { DelegationManager } from "@agentmesh/authorization";
@@ -11,16 +19,25 @@ import { CircuitBreaker, Bulkhead, FanOutLimiter, withTimeout } from "@agentmesh
 export class TaskService {
   private repo = getTaskRepository();
   private registry = getRegistryService();
-  private eventBus = createEventBus({ serviceName: "control-plane-tasks", url: process.env.NATS_URL });
+  private eventBus = createEventBus({
+    serviceName: "control-plane-tasks",
+    url: process.env.NATS_URL,
+  });
   private tenantManager = getTenantManager();
   private delegationManager = new DelegationManager();
-  private fanOutLimiter = new FanOutLimiter({ maxFanOut: DEFAULT_RESOURCE_LIMITS.maxFanOut, windowMs: 60000 });
+  private fanOutLimiter = new FanOutLimiter({
+    maxFanOut: DEFAULT_RESOURCE_LIMITS.maxFanOut,
+    windowMs: 60000,
+  });
   private agentBreakers = new Map<string, CircuitBreaker>();
   private agentBulkheads = new Map<string, Bulkhead>();
 
   private getBreaker(agentId: string): CircuitBreaker {
     if (!this.agentBreakers.has(agentId)) {
-      this.agentBreakers.set(agentId, new CircuitBreaker({ failureThreshold: 5, timeoutMs: 60000 }));
+      this.agentBreakers.set(
+        agentId,
+        new CircuitBreaker({ failureThreshold: 5, timeoutMs: 60000 })
+      );
     }
     return this.agentBreakers.get(agentId)!;
   }
@@ -78,14 +95,18 @@ export class TaskService {
     if (input.parentTaskId) {
       const fanOutCheck = this.fanOutLimiter.check(input.parentTaskId, 1);
       if (!fanOutCheck.allowed) {
-        throw new ValidationError(`Fan-out limit exceeded for parent ${input.parentTaskId}: ${fanOutCheck.reason}`);
+        throw new ValidationError(
+          `Fan-out limit exceeded for parent ${input.parentTaskId}: ${fanOutCheck.reason}`
+        );
       }
       // Also check depth to prevent infinite delegation
       const parent = await this.repo.getById(input.parentTaskId);
       if (parent) {
         const depth = parent.delegationChain?.length ?? 0;
         if (depth > 10) {
-          throw new ValidationError(`Delegation depth exceeded (max 10) for task ${input.parentTaskId}`);
+          throw new ValidationError(
+            `Delegation depth exceeded (max 10) for task ${input.parentTaskId}`
+          );
         }
         delegationChain = [...(parent.delegationChain ?? []), ...delegationChain];
       }
@@ -95,7 +116,9 @@ export class TaskService {
     const bulkhead = this.getBulkhead(input.agentId);
     const bulkheadCheck = bulkhead.tryAcquire();
     if (!bulkheadCheck.allowed) {
-      throw new ValidationError(`Agent ${input.agentId} at capacity: ${bulkhead.getStats().currentConcurrent} concurrent tasks`);
+      throw new ValidationError(
+        `Agent ${input.agentId} at capacity: ${bulkhead.getStats().currentConcurrent} concurrent tasks`
+      );
     }
 
     // Circuit breaker check
@@ -106,14 +129,18 @@ export class TaskService {
     }
 
     if (agent.health === "UNHEALTHY") {
-      console.warn(`[tasks] creating task for unhealthy agent ${input.agentId}, but allowing (will track failure)`);
+      console.warn(
+        `[tasks] creating task for unhealthy agent ${input.agentId}, but allowing (will track failure)`
+      );
     }
 
     const id = generateId("task");
     const sessionId = input.sessionId ?? generateId("sess");
     const contextId = input.contextId ?? generateId("ctx");
     const traceId = input.traceId ?? generateId("trace");
-    const rootTaskId = input.parentTaskId ? (await this.repo.getById(input.parentTaskId))?.rootTaskId ?? input.parentTaskId : id;
+    const rootTaskId = input.parentTaskId
+      ? ((await this.repo.getById(input.parentTaskId))?.rootTaskId ?? input.parentTaskId)
+      : id;
 
     const now = nowIso();
 
@@ -142,18 +169,29 @@ export class TaskService {
 
     const created = await this.repo.create(task);
 
-    await this.publishEvent("task.created", id, { task: created, agentId: input.agentId }, input.tenant);
+    await this.publishEvent(
+      "task.created",
+      id,
+      { task: created, agentId: input.agentId },
+      input.tenant
+    );
 
     // Transition to WORKING asynchronously with timeout protection
     setImmediate(async () => {
       try {
         await withTimeout(
-          () => this.transition(id, TaskState.WORKING, { reason: "Task delegated to agent", tenant: input.tenant }),
+          () =>
+            this.transition(id, TaskState.WORKING, {
+              reason: "Task delegated to agent",
+              tenant: input.tenant,
+            }),
           5000,
           `Transition to WORKING timeout for ${id}`
         );
       } catch (err) {
-        console.error(`[tasks] failed to transition task ${id} to WORKING: ${(err as Error).message}`);
+        console.error(
+          `[tasks] failed to transition task ${id} to WORKING: ${(err as Error).message}`
+        );
         bulkhead.release();
       }
     });
@@ -179,7 +217,9 @@ export class TaskService {
     return task;
   }
 
-  async list(filter: TaskFilter & { tenant?: TenantContext }): Promise<{ tasks: TaskRecord[]; total: number }> {
+  async list(
+    filter: TaskFilter & { tenant?: TenantContext }
+  ): Promise<{ tasks: TaskRecord[]; total: number }> {
     if (filter.tenant) {
       filter.organizationId = filter.organizationId ?? filter.tenant.organizationId;
       filter.projectId = filter.projectId ?? filter.tenant.projectId;
@@ -190,7 +230,12 @@ export class TaskService {
   async transition(
     id: string,
     toState: TaskRecord["state"],
-    opts: { reason?: string; output?: Record<string, unknown>; error?: TaskRecord["error"]; tenant?: TenantContext } = {}
+    opts: {
+      reason?: string;
+      output?: Record<string, unknown>;
+      error?: TaskRecord["error"];
+      tenant?: TenantContext;
+    } = {}
   ): Promise<TaskRecord> {
     const task = await this.repo.getById(id);
     if (!task) throw new NotFoundError("Task", id);
@@ -224,7 +269,15 @@ export class TaskService {
     }
 
     // Release bulkhead on terminal states
-    if ([TaskState.COMPLETED, TaskState.FAILED, TaskState.CANCELED, TaskState.REJECTED, TaskState.TIMEOUT].includes(toState as any)) {
+    if (
+      [
+        TaskState.COMPLETED,
+        TaskState.FAILED,
+        TaskState.CANCELED,
+        TaskState.REJECTED,
+        TaskState.TIMEOUT,
+      ].includes(toState as any)
+    ) {
       this.getBulkhead(task.agentId).release();
       if (task.parentTaskId) {
         this.fanOutLimiter.release(task.parentTaskId);
@@ -247,15 +300,27 @@ export class TaskService {
     return updated;
   }
 
-  async cancel(id: string, reason = "Canceled by user", tenant?: TenantContext): Promise<TaskRecord> {
+  async cancel(
+    id: string,
+    reason = "Canceled by user",
+    tenant?: TenantContext
+  ): Promise<TaskRecord> {
     const task = await this.getById(id, tenant);
-    if ([TaskState.COMPLETED, TaskState.FAILED, TaskState.CANCELED, TaskState.REJECTED].includes(task.state as any)) {
+    if (
+      [TaskState.COMPLETED, TaskState.FAILED, TaskState.CANCELED, TaskState.REJECTED].includes(
+        task.state as any
+      )
+    ) {
       throw new ValidationError(`Task ${id} is already terminal: ${task.state}`);
     }
     return this.transition(id, TaskState.CANCELED, { reason, tenant });
   }
 
-  async complete(id: string, output?: Record<string, unknown>, tenant?: TenantContext): Promise<TaskRecord> {
+  async complete(
+    id: string,
+    output?: Record<string, unknown>,
+    tenant?: TenantContext
+  ): Promise<TaskRecord> {
     // Resource limit check on output size
     if (output) {
       const size = JSON.stringify(output).length;
@@ -265,7 +330,11 @@ export class TaskService {
     return this.transition(id, TaskState.COMPLETED, { output, reason: "Task completed", tenant });
   }
 
-  async fail(id: string, error: { code: string; message: string; details?: unknown }, tenant?: TenantContext): Promise<TaskRecord> {
+  async fail(
+    id: string,
+    error: { code: string; message: string; details?: unknown },
+    tenant?: TenantContext
+  ): Promise<TaskRecord> {
     return this.transition(id, TaskState.FAILED, { error, reason: error.message, tenant });
   }
 
@@ -289,7 +358,9 @@ export class TaskService {
 
     await this.publishEvent("task.created", id, { task: updated, retry: true }, tenant);
 
-    setImmediate(() => this.transition(id, TaskState.WORKING, { reason: "Retry delegated", tenant }).catch(() => {}));
+    setImmediate(() =>
+      this.transition(id, TaskState.WORKING, { reason: "Retry delegated", tenant }).catch(() => {})
+    );
 
     return updated as TaskRecord;
   }
@@ -299,7 +370,10 @@ export class TaskService {
     return this.repo.getHistory(id);
   }
 
-  async getDelegationTree(rootTaskId: string, tenant?: TenantContext): Promise<{ tree: TaskRecord[]; graph: any }> {
+  async getDelegationTree(
+    rootTaskId: string,
+    tenant?: TenantContext
+  ): Promise<{ tree: TaskRecord[]; graph: any }> {
     const tasks = await this.repo.getDelegationTree(rootTaskId);
     if (tasks.length === 0) throw new NotFoundError("Task", rootTaskId);
 
@@ -314,7 +388,12 @@ export class TaskService {
       }
     }
 
-    const nodes = tasks.map((t) => ({ id: t.id, label: `${t.id.slice(0, 8)} (${t.state})`, state: t.state, agentId: t.agentId }));
+    const nodes = tasks.map(t => ({
+      id: t.id,
+      label: `${t.id.slice(0, 8)} (${t.state})`,
+      state: t.state,
+      agentId: t.agentId,
+    }));
     const edges: any[] = [];
 
     for (const task of tasks) {
@@ -343,7 +422,12 @@ export class TaskService {
     };
   }
 
-  private async publishEvent(type: AgentMeshEvent["type"], taskId: string, data: unknown, tenant?: TenantContext): Promise<void> {
+  private async publishEvent(
+    type: AgentMeshEvent["type"],
+    taskId: string,
+    data: unknown,
+    tenant?: TenantContext
+  ): Promise<void> {
     try {
       const event: AgentMeshEvent = {
         id: `evt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,

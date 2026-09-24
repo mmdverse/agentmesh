@@ -39,7 +39,13 @@ export class CircuitBreaker {
     return this.state;
   }
 
-  getStats(): { state: CircuitState; failures: number; successes: number; nextAttempt: number; name: string } {
+  getStats(): {
+    state: CircuitState;
+    failures: number;
+    successes: number;
+    nextAttempt: number;
+    name: string;
+  } {
     return {
       state: this.getState(),
       failures: this.failures,
@@ -52,7 +58,9 @@ export class CircuitBreaker {
   async execute<T>(fn: () => Promise<T>): Promise<T> {
     const state = this.getState();
     if (state === "OPEN") {
-      throw new Error(`Circuit ${this.config.name} is OPEN, next attempt at ${new Date(this.nextAttempt).toISOString()}`);
+      throw new Error(
+        `Circuit ${this.config.name} is OPEN, next attempt at ${new Date(this.nextAttempt).toISOString()}`
+      );
     }
     if (state === "HALF_OPEN") {
       if (this.halfOpenCalls >= (this.config.halfOpenMaxCalls ?? 3)) {
@@ -98,7 +106,9 @@ export class CircuitBreaker {
       this.state = "OPEN";
       this.nextAttempt = Date.now() + (this.config.timeoutMs ?? 60000);
       this.successes = 0;
-      console.warn(`[circuit:${this.config.name}] OPEN after ${this.failures} failures, next attempt at ${new Date(this.nextAttempt).toISOString()}`);
+      console.warn(
+        `[circuit:${this.config.name}] OPEN after ${this.failures} failures, next attempt at ${new Date(this.nextAttempt).toISOString()}`
+      );
     }
   }
 
@@ -120,7 +130,11 @@ export interface BulkheadConfig {
 
 export class Bulkhead {
   private active = 0;
-  private queue: Array<{ fn: () => Promise<any>; resolve: (v: any) => void; reject: (e: any) => void }> = [];
+  private queue: Array<{
+    fn: () => Promise<any>;
+    resolve: (v: any) => void;
+    reject: (e: any) => void;
+  }> = [];
 
   constructor(private config: BulkheadConfig = {}) {
     this.config.maxConcurrent = config.maxConcurrent ?? 10;
@@ -131,7 +145,10 @@ export class Bulkhead {
   tryAcquire(): { allowed: boolean; reason?: string } {
     if (this.active >= (this.config.maxConcurrent ?? 10)) {
       if (this.queue.length >= (this.config.maxQueue ?? 100)) {
-        return { allowed: false, reason: `Bulkhead ${this.config.name} at capacity ${this.active}/${this.config.maxConcurrent} queue ${this.queue.length}/${this.config.maxQueue}` };
+        return {
+          allowed: false,
+          reason: `Bulkhead ${this.config.name} at capacity ${this.active}/${this.config.maxConcurrent} queue ${this.queue.length}/${this.config.maxQueue}`,
+        };
       }
     }
     this.active++;
@@ -173,7 +190,13 @@ export class Bulkhead {
     }
   }
 
-  getStats(): { active: number; queued: number; maxConcurrent: number; maxQueue: number; currentConcurrent: number } {
+  getStats(): {
+    active: number;
+    queued: number;
+    maxConcurrent: number;
+    maxQueue: number;
+    currentConcurrent: number;
+  } {
     return {
       active: this.active,
       queued: this.queue.length,
@@ -213,8 +236,10 @@ export async function retry<T>(fn: () => Promise<T>, config: RetryConfig = {}): 
       if (attempt === maxAttempts - 1) break;
       let delay = Math.min(initialDelay * Math.pow(factor, attempt), maxDelay);
       if (jitter) delay = delay * (0.5 + Math.random() * 0.5);
-      console.warn(`[retry] attempt ${attempt + 1}/${maxAttempts} failed: ${(err as Error).message}, retrying in ${Math.round(delay)}ms`);
-      await new Promise((r) => setTimeout(r, delay));
+      console.warn(
+        `[retry] attempt ${attempt + 1}/${maxAttempts} failed: ${(err as Error).message}, retrying in ${Math.round(delay)}ms`
+      );
+      await new Promise(r => setTimeout(r, delay));
     }
   }
   throw lastErr ?? new Error("Retry failed after max attempts");
@@ -222,14 +247,20 @@ export async function retry<T>(fn: () => Promise<T>, config: RetryConfig = {}): 
 
 // Timeout
 
-export async function withTimeout<T>(fn: () => Promise<T>, timeoutMs: number, message = "Operation timed out"): Promise<T> {
+export async function withTimeout<T>(
+  fn: () => Promise<T>,
+  timeoutMs: number,
+  message = "Operation timed out"
+): Promise<T> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const result = await Promise.race([
       fn(),
       new Promise<never>((_, reject) => {
-        controller.signal.addEventListener("abort", () => reject(new Error(`${message} after ${timeoutMs}ms`)));
+        controller.signal.addEventListener("abort", () =>
+          reject(new Error(`${message} after ${timeoutMs}ms`))
+        );
       }),
     ]);
     return result;
@@ -243,7 +274,10 @@ export async function withTimeout<T>(fn: () => Promise<T>, timeoutMs: number, me
 export class Deduplicator {
   private seen = new Map<string, { expiresAt: number; result?: unknown }>();
 
-  constructor(private ttlMs = 60000, private cleanupIntervalMs = 30000) {
+  constructor(
+    private ttlMs = 60000,
+    private cleanupIntervalMs = 30000
+  ) {
     const interval = setInterval(() => this.cleanup(), cleanupIntervalMs);
     if ((interval as any).unref) (interval as any).unref();
   }
@@ -330,7 +364,11 @@ export class FanOutLimiter {
       this.counts.set(key, entry);
     }
     if (entry.count + increment > this.maxFanOut) {
-      return { allowed: false, reason: `Fan-out ${entry.count + increment} exceeds limit ${this.maxFanOut} for ${key}`, current: entry.count };
+      return {
+        allowed: false,
+        reason: `Fan-out ${entry.count + increment} exceeds limit ${this.maxFanOut} for ${key}`,
+        current: entry.count,
+      };
     }
     entry.count += increment;
     return { allowed: true, current: entry.count };
@@ -355,7 +393,8 @@ export class FanOutLimiter {
 
   // Legacy compat for old API check(fanOut: number)
   checkLegacy(fanOut: number): void {
-    if (fanOut > this.maxFanOut) throw new Error(`Fan-out limit exceeded: ${fanOut} > ${this.maxFanOut}`);
+    if (fanOut > this.maxFanOut)
+      throw new Error(`Fan-out limit exceeded: ${fanOut} > ${this.maxFanOut}`);
   }
 
   getCount(): number {

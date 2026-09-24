@@ -18,7 +18,9 @@ async function authPluginInternal(app: FastifyInstance, opts: AuthPluginOptions)
     apiKeys: opts.apiKeys,
   });
 
-  const publicRoutes = new Set(opts.publicRoutes ?? ["/health", "/ready", "/v1/health", "/v1/info"]);
+  const publicRoutes = new Set(
+    opts.publicRoutes ?? ["/health", "/ready", "/v1/health", "/v1/info"]
+  );
 
   if (!app.hasDecorator("authProvider")) {
     app.decorate("authProvider", authProvider);
@@ -50,12 +52,16 @@ async function authPluginInternal(app: FastifyInstance, opts: AuthPluginOptions)
       const auth = await authProvider.authenticate({ headers: req.headers as any });
       (req as any).auth = auth;
       if (!auth.authenticated && (authHeader || apiKeyHeader)) {
-        return reply.status(401).send({ error: { code: "AUTHENTICATION_FAILED", message: "Invalid authentication credentials" } });
+        return reply.status(401).send({
+          error: { code: "AUTHENTICATION_FAILED", message: "Invalid authentication credentials" },
+        });
       }
     } catch (err) {
       const e = err as any;
       if (e.statusCode === 401) {
-        return reply.status(401).send({ error: { code: e.code ?? "AUTHENTICATION_FAILED", message: e.message } });
+        return reply
+          .status(401)
+          .send({ error: { code: e.code ?? "AUTHENTICATION_FAILED", message: e.message } });
       }
       app.log.warn({ err, url: req.url }, "auth error");
       (req as any).auth = { method: "none", authenticated: false } as AuthContext;

@@ -1,5 +1,16 @@
 // Drizzle schema - Phase 0 minimal, will expand in Phase 1
-import { pgTable, text, timestamp, jsonb, varchar, integer, boolean, uuid, index, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  jsonb,
+  varchar,
+  integer,
+  boolean,
+  uuid,
+  index,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
 // Organizations
 export const organizations = pgTable(
@@ -13,7 +24,7 @@ export const organizations = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
+  t => ({
     slugIdx: uniqueIndex("organizations_slug_idx").on(t.slug),
   })
 );
@@ -33,7 +44,7 @@ export const projects = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
+  t => ({
     orgIdx: index("projects_org_idx").on(t.organizationId),
     slugIdx: uniqueIndex("projects_org_slug_idx").on(t.organizationId, t.slug),
   })
@@ -44,7 +55,9 @@ export const agents = pgTable(
   "agents",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: "cascade" }),
+    organizationId: uuid("organization_id").references(() => organizations.id, {
+      onDelete: "cascade",
+    }),
     projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
@@ -62,7 +75,7 @@ export const agents = pgTable(
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
     ttlSeconds: integer("ttl_seconds"),
   },
-  (t) => ({
+  t => ({
     orgIdx: index("agents_org_idx").on(t.organizationId),
     projectIdx: index("agents_project_idx").on(t.projectId),
     nameIdx: index("agents_name_idx").on(t.name),
@@ -84,7 +97,7 @@ export const agentVersions = pgTable(
     isActive: boolean("is_active").default(true).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
+  t => ({
     agentIdx: index("agent_versions_agent_idx").on(t.agentId),
     versionIdx: uniqueIndex("agent_versions_agent_version_idx").on(t.agentId, t.version),
   })
@@ -104,7 +117,7 @@ export const agentCards = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
   },
-  (t) => ({
+  t => ({
     agentIdx: index("agent_cards_agent_idx").on(t.agentId),
   })
 );
@@ -124,7 +137,7 @@ export const skills = pgTable(
     metadata: jsonb("metadata").default({}),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
+  t => ({
     agentIdx: index("skills_agent_idx").on(t.agentId),
     skillIdIdx: index("skills_skill_id_idx").on(t.skillId),
     nameIdx: index("skills_name_idx").on(t.name),
@@ -155,7 +168,7 @@ export const tasks = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
   },
-  (t) => ({
+  t => ({
     rootIdx: index("tasks_root_idx").on(t.rootTaskId),
     agentIdx: index("tasks_agent_idx").on(t.agentId),
     contextIdx: index("tasks_context_idx").on(t.contextId),
@@ -181,7 +194,7 @@ export const taskHistory = pgTable(
     metadata: jsonb("metadata").default({}),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
+  t => ({
     taskIdx: index("task_history_task_idx").on(t.taskId),
     createdIdx: index("task_history_created_idx").on(t.createdAt),
   })
@@ -201,7 +214,7 @@ export const taskEdges = pgTable(
     agentId: varchar("agent_id", { length: 255 }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
+  t => ({
     parentIdx: index("task_edges_parent_idx").on(t.parentTaskId),
     childIdx: index("task_edges_child_idx").on(t.childTaskId),
   })
@@ -220,7 +233,7 @@ export const messages = pgTable(
     metadata: jsonb("metadata").default({}),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
+  t => ({
     taskIdx: index("messages_task_idx").on(t.taskId),
     contextIdx: index("messages_context_idx").on(t.contextId),
     traceIdx: index("messages_trace_idx").on(t.traceId),
@@ -247,7 +260,7 @@ export const artifacts = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
   },
-  (t) => ({
+  t => ({
     taskIdx: index("artifacts_task_idx").on(t.taskId),
     orgIdx: index("artifacts_org_idx").on(t.organizationId),
     createdIdx: index("artifacts_created_idx").on(t.createdAt),
@@ -259,7 +272,9 @@ export const routes = pgTable(
   "routes",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: "cascade" }),
+    organizationId: uuid("organization_id").references(() => organizations.id, {
+      onDelete: "cascade",
+    }),
     projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
@@ -271,7 +286,7 @@ export const routes = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
+  t => ({
     orgIdx: index("routes_org_idx").on(t.organizationId),
     skillIdx: index("routes_skill_idx").on(t.skill),
   })
@@ -282,7 +297,9 @@ export const policies = pgTable(
   "policies",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: "cascade" }),
+    organizationId: uuid("organization_id").references(() => organizations.id, {
+      onDelete: "cascade",
+    }),
     projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
@@ -295,7 +312,7 @@ export const policies = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
+  t => ({
     orgIdx: index("policies_org_idx").on(t.organizationId),
   })
 );
@@ -305,7 +322,9 @@ export const credentials = pgTable(
   "credentials",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: "cascade" }),
+    organizationId: uuid("organization_id").references(() => organizations.id, {
+      onDelete: "cascade",
+    }),
     projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 255 }).notNull(),
     type: varchar("type", { length: 50 }).notNull(), // apiKey, oauth, mtls, etc
@@ -315,7 +334,7 @@ export const credentials = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
   },
-  (t) => ({
+  t => ({
     orgIdx: index("credentials_org_idx").on(t.organizationId),
     typeIdx: index("credentials_type_idx").on(t.type),
   })
@@ -336,7 +355,7 @@ export const events = pgTable(
     metadata: jsonb("metadata").default({}),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
+  t => ({
     typeIdx: index("events_type_idx").on(t.type),
     subjectIdx: index("events_subject_idx").on(t.subject),
     traceIdx: index("events_trace_idx").on(t.traceId),
@@ -350,7 +369,9 @@ export const webhooks = pgTable(
   "webhooks",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: "cascade" }),
+    organizationId: uuid("organization_id").references(() => organizations.id, {
+      onDelete: "cascade",
+    }),
     projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }),
     url: text("url").notNull(),
     secret: text("secret"),
@@ -362,7 +383,7 @@ export const webhooks = pgTable(
     lastDeliveryAt: timestamp("last_delivery_at", { withTimezone: true }),
     lastDeliveryStatus: varchar("last_delivery_status", { length: 20 }),
   },
-  (t) => ({
+  t => ({
     orgIdx: index("webhooks_org_idx").on(t.organizationId),
   })
 );

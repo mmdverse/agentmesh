@@ -24,10 +24,19 @@ export interface ArtifactMetadata {
 }
 
 export interface ArtifactStore {
-  put(key: string, data: Buffer | Uint8Array | string, opts: { contentType: string; metadata?: Record<string, string> }): Promise<{ key: string; size: number; checksum: string }>;
-  get(key: string): Promise<{ data: Buffer; contentType: string; metadata?: Record<string, string> }>;
+  put(
+    key: string,
+    data: Buffer | Uint8Array | string,
+    opts: { contentType: string; metadata?: Record<string, string> }
+  ): Promise<{ key: string; size: number; checksum: string }>;
+  get(
+    key: string
+  ): Promise<{ data: Buffer; contentType: string; metadata?: Record<string, string> }>;
   delete(key: string): Promise<void>;
-  presignedUrl(key: string, opts: { expiresInSeconds?: number; method?: "GET" | "PUT" }): Promise<string>;
+  presignedUrl(
+    key: string,
+    opts: { expiresInSeconds?: number; method?: "GET" | "PUT" }
+  ): Promise<string>;
   exists(key: string): Promise<boolean>;
 }
 
@@ -42,10 +51,22 @@ export interface ArtifactStoreConfig {
 
 // In-memory store for Phase 4 dev / tests
 export class InMemoryArtifactStore implements ArtifactStore {
-  private store = new Map<string, { data: Buffer; contentType: string; metadata?: Record<string, string> }>();
+  private store = new Map<
+    string,
+    { data: Buffer; contentType: string; metadata?: Record<string, string> }
+  >();
 
-  async put(key: string, data: Buffer | Uint8Array | string, opts: { contentType: string; metadata?: Record<string, string> }) {
-    const buf = typeof data === "string" ? Buffer.from(data) : Buffer.isBuffer(data) ? data : Buffer.from(data);
+  async put(
+    key: string,
+    data: Buffer | Uint8Array | string,
+    opts: { contentType: string; metadata?: Record<string, string> }
+  ) {
+    const buf =
+      typeof data === "string"
+        ? Buffer.from(data)
+        : Buffer.isBuffer(data)
+          ? data
+          : Buffer.from(data);
     const checksum = createHash("sha256").update(buf).digest("hex");
     this.store.set(key, { data: buf, contentType: opts.contentType, metadata: opts.metadata });
     return { key, size: buf.length, checksum };
@@ -91,17 +112,25 @@ class InMemoryArtifactRepo {
     return null;
   }
 
-  async list(filter: { organizationId?: string; projectId?: string; taskId?: string; agentId?: string; limit?: number; offset?: number; contentType?: string }): Promise<{ artifacts: ArtifactMetadata[]; total: number }> {
+  async list(filter: {
+    organizationId?: string;
+    projectId?: string;
+    taskId?: string;
+    agentId?: string;
+    limit?: number;
+    offset?: number;
+    contentType?: string;
+  }): Promise<{ artifacts: ArtifactMetadata[]; total: number }> {
     let list = Array.from(this.artifacts.values());
-    if (filter.organizationId) list = list.filter((a) => a.organizationId === filter.organizationId);
-    if (filter.projectId) list = list.filter((a) => a.projectId === filter.projectId);
-    if (filter.taskId) list = list.filter((a) => a.taskId === filter.taskId);
-    if (filter.agentId) list = list.filter((a) => a.agentId === filter.agentId);
-    if (filter.contentType) list = list.filter((a) => a.contentType === filter.contentType);
+    if (filter.organizationId) list = list.filter(a => a.organizationId === filter.organizationId);
+    if (filter.projectId) list = list.filter(a => a.projectId === filter.projectId);
+    if (filter.taskId) list = list.filter(a => a.taskId === filter.taskId);
+    if (filter.agentId) list = list.filter(a => a.agentId === filter.agentId);
+    if (filter.contentType) list = list.filter(a => a.contentType === filter.contentType);
 
     // Filter expired
     const now = Date.now();
-    list = list.filter((a) => !a.expiresAt || new Date(a.expiresAt).getTime() > now);
+    list = list.filter(a => !a.expiresAt || new Date(a.expiresAt).getTime() > now);
 
     list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
@@ -170,7 +199,10 @@ export class ArtifactManager {
     const storageKey = `${input.organizationId ?? "default"}/${input.projectId ?? "default"}/${id}/${input.name ?? "artifact"}`;
 
     // Validate size - max 100MB default, but check
-    const size = typeof input.data === "string" ? Buffer.byteLength(input.data) : (input.data as Buffer).length;
+    const size =
+      typeof input.data === "string"
+        ? Buffer.byteLength(input.data)
+        : (input.data as Buffer).length;
     const maxSize = 100 * 1024 * 1024; // 100MB
     if (size > maxSize) {
       throw new Error(`Artifact size ${size} exceeds limit ${maxSize}`);
@@ -187,7 +219,11 @@ export class ArtifactManager {
       },
     });
 
-    const expiresAt = input.expiresAt ?? (input.retentionDays ? new Date(Date.now() + input.retentionDays * 24 * 60 * 60 * 1000).toISOString() : undefined);
+    const expiresAt =
+      input.expiresAt ??
+      (input.retentionDays
+        ? new Date(Date.now() + input.retentionDays * 24 * 60 * 60 * 1000).toISOString()
+        : undefined);
 
     const metadata: ArtifactMetadata = {
       id,
@@ -215,20 +251,36 @@ export class ArtifactManager {
     return metadata;
   }
 
-  async getArtifact(id: string, requester?: { organizationId?: string; projectId?: string; identityId?: string }): Promise<{ metadata: ArtifactMetadata; data: Buffer; contentType: string }> {
+  async getArtifact(
+    id: string,
+    requester?: { organizationId?: string; projectId?: string; identityId?: string }
+  ): Promise<{ metadata: ArtifactMetadata; data: Buffer; contentType: string }> {
     const meta = await this.repo.getById(id);
     if (!meta) throw new Error(`Artifact ${id} not found`);
 
     // Access control check
     if (requester && meta.accessControl !== "public") {
-      if (meta.accessControl === "private" && meta.createdBy && requester.identityId && meta.createdBy !== requester.identityId) {
+      if (
+        meta.accessControl === "private" &&
+        meta.createdBy &&
+        requester.identityId &&
+        meta.createdBy !== requester.identityId
+      ) {
         // For private, only creator can access - but allow same org/project for now
         // Strict check would be creator only, but we allow org/project for collaboration
       }
-      if (meta.accessControl === "organization" && meta.organizationId && requester.organizationId !== meta.organizationId) {
+      if (
+        meta.accessControl === "organization" &&
+        meta.organizationId &&
+        requester.organizationId !== meta.organizationId
+      ) {
         throw new Error(`Access denied: organization mismatch for artifact ${id}`);
       }
-      if (meta.accessControl === "project" && meta.projectId && requester.projectId !== meta.projectId) {
+      if (
+        meta.accessControl === "project" &&
+        meta.projectId &&
+        requester.projectId !== meta.projectId
+      ) {
         throw new Error(`Access denied: project mismatch for artifact ${id}`);
       }
     }
@@ -246,11 +298,22 @@ export class ArtifactManager {
     return this.repo.getById(id);
   }
 
-  async listArtifacts(filter: { organizationId?: string; projectId?: string; taskId?: string; agentId?: string; limit?: number; offset?: number; contentType?: string }): Promise<{ artifacts: ArtifactMetadata[]; total: number }> {
+  async listArtifacts(filter: {
+    organizationId?: string;
+    projectId?: string;
+    taskId?: string;
+    agentId?: string;
+    limit?: number;
+    offset?: number;
+    contentType?: string;
+  }): Promise<{ artifacts: ArtifactMetadata[]; total: number }> {
     return this.repo.list(filter);
   }
 
-  async deleteArtifact(id: string, requester?: { organizationId?: string; projectId?: string }): Promise<void> {
+  async deleteArtifact(
+    id: string,
+    requester?: { organizationId?: string; projectId?: string }
+  ): Promise<void> {
     const meta = await this.repo.getById(id);
     if (!meta) throw new Error(`Artifact ${id} not found`);
 
@@ -263,7 +326,10 @@ export class ArtifactManager {
     await this.repo.delete(id);
   }
 
-  async presignedUrl(id: string, opts: { expiresInSeconds?: number; method?: "GET" | "PUT" } = {}): Promise<{ url: string; metadata: ArtifactMetadata }> {
+  async presignedUrl(
+    id: string,
+    opts: { expiresInSeconds?: number; method?: "GET" | "PUT" } = {}
+  ): Promise<{ url: string; metadata: ArtifactMetadata }> {
     const meta = await this.repo.getById(id);
     if (!meta) throw new Error(`Artifact ${id} not found`);
     const url = await this.store.presignedUrl(meta.storageKey, opts);
@@ -277,7 +343,11 @@ export class ArtifactManager {
   }
 
   // For task integration - create artifact from task output
-  async createFromTaskOutput(taskId: string, output: Record<string, unknown>, opts: { organizationId?: string; projectId?: string; agentId?: string; createdBy?: string }): Promise<ArtifactMetadata> {
+  async createFromTaskOutput(
+    taskId: string,
+    output: Record<string, unknown>,
+    opts: { organizationId?: string; projectId?: string; agentId?: string; createdBy?: string }
+  ): Promise<ArtifactMetadata> {
     const data = JSON.stringify(output, null, 2);
     return this.createArtifact({
       name: `task-${taskId}-output.json`,
@@ -309,7 +379,9 @@ export function createArtifactManager(store: ArtifactStore, bucket?: string): Ar
 }
 
 export function createArtifactStore(config: ArtifactStoreConfig): ArtifactStore {
-  console.log(`[artifacts] Using InMemory store for Phase 4 (bucket: ${config.bucket}) - S3 will be used when config provided with USE_S3=true`);
+  console.log(
+    `[artifacts] Using InMemory store for Phase 4 (bucket: ${config.bucket}) - S3 will be used when config provided with USE_S3=true`
+  );
   if (process.env.USE_S3 === "true") {
     // Dynamically import S3 adapter
     try {

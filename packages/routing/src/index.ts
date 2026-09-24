@@ -28,7 +28,11 @@ export interface RoutingStrategy {
 }
 
 export interface RoutingEngine {
-  route(candidates: AgentCandidate[], ctx: RoutingContext, strategyName?: string): AgentCandidate | null;
+  route(
+    candidates: AgentCandidate[],
+    ctx: RoutingContext,
+    strategyName?: string
+  ): AgentCandidate | null;
   registerStrategy(strategy: RoutingStrategy): void;
   listStrategies(): string[];
 }
@@ -41,7 +45,7 @@ export class RoundRobinStrategy implements RoutingStrategy {
 
   select(candidates: AgentCandidate[]): AgentCandidate | null {
     if (candidates.length === 0) return null;
-    const healthy = candidates.filter((c) => c.health === "HEALTHY" || c.health === "UNKNOWN");
+    const healthy = candidates.filter(c => c.health === "HEALTHY" || c.health === "UNKNOWN");
     const pool = healthy.length > 0 ? healthy : candidates;
     const idx = this.counter++ % pool.length;
     return pool[idx] ?? null;
@@ -61,9 +65,11 @@ export class LatencyAwareStrategy implements RoutingStrategy {
   readonly name = "latency_aware";
   select(candidates: AgentCandidate[]): AgentCandidate | null {
     if (candidates.length === 0) return null;
-    const withLatency = candidates.filter((c) => c.latencyMs !== undefined);
+    const withLatency = candidates.filter(c => c.latencyMs !== undefined);
     if (withLatency.length === 0) return candidates[0] ?? null;
-    const sorted = withLatency.sort((a, b) => (a.latencyMs ?? Infinity) - (b.latencyMs ?? Infinity));
+    const sorted = withLatency.sort(
+      (a, b) => (a.latencyMs ?? Infinity) - (b.latencyMs ?? Infinity)
+    );
     return sorted[0] ?? null;
   }
 }
@@ -75,7 +81,10 @@ export class WeightedStrategy implements RoutingStrategy {
   select(candidates: AgentCandidate[]): AgentCandidate | null {
     if (candidates.length === 0) return null;
     // simple weighted random based on score or explicit weights
-    const total = candidates.reduce((sum, c) => sum + (this.weights[c.agent.id] ?? c.score ?? 1), 0);
+    const total = candidates.reduce(
+      (sum, c) => sum + (this.weights[c.agent.id] ?? c.score ?? 1),
+      0
+    );
     let r = Math.random() * total;
     for (const c of candidates) {
       const w = this.weights[c.agent.id] ?? c.score ?? 1;
@@ -90,9 +99,9 @@ export class CapabilityMatchStrategy implements RoutingStrategy {
   readonly name = "capability_match";
   select(candidates: AgentCandidate[], ctx: RoutingContext): AgentCandidate | null {
     if (!ctx.skill && !ctx.capability) return candidates[0] ?? null;
-    const filtered = candidates.filter((c) => {
+    const filtered = candidates.filter(c => {
       if (ctx.skill) {
-        return c.agent.skills.some((s) => s.id === ctx.skill || s.name === ctx.skill);
+        return c.agent.skills.some(s => s.id === ctx.skill || s.name === ctx.skill);
       }
       if (ctx.capability) {
         return c.agent.capabilities.extensions?.includes(ctx.capability) ?? false;
@@ -122,18 +131,22 @@ export class DefaultRoutingEngine implements RoutingEngine {
     return Array.from(this.strategies.keys());
   }
 
-  route(candidates: AgentCandidate[], ctx: RoutingContext, strategyName = "capability_match"): AgentCandidate | null {
+  route(
+    candidates: AgentCandidate[],
+    ctx: RoutingContext,
+    strategyName = "capability_match"
+  ): AgentCandidate | null {
     // Phase 0: two-stage filter + score
     // Stage 1: Filter by health, region, version if provided
-    let pool = candidates.filter((c) => c.health !== "UNHEALTHY");
+    let pool = candidates.filter(c => c.health !== "UNHEALTHY");
 
     if (ctx.region) {
-      const regional = pool.filter((c) => c.agent.region === ctx.region);
+      const regional = pool.filter(c => c.agent.region === ctx.region);
       if (regional.length > 0) pool = regional;
     }
 
     if (ctx.agentVersion) {
-      const versioned = pool.filter((c) => c.agent.version === ctx.agentVersion);
+      const versioned = pool.filter(c => c.agent.version === ctx.agentVersion);
       if (versioned.length > 0) pool = versioned;
     }
 

@@ -1,4 +1,10 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+  HeadObjectCommand,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createHash } from "node:crypto";
 
@@ -41,11 +47,20 @@ export function getS3(config?: S3Config): S3Client {
 }
 
 export class S3ArtifactStore {
-  constructor(private s3: S3Client, private bucket: string) {}
+  constructor(
+    private s3: S3Client,
+    private bucket: string
+  ) {}
 
-  async put(key: string, data: Buffer | Uint8Array | string, opts: { contentType: string; metadata?: Record<string, string> }) {
+  async put(
+    key: string,
+    data: Buffer | Uint8Array | string,
+    opts: { contentType: string; metadata?: Record<string, string> }
+  ) {
     const body = typeof data === "string" ? Buffer.from(data) : data;
-    const checksum = createHash("sha256").update(body as any).digest("hex");
+    const checksum = createHash("sha256")
+      .update(body as any)
+      .digest("hex");
 
     await this.s3.send(
       new PutObjectCommand({
@@ -70,7 +85,11 @@ export class S3ArtifactStore {
       }
     }
     const data = Buffer.concat(chunks);
-    return { data, contentType: res.ContentType ?? "application/octet-stream", metadata: res.Metadata };
+    return {
+      data,
+      contentType: res.ContentType ?? "application/octet-stream",
+      metadata: res.Metadata,
+    };
   }
 
   async delete(key: string) {
@@ -86,8 +105,14 @@ export class S3ArtifactStore {
     }
   }
 
-  async presignedUrl(key: string, opts: { expiresInSeconds?: number; method?: "GET" | "PUT" } = {}): Promise<string> {
-    const command = opts.method === "PUT" ? new PutObjectCommand({ Bucket: this.bucket, Key: key }) : new GetObjectCommand({ Bucket: this.bucket, Key: key });
+  async presignedUrl(
+    key: string,
+    opts: { expiresInSeconds?: number; method?: "GET" | "PUT" } = {}
+  ): Promise<string> {
+    const command =
+      opts.method === "PUT"
+        ? new PutObjectCommand({ Bucket: this.bucket, Key: key })
+        : new GetObjectCommand({ Bucket: this.bucket, Key: key });
     return getSignedUrl(this.s3, command as any, { expiresIn: opts.expiresInSeconds ?? 3600 });
   }
 }

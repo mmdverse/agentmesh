@@ -38,7 +38,14 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
   // Phase 3 - Security & Reliability
   await app.register(authPlugin, {
     jwtSecret: opts.config.JWT_SECRET,
-    publicRoutes: ["/health", "/ready", "/v1/health", "/v1/info", "/v1/reliability/stats", "/v1/observability/*"],
+    publicRoutes: [
+      "/health",
+      "/ready",
+      "/v1/health",
+      "/v1/info",
+      "/v1/reliability/stats",
+      "/v1/observability/*",
+    ],
   });
   await app.register(tenantPlugin);
   await app.register(rateLimitPlugin, { enabled: true });

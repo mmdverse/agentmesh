@@ -2,6 +2,25 @@
 
 > 🌍 **Languages:** [English](./README.md) | [Русский](./README.ru.md) | [中文](./README.zh.md) | [العربية](./README.ar.md) | [فارسی](./README.fa.md) | [Türkçe](./README.tr.md) | [Español](./README.es.md)
 
+[![AgentMesh Banner](./docs/assets/agentmesh-banner.svg)](./docs/assets/agentmesh-banner.svg)
+
+[![Next.js 14](https://img.shields.io/badge/Next.js-14-000000?logo=nextdotjs&logoColor=white)](./apps/console)
+[![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](./tsconfig.base.json)
+[![Fastify](https://img.shields.io/badge/Fastify-5-000000?logo=fastify&logoColor=white)](./apps/gateway)
+[![A2A Protocol](https://img.shields.io/badge/A2A-first--class-6366f1)](./packages/a2a-protocol)
+[![MCP Bridge](https://img.shields.io/badge/MCP-bridge-8b5cf6)](./packages/mcp-bridge)
+[![Tests](https://img.shields.io/badge/tests-28%20packages-2ea043)](./packages)
+[![Languages](https://img.shields.io/badge/languages-7%20%E2%80%A2%20RTL%20%2B%20LTR-1f6feb)](./README.fa.md)
+[![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker&logoColor=white)](./infra/docker-compose.yml)
+[![License](https://img.shields.io/badge/license-free-lightgrey)](./DONATE.md)
+[![Version](https://img.shields.io/badge/version-1.0.0-6366f1)](./package.json)
+
+⭐ **[Поставьте звезду](https://github.com/mmdverse/agentmesh/stargazers)** если полезно · 💛 **[Поддержать проект](#поддержка-и-донаты)**
+
+_Автономный инфраструктурный шлюз и control plane для AI-агентов — с A2A как первый класс, MCP bridge и консолью с живым графом делегации._
+
+---
+
 **Production-grade Infrastructure Gateway и Control Plane для AI-агентов**
 
 > API Gateway + Service Mesh + Service Discovery + Message Broker + Observability — создано специально для агентных нагрузок.
@@ -61,6 +80,7 @@ packages/
 ## Быстрый старт
 
 ### Требования
+
 - Node.js 20+, pnpm 9+
 - Docker & Docker Compose
 - Опционально: kubectl, helm
@@ -109,53 +129,68 @@ curl http://localhost:3000/
 ## Возможности
 
 ### A2A как протокол первого класса
+
 - Agent Cards: кэширование, валидация, версионирование, подпись, trust policies
 - Discovery: Direct URL, Well-Known, Local Registry, Enterprise, DNS, Dynamic, Manual
 - Поддержка: Messages, Tasks, Artifacts, Streaming (SSE), Push Notifications, Cancellation
 
 ### Registry
+
 ID, Name, Description, Organization, Version, Endpoints, Skills, Capabilities, Security Schemes, Health, Region, Tags, Trust Status. Ранжирование через плагины RoutingStrategy.
 
 ### Версионирование
+
 Несколько версий: CodeAgent v1, v2, v3. Стратегии: latest, stable, specific, minimum, canary, max_satisfying (semver `^1.0.0`, `~2.0.0`). Per-tenant версионирование.
 
 ### Multi-Tenancy
+
 ```
 Organization -> Projects -> Agents, Tasks, Policies
 ```
+
 Строгая изоляция — несовпадение org → 403. Извлекается из `X-Organization-Id`, `X-Project-Id`, JWT.
 
 ### Оркестрация задач
+
 `SUBMITTED → WORKING → INPUT_REQUIRED/AUTH_REQUIRED → COMPLETED/FAILED/CANCELED`. Persistent state, delegation tree с лимитом fan-out 10, depth 10. Live граф через React Flow.
 
 ### Надежность
+
 Retries с exponential backoff + jitter, deadlines, Circuit Breakers CLOSED/OPEN/HALF_OPEN, Bulkheads, Idempotency 24ч, Deduplication, без слепых ретраев.
 
 ### Безопасность (Threat Model реализован)
+
 - Вредоносный агент, скомпрометированный агент, поддельный Agent Card, спуфинг, replay, hijacking, confused deputy, SSRF (блок private IP, только https в prod), webhook abuse, обход авторизации, tenant breakout, доступ к артефактам, инъекция сообщений, DoS, retry storms, утечка credentials.
 
 ### Аутентификация
+
 ApiKey, JWT (jose), OIDC (JWKS), mTLS, Workload Identity, Composite.
 
 ### Авторизация
+
 Caller, agent, org, project, skill, task, scope, policy, delegation chain. `deny-overrides-allow`, glob matching, scopes subset check против escalation.
 
 ### Артефакты и сообщения
+
 S3 (MinIO/AWS) + checksum sha256, presigned URLs, retention. Сообщения sync/async/streaming с traceId.
 
 ### MCP Bridge
+
 ```
 A2A Agent | AgentMesh | MCP Server
 MCP Tool → A2A Skill, MCP Server → A2A Card, A2A Skill → MCP Tool
 ```
 
 ### Event Bus и Webhooks
+
 NATS JetStream stream `AGENTMESH` с fallback на InMemory. Webhooks подписанные HMAC sha256, ретраи, SSRF защита, dead-letter.
 
 ### Rate Limiting и Observability
+
 Multi-dimensional: org 500/s, project 200/s, agent 50/s, IP 100/s, global 1000/s. Token bucket, sliding window. OTel tracing User→Agent→Tool, метрики latency, errors, retries.
 
 ### Console
+
 Next.js 14, 19 страниц: Agents, Tasks с живым графом React Flow, Artifacts, Messages, MCP, Security, Telemetry и т.д.
 
 ---
@@ -177,6 +212,7 @@ Next.js 14, 19 страниц: Agents, Tasks с живым графом React Fl
 ## Деплой
 
 ### Docker Compose
+
 ```bash
 pnpm docker:up   # postgres, redis, nats, minio, control-plane, gateway x2, console
 pnpm docker:logs
@@ -184,12 +220,14 @@ pnpm docker:down
 ```
 
 ### Kubernetes
+
 ```bash
 kubectl apply -f infra/k8s/
 # Namespace, ConfigMap, Secret, Postgres PVC 10Gi, Redis 5Gi, NATS 5Gi, Gateway 3 реплики HPA 3-10, Control-Plane 2, Console, Ingress
 ```
 
 ### Helm
+
 ```bash
 helm install agentmesh infra/helm/agentmesh -n agentmesh --create-namespace
 helm upgrade agentmesh infra/helm/agentmesh -n agentmesh
@@ -212,9 +250,15 @@ Unit, Integration, A2A Conformance, MCP Bridge, Routing, Task Lifecycle, Failure
 ## SDK
 
 ```ts
-const mesh = new AgentMeshClient({ endpoint: "http://localhost:3002", gatewayEndpoint: "http://localhost:3001" });
+const mesh = new AgentMeshClient({
+  endpoint: "http://localhost:3002",
+  gatewayEndpoint: "http://localhost:3001",
+});
 const agents = await mesh.discovery.find({ skill: "code-review", versionStrategy: "stable" });
-const task = await mesh.tasks.create({ agentId: agents.agents[0].id, message: { text: "Review PR" } });
+const task = await mesh.tasks.create({
+  agentId: agents.agents[0].id,
+  message: { text: "Review PR" },
+});
 const result = await mesh.tasks.poll(task.task.id);
 ```
 
@@ -224,16 +268,35 @@ const result = await mesh.tasks.poll(task.task.id);
 
 Бесплатно и открыто — без условий. Один человек поддерживает проект, донаты идут на реальную инфраструктуру: серверы, измерения, продакшн трафик.
 
-**Крипто-донаты — 100% на инфраструктуру:**
+### Адреса
 
-- **BTC (Bitcoin):** `bc1q36uzqlkaav3lkscknhemcem0lcjtkhepdqckul`
-- **BNB (BSC):** `0x57902d3955D5F1C0fbCaEA0a12A7D691c792487E`
-- **SOL (Solana):** `4hCYetZjvK8mkuobRvPYXyRnM84aTj3q8LZ1GpiTK8HR` — минимальные комиссии
-- **TRON (TRC20):** `TVFZKSwMYNw1jiCyKKtKoVG3HbpB4DhsA5` — минимальные комиссии
+Сканируйте карту приложением кошелька или используйте кнопку копирования под ней. Проверьте адрес в кошельке перед отправкой — минимальные комиссии на Solana и Tron.
 
-См. [DONATE.md](./DONATE.md) для деталей. Минимальные комиссии на Solana и Tron.
+[![Bitcoin · BTC mainnet](./docs/assets/donate/donate-bitcoin.svg)](./docs/assets/donate/donate-bitcoin.svg)
 
----
+```
+bc1q36uzqlkaav3lkscknhemcem0lcjtkhepdqckul
+```
+
+[![BNB Smart Chain · BEP-20](./docs/assets/donate/donate-bnb.svg)](./docs/assets/donate/donate-bnb.svg)
+
+```
+0x57902d3955D5F1C0fbCaEA0a12A7D691c792487E
+```
+
+[![Solana · SOL mainnet](./docs/assets/donate/donate-solana.svg)](./docs/assets/donate/donate-solana.svg)
+
+```
+4hCYetZjvK8mkuobRvPYXyRnM84aTj3q8LZ1GpiTK8HR
+```
+
+[![Tron · TRC-20](./docs/assets/donate/donate-tron.svg)](./docs/assets/donate/donate-tron.svg)
+
+```
+TVFZKSwMYNw1jiCyKKtKoVG3HbpB4DhsA5
+```
+
+**Не денежный человек?** Кейс для `world-matrix` или новая стратегия роутинга ценнее большинства PR.
 
 ---
 

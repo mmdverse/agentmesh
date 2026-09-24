@@ -22,8 +22,18 @@ const CreateTaskSchema = z.object({
 export async function tasksRoutes(app: FastifyInstance) {
   const service = getTaskService();
 
-  app.get("/", async (req) => {
-    const { state, agentId, contextId, traceId, rootTaskId, organizationId, projectId, limit = "20", offset = "0" } = req.query as any;
+  app.get("/", async req => {
+    const {
+      state,
+      agentId,
+      contextId,
+      traceId,
+      rootTaskId,
+      organizationId,
+      projectId,
+      limit = "20",
+      offset = "0",
+    } = req.query as any;
     const tenant = (req as any).tenant ?? {};
 
     const filter = {
@@ -52,7 +62,9 @@ export async function tasksRoutes(app: FastifyInstance) {
       return { task };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 404).send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 404)
+        .send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
     }
   });
 
@@ -60,7 +72,13 @@ export async function tasksRoutes(app: FastifyInstance) {
     try {
       const parsed = CreateTaskSchema.safeParse(req.body);
       if (!parsed.success) {
-        return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "Invalid input", details: parsed.error.flatten() } });
+        return reply.status(400).send({
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid input",
+            details: parsed.error.flatten(),
+          },
+        });
       }
 
       const tenant = (req as any).tenant ?? {};
@@ -68,7 +86,9 @@ export async function tasksRoutes(app: FastifyInstance) {
       return reply.status(201).send({ task });
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "CREATE_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "CREATE_FAILED", message: e.message } });
     }
   });
 
@@ -81,7 +101,9 @@ export async function tasksRoutes(app: FastifyInstance) {
       return { task };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "CANCEL_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "CANCEL_FAILED", message: e.message } });
     }
   });
 
@@ -94,7 +116,9 @@ export async function tasksRoutes(app: FastifyInstance) {
       return { task };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "COMPLETE_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "COMPLETE_FAILED", message: e.message } });
     }
   });
 
@@ -103,14 +127,18 @@ export async function tasksRoutes(app: FastifyInstance) {
     const { error } = (req.body as any) ?? {};
     const tenant = (req as any).tenant ?? {};
     if (!error?.message) {
-      return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "error.message required" } });
+      return reply
+        .status(400)
+        .send({ error: { code: "VALIDATION_ERROR", message: "error.message required" } });
     }
     try {
       const task = await service.fail(id, error, tenant);
       return { task };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "FAIL_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "FAIL_FAILED", message: e.message } });
     }
   });
 
@@ -122,7 +150,9 @@ export async function tasksRoutes(app: FastifyInstance) {
       return { task };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "RETRY_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "RETRY_FAILED", message: e.message } });
     }
   });
 
@@ -134,7 +164,9 @@ export async function tasksRoutes(app: FastifyInstance) {
       return { taskId: id, history };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "HISTORY_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "HISTORY_FAILED", message: e.message } });
     }
   });
 
@@ -146,7 +178,9 @@ export async function tasksRoutes(app: FastifyInstance) {
       return { taskId: id, tree, graph };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "GRAPH_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "GRAPH_FAILED", message: e.message } });
     }
   });
 
@@ -162,7 +196,9 @@ export async function tasksRoutes(app: FastifyInstance) {
       await service.getById(id, tenant);
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 404).send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 404)
+        .send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
     }
 
     reply.raw.writeHead(200, {
@@ -183,12 +219,20 @@ export async function tasksRoutes(app: FastifyInstance) {
     } catch {}
 
     const { createEventBus } = await import("@agentmesh/events");
-    const eventBus = createEventBus({ serviceName: "control-plane-stream", url: process.env.NATS_URL });
+    const eventBus = createEventBus({
+      serviceName: "control-plane-stream",
+      url: process.env.NATS_URL,
+    });
 
     const sub = await eventBus.subscribe("*", (event: any) => {
       if (event.subject === `task.${id}` || event.data?.task?.id === id) {
         // Tenant check for stream
-        if (tenant.organizationId && event.organizationId && event.organizationId !== tenant.organizationId) return;
+        if (
+          tenant.organizationId &&
+          event.organizationId &&
+          event.organizationId !== tenant.organizationId
+        )
+          return;
         if (tenant.projectId && event.projectId && event.projectId !== tenant.projectId) return;
         const type = event.type.replace("task.", "");
         sendEvent(type, event.data);

@@ -18,12 +18,14 @@ User -> Gateway Cluster (Data Plane) -> Agent A -> Agent B -> MCP Tools
 ## Control Plane / Data Plane Separation
 
 **Control Plane** (stateful):
+
 - Agent Registry, Agent Card management, versioning, health, TTL
 - Policies, Authorization, Tenant isolation
 - Configuration, Routing rules, Admin API
 - Workers for health checks, webhook retries, timeouts
 
 **Data Plane** (stateless):
+
 - Message forwarding, routing, load balancing
 - Streaming (SSE), Task lifecycle proxy
 - Telemetry, Rate limiting, Circuit breaking
@@ -34,6 +36,7 @@ User -> Gateway Cluster (Data Plane) -> Agent A -> Agent B -> MCP Tools
 No proprietary replacement. A2A spec is versioned in `packages/a2a-protocol`.
 
 Supported:
+
 - Agent Cards, Discovery (well-known, direct URL, registry, DNS)
 - Messages, Tasks, Artifacts, Streaming, Push Notifications, Cancellation, Context IDs, Extensions
 

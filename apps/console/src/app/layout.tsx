@@ -32,8 +32,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <p className="text-[10px] text-muted-foreground mt-1">Made ❤️ by Mohammad @llllxyz</p>
             </div>
             <nav className="space-y-1">
-              {nav.map((item) => (
-                <Link key={item.href} href={item.href} className="block rounded px-3 py-2 text-sm hover:bg-secondary">
+              {nav.map(item => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="block rounded px-3 py-2 text-sm hover:bg-secondary"
+                >
                   {item.label}
                 </Link>
               ))}

@@ -5,8 +5,14 @@ const nextConfig = {
   experimental: { typedRoutes: false },
   async rewrites() {
     return [
-      { source: "/api/control-plane/:path*", destination: `${process.env.CONTROL_PLANE_URL || "http://localhost:3002"}/:path*` },
-      { source: "/api/gateway/:path*", destination: `${process.env.GATEWAY_URL || "http://localhost:3001"}/:path*` },
+      {
+        source: "/api/control-plane/:path*",
+        destination: `${process.env.CONTROL_PLANE_URL || "http://localhost:3002"}/:path*`,
+      },
+      {
+        source: "/api/gateway/:path*",
+        destination: `${process.env.GATEWAY_URL || "http://localhost:3001"}/:path*`,
+      },
     ];
   },
 };

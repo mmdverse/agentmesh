@@ -4,7 +4,10 @@ export async function tasksRoutes(app: FastifyInstance) {
   const controlPlaneUrl = process.env.CONTROL_PLANE_URL ?? "http://localhost:3002";
 
   // Helper to proxy to control-plane
-  async function proxyToControlPlane(path: string, opts: { method?: string; body?: unknown; headers?: Record<string, string> } = {}) {
+  async function proxyToControlPlane(
+    path: string,
+    opts: { method?: string; body?: unknown; headers?: Record<string, string> } = {}
+  ) {
     const url = `${controlPlaneUrl}${path}`;
     const res = await fetch(url, {
       method: opts.method ?? "GET",
@@ -46,22 +49,42 @@ export async function tasksRoutes(app: FastifyInstance) {
         });
 
         if (candidates.length === 0) {
-          return reply.status(404).send({ error: { code: "NO_AGENT_FOUND", message: `No agent found for skill=${body.skill} capability=${body.capability}` } });
+          return reply.status(404).send({
+            error: {
+              code: "NO_AGENT_FOUND",
+              message: `No agent found for skill=${body.skill} capability=${body.capability}`,
+            },
+          });
         }
 
         // Use routing engine
-        const routingCandidates = candidates.map((a: any) => ({ agent: a, health: a.health ?? "UNKNOWN", score: 1 }));
-        const selected = app.routingEngine.route(routingCandidates as any, { skill: body.skill, capability: body.capability, region: body.region }, body.strategy ?? "capability_match");
+        const routingCandidates = candidates.map((a: any) => ({
+          agent: a,
+          health: a.health ?? "UNKNOWN",
+          score: 1,
+        }));
+        const selected = app.routingEngine.route(
+          routingCandidates as any,
+          { skill: body.skill, capability: body.capability, region: body.region },
+          body.strategy ?? "capability_match"
+        );
 
         if (!selected) {
-          return reply.status(404).send({ error: { code: "ROUTING_FAILED", message: "Routing failed to select agent" } });
+          return reply
+            .status(404)
+            .send({ error: { code: "ROUTING_FAILED", message: "Routing failed to select agent" } });
         }
 
         body.agentId = selected.agent.id;
-        app.log.info({ routedTo: body.agentId, skill: body.skill, strategy: body.strategy }, "task routed");
+        app.log.info(
+          { routedTo: body.agentId, skill: body.skill, strategy: body.strategy },
+          "task routed"
+        );
       } catch (err) {
         app.log.error({ err }, "routing failed");
-        return reply.status(500).send({ error: { code: "ROUTING_FAILED", message: (err as Error).message } });
+        return reply
+          .status(500)
+          .send({ error: { code: "ROUTING_FAILED", message: (err as Error).message } });
       }
     }
 
@@ -72,21 +95,30 @@ export async function tasksRoutes(app: FastifyInstance) {
   // Cancel
   app.post("/:id/cancel", async (req, reply) => {
     const { id } = req.params as { id: string };
-    const { status, data } = await proxyToControlPlane(`/v1/tasks/${id}/cancel`, { method: "POST", body: req.body });
+    const { status, data } = await proxyToControlPlane(`/v1/tasks/${id}/cancel`, {
+      method: "POST",
+      body: req.body,
+    });
     return reply.status(status).send(data);
   });
 
   // Complete (for agents to report)
   app.post("/:id/complete", async (req, reply) => {
     const { id } = req.params as { id: string };
-    const { status, data } = await proxyToControlPlane(`/v1/tasks/${id}/complete`, { method: "POST", body: req.body });
+    const { status, data } = await proxyToControlPlane(`/v1/tasks/${id}/complete`, {
+      method: "POST",
+      body: req.body,
+    });
     return reply.status(status).send(data);
   });
 
   // Fail
   app.post("/:id/fail", async (req, reply) => {
     const { id } = req.params as { id: string };
-    const { status, data } = await proxyToControlPlane(`/v1/tasks/${id}/fail`, { method: "POST", body: req.body });
+    const { status, data } = await proxyToControlPlane(`/v1/tasks/${id}/fail`, {
+      method: "POST",
+      body: req.body,
+    });
     return reply.status(status).send(data);
   });
 
@@ -122,7 +154,12 @@ export async function tasksRoutes(app: FastifyInstance) {
       });
 
       if (!res.ok || !res.body) {
-        return reply.status(res.status).send({ error: { code: "STREAM_FAILED", message: `Failed to connect to task stream: ${res.status}` } });
+        return reply.status(res.status).send({
+          error: {
+            code: "STREAM_FAILED",
+            message: `Failed to connect to task stream: ${res.status}`,
+          },
+        });
       }
 
       reply.raw.writeHead(200, {
@@ -153,7 +190,9 @@ export async function tasksRoutes(app: FastifyInstance) {
 
       return reply;
     } catch (err) {
-      return reply.status(502).send({ error: { code: "STREAM_PROXY_FAILED", message: (err as Error).message } });
+      return reply
+        .status(502)
+        .send({ error: { code: "STREAM_PROXY_FAILED", message: (err as Error).message } });
     }
   });
 }

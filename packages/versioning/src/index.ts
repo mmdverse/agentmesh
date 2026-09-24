@@ -103,12 +103,23 @@ export function isStableVersion(v: string): boolean {
   // stable = no prerelease and not containing canary/beta/alpha/rc
   if (parsed.prerelease) {
     const pre = parsed.prerelease.toLowerCase();
-    if (pre.includes("canary") || pre.includes("beta") || pre.includes("alpha") || pre.includes("rc")) return false;
+    if (
+      pre.includes("canary") ||
+      pre.includes("beta") ||
+      pre.includes("alpha") ||
+      pre.includes("rc")
+    )
+      return false;
     // any prerelease is considered unstable unless explicitly allowed
     return false;
   }
   const lower = v.toLowerCase();
-  return !lower.includes("canary") && !lower.includes("-dev") && !lower.includes("-beta") && !lower.includes("-alpha");
+  return (
+    !lower.includes("canary") &&
+    !lower.includes("-dev") &&
+    !lower.includes("-beta") &&
+    !lower.includes("-alpha")
+  );
 }
 
 export function isCanaryVersion(v: string): boolean {
@@ -127,14 +138,14 @@ export function satisfiesRange(version: string, range: string): boolean {
 
   // Handle OR (||)
   if (trimmed.includes("||")) {
-    return trimmed.split("||").some((r) => satisfiesRange(version, r.trim()));
+    return trimmed.split("||").some(r => satisfiesRange(version, r.trim()));
   }
 
   // Handle AND (space separated)
   if (trimmed.includes(" ")) {
     const parts = trimmed.split(/\s+/).filter(Boolean);
-    if (parts.length > 1 && !parts.some((p) => p.startsWith("^") || p.startsWith("~"))) {
-      return parts.every((p) => satisfiesRange(version, p));
+    if (parts.length > 1 && !parts.some(p => p.startsWith("^") || p.startsWith("~"))) {
+      return parts.every(p => satisfiesRange(version, p));
     }
   }
 
@@ -193,11 +204,11 @@ export class VersionResolver {
 
     // Filter prerelease if not allowed
     if (constraint.allowPrerelease === false) {
-      filtered = filtered.filter((a) => isStableVersion(a.version));
+      filtered = filtered.filter(a => isStableVersion(a.version));
     }
 
     if (constraint.preferStable) {
-      const stable = filtered.filter((a) => isStableVersion(a.version));
+      const stable = filtered.filter(a => isStableVersion(a.version));
       if (stable.length > 0) filtered = stable;
     }
 
@@ -210,7 +221,7 @@ export class VersionResolver {
 
       case "specific":
         if (!constraint.version) throw new Error("specific strategy requires version");
-        return filtered.find((a) => a.version === constraint.version) ?? null;
+        return filtered.find(a => a.version === constraint.version) ?? null;
 
       case "minimum":
         if (!constraint.version) throw new Error("minimum strategy requires version");
@@ -234,36 +245,40 @@ export class VersionResolver {
     let filtered = [...agents];
 
     if (constraint.allowPrerelease === false) {
-      filtered = filtered.filter((a) => isStableVersion(a.version));
+      filtered = filtered.filter(a => isStableVersion(a.version));
     }
 
     if (constraint.preferStable) {
-      const stable = filtered.filter((a) => isStableVersion(a.version));
+      const stable = filtered.filter(a => isStableVersion(a.version));
       if (stable.length > 0) filtered = stable;
     }
 
     switch (constraint.strategy) {
       case "specific":
         if (!constraint.version) return filtered;
-        return filtered.filter((a) => a.version === constraint.version);
+        return filtered.filter(a => a.version === constraint.version);
 
       case "minimum":
         if (!constraint.version) return filtered;
         return filtered
-          .filter((a) => compareSemVer(a.version, constraint.version!) >= 0)
+          .filter(a => compareSemVer(a.version, constraint.version!) >= 0)
           .sort((a, b) => compareSemVer(b.version, a.version));
 
       case "max_satisfying":
         if (!constraint.range) return filtered;
         return filtered
-          .filter((a) => satisfiesRange(a.version, constraint.range!))
+          .filter(a => satisfiesRange(a.version, constraint.range!))
           .sort((a, b) => compareSemVer(b.version, a.version));
 
       case "stable":
-        return filtered.filter((a) => isStableVersion(a.version)).sort((a, b) => compareSemVer(b.version, a.version));
+        return filtered
+          .filter(a => isStableVersion(a.version))
+          .sort((a, b) => compareSemVer(b.version, a.version));
 
       case "canary":
-        return filtered.filter((a) => isCanaryVersion(a.version)).sort((a, b) => compareSemVer(b.version, a.version));
+        return filtered
+          .filter(a => isCanaryVersion(a.version))
+          .sort((a, b) => compareSemVer(b.version, a.version));
 
       case "latest":
       default:
@@ -298,30 +313,37 @@ export class VersionResolver {
 
   private getLatest(agents: VersionedAgent[]): VersionedAgent | null {
     if (agents.length === 0) return null;
-    return agents.reduce((latest, curr) => (compareSemVer(curr.version, latest.version) > 0 ? curr : latest));
+    return agents.reduce((latest, curr) =>
+      compareSemVer(curr.version, latest.version) > 0 ? curr : latest
+    );
   }
 
   private getStableLatest(agents: VersionedAgent[]): VersionedAgent | null {
-    const stable = agents.filter((a) => isStableVersion(a.version));
+    const stable = agents.filter(a => isStableVersion(a.version));
     if (stable.length === 0) return this.getLatest(agents); // fallback to latest if no stable
     return this.getLatest(stable);
   }
 
   private getCanaryLatest(agents: VersionedAgent[]): VersionedAgent | null {
-    const canary = agents.filter((a) => isCanaryVersion(a.version));
+    const canary = agents.filter(a => isCanaryVersion(a.version));
     if (canary.length === 0) return null;
     return this.getLatest(canary);
   }
 
-  private getMinimumSatisfying(agents: VersionedAgent[], minVersion: string): VersionedAgent | null {
-    const satisfying = agents.filter((a) => compareSemVer(a.version, minVersion) >= 0);
+  private getMinimumSatisfying(
+    agents: VersionedAgent[],
+    minVersion: string
+  ): VersionedAgent | null {
+    const satisfying = agents.filter(a => compareSemVer(a.version, minVersion) >= 0);
     if (satisfying.length === 0) return null;
     // Return minimum that satisfies
-    return satisfying.reduce((min, curr) => (compareSemVer(curr.version, min.version) < 0 ? curr : min));
+    return satisfying.reduce((min, curr) =>
+      compareSemVer(curr.version, min.version) < 0 ? curr : min
+    );
   }
 
   private getMaxSatisfying(agents: VersionedAgent[], range: string): VersionedAgent | null {
-    const satisfying = agents.filter((a) => satisfiesRange(a.version, range));
+    const satisfying = agents.filter(a => satisfiesRange(a.version, range));
     if (satisfying.length === 0) return null;
     return this.getLatest(satisfying);
   }

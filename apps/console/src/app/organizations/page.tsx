@@ -4,13 +4,18 @@ export default function OrganizationsPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Organizations & Projects</h1>
-      <p className="text-sm text-muted-foreground">Multi-Tenancy • Organization → Projects → Agents/Tasks/Policies/Credentials • Strict Isolation</p>
+      <p className="text-sm text-muted-foreground">
+        Multi-Tenancy • Organization → Projects → Agents/Tasks/Policies/Credentials • Strict
+        Isolation
+      </p>
 
       <Card>
-        <CardHeader><CardTitle>Hierarchy</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Hierarchy</CardTitle>
+        </CardHeader>
         <CardContent>
           <pre className="text-xs bg-secondary p-4 rounded">
-{`Organization (org_123)
+            {`Organization (org_123)
   +-- Project A (proj_a)
   |    +-- Agents: CodeAgent v1, v2, v2.1-canary
   |    +-- Tasks: task_abc, task_def
@@ -35,11 +40,13 @@ X-Project-Id: proj_a
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Versioning per Tenant</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Versioning per Tenant</CardTitle>
+        </CardHeader>
         <CardContent className="text-sm space-y-2">
           <div>Same agent name can have multiple versions per tenant:</div>
           <pre className="bg-secondary p-2 rounded text-xs">
-{`CodeAgent v1.0.0 (org_123/proj_a)
+            {`CodeAgent v1.0.0 (org_123/proj_a)
 CodeAgent v2.0.0 (org_123/proj_a)
 CodeAgent v2.1.0-canary (org_123/proj_a)
 

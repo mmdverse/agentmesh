@@ -26,7 +26,7 @@ export async function agentsRoutes(app: FastifyInstance) {
   const registry = getRegistryService();
   const discovery = getDiscovery();
 
-  app.get("/", async (req) => {
+  app.get("/", async req => {
     const {
       skill,
       capability,
@@ -93,13 +93,28 @@ export async function agentsRoutes(app: FastifyInstance) {
     };
   });
 
-  app.get("/discover", async (req) => {
-    const { skill, capability, region, search, url, baseUrl, limit = "20", versionStrategy, version, minVersion } = req.query as any;
+  app.get("/discover", async req => {
+    const {
+      skill,
+      capability,
+      region,
+      search,
+      url,
+      baseUrl,
+      limit = "20",
+      versionStrategy,
+      version,
+      minVersion,
+    } = req.query as any;
     const tenant = (req as any).tenant ?? {};
 
     let versionConstraint: VersionConstraint | undefined;
     if (versionStrategy) {
-      versionConstraint = { strategy: versionStrategy, version, range: req.query as any["versionRange"] };
+      versionConstraint = {
+        strategy: versionStrategy,
+        version,
+        range: req.query as any["versionRange"],
+      };
     }
 
     // If version constraint, use registry's discoverBest or list with versioning
@@ -126,7 +141,9 @@ export async function agentsRoutes(app: FastifyInstance) {
     // Apply tenant filter if present
     let filtered = agents;
     if (tenant.organizationId) {
-      filtered = filtered.filter((a: any) => !a.organizationId || a.organizationId === tenant.organizationId);
+      filtered = filtered.filter(
+        (a: any) => !a.organizationId || a.organizationId === tenant.organizationId
+      );
     }
     if (tenant.projectId) {
       filtered = filtered.filter((a: any) => !a.projectId || a.projectId === tenant.projectId);
@@ -140,7 +157,7 @@ export async function agentsRoutes(app: FastifyInstance) {
   });
 
   // List versions for a name
-  app.get("/versions/:name", async (req) => {
+  app.get("/versions/:name", async req => {
     const { name } = req.params as { name: string };
     const tenant = (req as any).tenant ?? {};
     const { versions, agents } = await registry.listVersions(name, tenant);
@@ -157,7 +174,9 @@ export async function agentsRoutes(app: FastifyInstance) {
       return { agent };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 404).send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 404)
+        .send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
     }
   });
 
@@ -176,7 +195,9 @@ export async function agentsRoutes(app: FastifyInstance) {
       };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "FETCH_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "FETCH_FAILED", message: e.message } });
     }
   });
 
@@ -184,7 +205,13 @@ export async function agentsRoutes(app: FastifyInstance) {
     try {
       const parsed = RegisterSchema.safeParse(req.body);
       if (!parsed.success) {
-        return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "Invalid input", details: parsed.error.flatten() } });
+        return reply.status(400).send({
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid input",
+            details: parsed.error.flatten(),
+          },
+        });
       }
 
       const tenant = (req as any).tenant ?? {};
@@ -192,7 +219,9 @@ export async function agentsRoutes(app: FastifyInstance) {
       return reply.status(201).send({ agent });
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "REGISTRATION_FAILED", message: e.message, details: e.details } });
+      return reply.status(e.statusCode ?? 500).send({
+        error: { code: e.code ?? "REGISTRATION_FAILED", message: e.message, details: e.details },
+      });
     }
   });
 
@@ -201,7 +230,13 @@ export async function agentsRoutes(app: FastifyInstance) {
     try {
       const parsed = RegisterSchema.partial().safeParse(req.body);
       if (!parsed.success) {
-        return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "Invalid input", details: parsed.error.flatten() } });
+        return reply.status(400).send({
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid input",
+            details: parsed.error.flatten(),
+          },
+        });
       }
 
       const tenant = (req as any).tenant ?? {};
@@ -209,7 +244,9 @@ export async function agentsRoutes(app: FastifyInstance) {
       return { agent };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "UPDATE_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "UPDATE_FAILED", message: e.message } });
     }
   });
 
@@ -221,7 +258,9 @@ export async function agentsRoutes(app: FastifyInstance) {
       return { success: true, id };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "DELETE_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "DELETE_FAILED", message: e.message } });
     }
   });
 
@@ -239,7 +278,9 @@ export async function agentsRoutes(app: FastifyInstance) {
       };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 404).send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 404)
+        .send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
     }
   });
 
@@ -253,7 +294,9 @@ export async function agentsRoutes(app: FastifyInstance) {
       return { success: true, id, timestamp: new Date().toISOString() };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "HEARTBEAT_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "HEARTBEAT_FAILED", message: e.message } });
     }
   });
 
@@ -263,7 +306,9 @@ export async function agentsRoutes(app: FastifyInstance) {
     const tenant = (req as any).tenant ?? {};
 
     if (!["HEALTHY", "DEGRADED", "UNHEALTHY", "UNKNOWN"].includes(health)) {
-      return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "Invalid health value" } });
+      return reply
+        .status(400)
+        .send({ error: { code: "VALIDATION_ERROR", message: "Invalid health value" } });
     }
 
     try {
@@ -272,7 +317,9 @@ export async function agentsRoutes(app: FastifyInstance) {
       return { success: true, id, health, latencyMs };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "HEALTH_UPDATE_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "HEALTH_UPDATE_FAILED", message: e.message } });
     }
   });
 }

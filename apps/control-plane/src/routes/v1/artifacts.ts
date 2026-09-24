@@ -20,8 +20,16 @@ const CreateArtifactSchema = z.object({
 export async function artifactsRoutes(app: FastifyInstance) {
   const service = getArtifactService();
 
-  app.get("/", async (req) => {
-    const { organizationId, projectId, taskId, agentId, contentType, limit = "20", offset = "0" } = req.query as any;
+  app.get("/", async req => {
+    const {
+      organizationId,
+      projectId,
+      taskId,
+      agentId,
+      contentType,
+      limit = "20",
+      offset = "0",
+    } = req.query as any;
     const tenant = (req as any).tenant ?? {};
 
     const { artifacts, total } = await service.list({
@@ -46,7 +54,9 @@ export async function artifactsRoutes(app: FastifyInstance) {
       return { artifact: meta };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 404).send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 404)
+        .send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
     }
   });
 
@@ -61,7 +71,9 @@ export async function artifactsRoutes(app: FastifyInstance) {
       return reply.send(data);
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 404).send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 404)
+        .send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
     }
   });
 
@@ -73,7 +85,9 @@ export async function artifactsRoutes(app: FastifyInstance) {
       return result;
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 404).send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 404)
+        .send({ error: { code: e.code ?? "NOT_FOUND", message: e.message } });
     }
   });
 
@@ -81,7 +95,13 @@ export async function artifactsRoutes(app: FastifyInstance) {
     try {
       const parsed = CreateArtifactSchema.safeParse(req.body);
       if (!parsed.success) {
-        return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "Invalid input", details: parsed.error.flatten() } });
+        return reply.status(400).send({
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid input",
+            details: parsed.error.flatten(),
+          },
+        });
       }
 
       const tenant = (req as any).tenant ?? {};
@@ -94,7 +114,10 @@ export async function artifactsRoutes(app: FastifyInstance) {
         // Try base64 decode if looks like base64, otherwise use as text
         try {
           // If data is base64 and contentType is binary, decode
-          if (parsed.data.contentType.startsWith("text/") || parsed.data.contentType === "application/json") {
+          if (
+            parsed.data.contentType.startsWith("text/") ||
+            parsed.data.contentType === "application/json"
+          ) {
             data = parsed.data.data;
           } else {
             data = Buffer.from(parsed.data.data, "base64");
@@ -103,7 +126,9 @@ export async function artifactsRoutes(app: FastifyInstance) {
           data = parsed.data.data;
         }
       } else {
-        return reply.status(400).send({ error: { code: "VALIDATION_ERROR", message: "data or jsonData required" } });
+        return reply
+          .status(400)
+          .send({ error: { code: "VALIDATION_ERROR", message: "data or jsonData required" } });
       }
 
       const artifact = await service.create({
@@ -125,7 +150,9 @@ export async function artifactsRoutes(app: FastifyInstance) {
       return reply.status(201).send({ artifact });
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "CREATE_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "CREATE_FAILED", message: e.message } });
     }
   });
 
@@ -137,7 +164,9 @@ export async function artifactsRoutes(app: FastifyInstance) {
       return { success: true, id };
     } catch (err) {
       const e = err as any;
-      return reply.status(e.statusCode ?? 500).send({ error: { code: e.code ?? "DELETE_FAILED", message: e.message } });
+      return reply
+        .status(e.statusCode ?? 500)
+        .send({ error: { code: e.code ?? "DELETE_FAILED", message: e.message } });
     }
   });
 }

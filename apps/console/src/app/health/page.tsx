@@ -35,49 +35,81 @@ export default async function HealthPage() {
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Control Plane</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Control Plane</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between"><span>Status</span><Badge variant={controlPlaneHealth.status === "ok" ? "default" : "destructive"}>{controlPlaneHealth.status}</Badge></div>
+            <div className="flex justify-between">
+              <span>Status</span>
+              <Badge variant={controlPlaneHealth.status === "ok" ? "default" : "destructive"}>
+                {controlPlaneHealth.status}
+              </Badge>
+            </div>
             <div>Version: {controlPlaneHealth.version}</div>
             <div>Service: {controlPlaneHealth.service}</div>
-            <pre className="text-xs bg-secondary p-2 rounded overflow-auto max-h-40">{JSON.stringify(controlPlaneHealth, null, 2)}</pre>
+            <pre className="text-xs bg-secondary p-2 rounded overflow-auto max-h-40">
+              {JSON.stringify(controlPlaneHealth, null, 2)}
+            </pre>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Gateway (Data Plane)</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Gateway (Data Plane)</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between"><span>Status</span><Badge variant={gatewayHealth.status === "ok" ? "default" : "destructive"}>{gatewayHealth.status}</Badge></div>
+            <div className="flex justify-between">
+              <span>Status</span>
+              <Badge variant={gatewayHealth.status === "ok" ? "default" : "destructive"}>
+                {gatewayHealth.status}
+              </Badge>
+            </div>
             <div>Version: {gatewayHealth.version}</div>
             <div>Service: {gatewayHealth.service}</div>
-            <pre className="text-xs bg-secondary p-2 rounded overflow-auto max-h-40">{JSON.stringify(gatewayHealth, null, 2)}</pre>
+            <pre className="text-xs bg-secondary p-2 rounded overflow-auto max-h-40">
+              {JSON.stringify(gatewayHealth, null, 2)}
+            </pre>
           </CardContent>
         </Card>
       </div>
 
       <Card>
-        <CardHeader><CardTitle>Control Plane Info</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Control Plane Info</CardTitle>
+        </CardHeader>
         <CardContent>
-          <pre className="text-xs bg-secondary p-4 rounded overflow-auto max-h-96">{JSON.stringify(controlPlaneInfo, null, 2)}</pre>
+          <pre className="text-xs bg-secondary p-4 rounded overflow-auto max-h-96">
+            {JSON.stringify(controlPlaneInfo, null, 2)}
+          </pre>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Gateway Info</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Gateway Info</CardTitle>
+        </CardHeader>
         <CardContent>
-          <pre className="text-xs bg-secondary p-4 rounded overflow-auto max-h-96">{JSON.stringify(gatewayInfo, null, 2)}</pre>
+          <pre className="text-xs bg-secondary p-4 rounded overflow-auto max-h-96">
+            {JSON.stringify(gatewayInfo, null, 2)}
+          </pre>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Reliability</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Reliability</CardTitle>
+        </CardHeader>
         <CardContent>
-          <pre className="text-xs bg-secondary p-4 rounded overflow-auto max-h-96">{JSON.stringify(reliability, null, 2)}</pre>
+          <pre className="text-xs bg-secondary p-4 rounded overflow-auto max-h-96">
+            {JSON.stringify(reliability, null, 2)}
+          </pre>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Storage</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Storage</CardTitle>
+        </CardHeader>
         <CardContent className="text-sm space-y-1">
           <div>Postgres: source of truth (InMemory fallback in dev)</div>
           <div>Redis: cache, health, rate limiting, coordination (InMemory fallback)</div>

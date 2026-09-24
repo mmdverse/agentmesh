@@ -33,40 +33,66 @@ export default function ConfigurationPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Configuration</h1>
-      <p className="text-sm text-muted-foreground">Environment-based config • No hardcoded secrets • Production-ready defaults</p>
+      <p className="text-sm text-muted-foreground">
+        Environment-based config • No hardcoded secrets • Production-ready defaults
+      </p>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Gateway Config</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Gateway Config</CardTitle>
+          </CardHeader>
           <CardContent>
-            <pre className="text-xs bg-secondary p-4 rounded overflow-auto">{JSON.stringify(config.gateway, null, 2)}</pre>
+            <pre className="text-xs bg-secondary p-4 rounded overflow-auto">
+              {JSON.stringify(config.gateway, null, 2)}
+            </pre>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Control Plane Config</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Control Plane Config</CardTitle>
+          </CardHeader>
           <CardContent>
-            <pre className="text-xs bg-secondary p-4 rounded overflow-auto">{JSON.stringify(config.controlPlane, null, 2)}</pre>
+            <pre className="text-xs bg-secondary p-4 rounded overflow-auto">
+              {JSON.stringify(config.controlPlane, null, 2)}
+            </pre>
           </CardContent>
         </Card>
       </div>
 
       <Card>
-        <CardHeader><CardTitle>Infrastructure</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Infrastructure</CardTitle>
+        </CardHeader>
         <CardContent>
-          <pre className="text-xs bg-secondary p-4 rounded overflow-auto">{JSON.stringify(config.infra, null, 2)}</pre>
+          <pre className="text-xs bg-secondary p-4 rounded overflow-auto">
+            {JSON.stringify(config.infra, null, 2)}
+          </pre>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Environment Variables</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Environment Variables</CardTitle>
+        </CardHeader>
         <CardContent className="text-xs space-y-1">
-          <div>DATABASE_URL, REDIS_URL, NATS_URL, S3_ENDPOINT, S3_REGION, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_BUCKET</div>
-          <div>GATEWAY_PORT, GATEWAY_HOST, GATEWAY_LOG_LEVEL, CONTROL_PLANE_PORT, CONTROL_PLANE_HOST</div>
+          <div>
+            DATABASE_URL, REDIS_URL, NATS_URL, S3_ENDPOINT, S3_REGION, S3_ACCESS_KEY_ID,
+            S3_SECRET_ACCESS_KEY, S3_BUCKET
+          </div>
+          <div>
+            GATEWAY_PORT, GATEWAY_HOST, GATEWAY_LOG_LEVEL, CONTROL_PLANE_PORT, CONTROL_PLANE_HOST
+          </div>
           <div>JWT_SECRET, OIDC_ISSUER, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET</div>
-          <div>MAX_MESSAGE_SIZE, MAX_ARTIFACT_SIZE, MAX_CONCURRENT_TASKS, MAX_FAN_OUT, RATE_LIMIT_MAX</div>
+          <div>
+            MAX_MESSAGE_SIZE, MAX_ARTIFACT_SIZE, MAX_CONCURRENT_TASKS, MAX_FAN_OUT, RATE_LIMIT_MAX
+          </div>
           <div>OTEL_SERVICE_NAME, OTEL_EXPORTER_OTLP_ENDPOINT</div>
-          <div>USE_POSTGRES=true to enable Postgres, USE_S3=true for S3, otherwise InMemory fallback for dev</div>
+          <div>
+            USE_POSTGRES=true to enable Postgres, USE_S3=true for S3, otherwise InMemory fallback
+            for dev
+          </div>
         </CardContent>
       </Card>
     </div>

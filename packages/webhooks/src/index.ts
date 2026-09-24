@@ -53,13 +53,7 @@ const BLOCKED_HOSTS = [
   "metadata.google.internal",
 ];
 
-const BLOCKED_IP_RANGES = [
-  /^10\./,
-  /^192\.168\./,
-  /^172\.(1[6-9]|2\d|3[01])\./,
-  /^127\./,
-  /^0\./,
-];
+const BLOCKED_IP_RANGES = [/^10\./, /^192\.168\./, /^172\.(1[6-9]|2\d|3[01])\./, /^127\./, /^0\./];
 
 export function isUrlAllowed(url: string): { allowed: boolean; reason?: string } {
   try {
@@ -106,11 +100,16 @@ export function signPayload(payload: string, secret: string, timestamp?: string)
   return `t=${ts},v1=${hmac}`;
 }
 
-export function verifySignature(payload: string, signature: string, secret: string, toleranceMs = 5 * 60 * 1000): boolean {
+export function verifySignature(
+  payload: string,
+  signature: string,
+  secret: string,
+  toleranceMs = 5 * 60 * 1000
+): boolean {
   try {
     const parts = signature.split(",");
-    const tPart = parts.find((p) => p.startsWith("t="));
-    const v1Part = parts.find((p) => p.startsWith("v1="));
+    const tPart = parts.find(p => p.startsWith("t="));
+    const v1Part = parts.find(p => p.startsWith("v1="));
     if (!tPart || !v1Part) return false;
 
     const timestamp = tPart.slice(2);
@@ -137,7 +136,9 @@ class InMemoryWebhookStore {
   private endpoints = new Map<string, WebhookEndpoint>();
   private deliveries = new Map<string, WebhookDelivery>();
 
-  async createEndpoint(input: Omit<WebhookEndpoint, "id" | "createdAt" | "updatedAt">): Promise<WebhookEndpoint> {
+  async createEndpoint(
+    input: Omit<WebhookEndpoint, "id" | "createdAt" | "updatedAt">
+  ): Promise<WebhookEndpoint> {
     const id = generateId("wh");
     const now = nowIso();
     const endpoint: WebhookEndpoint = { id, ...input, createdAt: now, updatedAt: now };
@@ -149,11 +150,17 @@ class InMemoryWebhookStore {
     return this.endpoints.get(id) ?? null;
   }
 
-  async listEndpoints(filter?: { organizationId?: string; projectId?: string; isActive?: boolean }): Promise<WebhookEndpoint[]> {
+  async listEndpoints(filter?: {
+    organizationId?: string;
+    projectId?: string;
+    isActive?: boolean;
+  }): Promise<WebhookEndpoint[]> {
     let list = Array.from(this.endpoints.values());
-    if (filter?.organizationId) list = list.filter((e) => !e.organizationId || e.organizationId === filter.organizationId);
-    if (filter?.projectId) list = list.filter((e) => !e.projectId || e.projectId === filter.projectId);
-    if (filter?.isActive !== undefined) list = list.filter((e) => e.isActive === filter.isActive);
+    if (filter?.organizationId)
+      list = list.filter(e => !e.organizationId || e.organizationId === filter.organizationId);
+    if (filter?.projectId)
+      list = list.filter(e => !e.projectId || e.projectId === filter.projectId);
+    if (filter?.isActive !== undefined) list = list.filter(e => e.isActive === filter.isActive);
     return list;
   }
 
@@ -171,7 +178,7 @@ class InMemoryWebhookStore {
 
   async listDeliveries(webhookId?: string): Promise<WebhookDelivery[]> {
     let list = Array.from(this.deliveries.values());
-    if (webhookId) list = list.filter((d) => d.webhookId === webhookId);
+    if (webhookId) list = list.filter(d => d.webhookId === webhookId);
     return list;
   }
 }
@@ -181,7 +188,14 @@ const memStore = new InMemoryWebhookStore();
 export class WebhookManager {
   private store = memStore;
 
-  async registerEndpoint(input: { url: string; events?: string[]; organizationId?: string; projectId?: string; headers?: Record<string, string>; secret?: string }): Promise<WebhookEndpoint> {
+  async registerEndpoint(input: {
+    url: string;
+    events?: string[];
+    organizationId?: string;
+    projectId?: string;
+    headers?: Record<string, string>;
+    secret?: string;
+  }): Promise<WebhookEndpoint> {
     // SSRF check
     const allowed = isUrlAllowed(input.url);
     if (!allowed.allowed) {
@@ -204,7 +218,10 @@ export class WebhookManager {
     });
   }
 
-  async listEndpoints(filter?: { organizationId?: string; projectId?: string }): Promise<WebhookEndpoint[]> {
+  async listEndpoints(filter?: {
+    organizationId?: string;
+    projectId?: string;
+  }): Promise<WebhookEndpoint[]> {
     return this.store.listEndpoints(filter);
   }
 
@@ -213,14 +230,18 @@ export class WebhookManager {
     if (!deleted) throw new Error(`Webhook ${id} not found`);
   }
 
-  async deliver(eventType: string, payload: Record<string, unknown>, opts: { organizationId?: string; projectId?: string } = {}): Promise<WebhookDelivery[]> {
+  async deliver(
+    eventType: string,
+    payload: Record<string, unknown>,
+    opts: { organizationId?: string; projectId?: string } = {}
+  ): Promise<WebhookDelivery[]> {
     const endpoints = await this.store.listEndpoints({
       organizationId: opts.organizationId,
       projectId: opts.projectId,
       isActive: true,
     });
 
-    const matching = endpoints.filter((e) => e.events.includes("*") || e.events.includes(eventType));
+    const matching = endpoints.filter(e => e.events.includes("*") || e.events.includes(eventType));
 
     const deliveries: WebhookDelivery[] = [];
 
@@ -232,7 +253,11 @@ export class WebhookManager {
     return deliveries;
   }
 
-  private async deliverToEndpoint(endpoint: WebhookEndpoint, eventType: string, payload: Record<string, unknown>): Promise<WebhookDelivery> {
+  private async deliverToEndpoint(
+    endpoint: WebhookEndpoint,
+    eventType: string,
+    payload: Record<string, unknown>
+  ): Promise<WebhookDelivery> {
     const id = generateId("whd");
     const now = nowIso();
     const eventId = generateId("evt");
@@ -298,7 +323,9 @@ export class WebhookManager {
         if (res.ok) {
           delivery.status = "SUCCESS";
           await this.store.saveDelivery(delivery);
-          console.log(`[webhooks] delivered ${eventType} to ${endpoint.url} attempt ${attempt} status ${res.status}`);
+          console.log(
+            `[webhooks] delivered ${eventType} to ${endpoint.url} attempt ${attempt} status ${res.status}`
+          );
           return delivery;
         } else {
           throw new Error(`HTTP ${res.status}: ${body.slice(0, 200)}`);
@@ -314,7 +341,7 @@ export class WebhookManager {
           const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1) + Math.random() * 1000, 30000);
           delivery.nextRetryAt = new Date(Date.now() + backoffMs).toISOString();
           await this.store.saveDelivery(delivery);
-          await new Promise((r) => setTimeout(r, backoffMs));
+          await new Promise(r => setTimeout(r, backoffMs));
         } else {
           // Dead letter after max retries
           if (attempt > endpoint.maxRetries) {

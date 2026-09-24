@@ -33,7 +33,7 @@ export interface SSRFOptions {
 }
 
 export function isPrivateIP(ip: string): boolean {
-  return PRIVATE_IP_RANGES.some((re) => re.test(ip));
+  return PRIVATE_IP_RANGES.some(re => re.test(ip));
 }
 
 export function isBlockedHostname(hostname: string, opts: SSRFOptions = {}): boolean {
@@ -69,7 +69,10 @@ export function isBlockedHostname(hostname: string, opts: SSRFOptions = {}): boo
   return false;
 }
 
-export function validateUrlForSSRF(urlString: string, opts: SSRFOptions = {}): { allowed: boolean; reason?: string } {
+export function validateUrlForSSRF(
+  urlString: string,
+  opts: SSRFOptions = {}
+): { allowed: boolean; reason?: string } {
   let url: URL;
   try {
     url = new URL(urlString);
@@ -110,7 +113,10 @@ export function assertUrlAllowed(urlString: string, opts: SSRFOptions = {}): voi
 }
 
 // Webhook URL validation - stricter
-export function validateWebhookUrl(urlString: string, opts: SSRFOptions = {}): { allowed: boolean; reason?: string } {
+export function validateWebhookUrl(
+  urlString: string,
+  opts: SSRFOptions = {}
+): { allowed: boolean; reason?: string } {
   const base = validateUrlForSSRF(urlString, opts);
   if (!base.allowed) return base;
 

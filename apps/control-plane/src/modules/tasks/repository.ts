@@ -7,7 +7,10 @@ import type { TaskState } from "@agentmesh/core";
 class InMemoryTaskRepo {
   private tasks = new Map<string, TaskRecord>();
   private history = new Map<string, TaskHistoryRecord[]>();
-  private edges = new Map<string, { parentTaskId: string; childTaskId: string; agentId: string; createdAt: string }[]>();
+  private edges = new Map<
+    string,
+    { parentTaskId: string; childTaskId: string; agentId: string; createdAt: string }[]
+  >();
 
   async create(task: TaskRecord): Promise<TaskRecord> {
     this.tasks.set(task.id, task);
@@ -24,7 +27,12 @@ class InMemoryTaskRepo {
     // Handle delegation edge
     if (task.parentTaskId) {
       const list = this.edges.get(task.parentTaskId) ?? [];
-      list.push({ parentTaskId: task.parentTaskId, childTaskId: task.id, agentId: task.agentId, createdAt: new Date().toISOString() });
+      list.push({
+        parentTaskId: task.parentTaskId,
+        childTaskId: task.id,
+        agentId: task.agentId,
+        createdAt: new Date().toISOString(),
+      });
       this.edges.set(task.parentTaskId, list);
     }
     return task;
@@ -37,13 +45,13 @@ class InMemoryTaskRepo {
   async list(filter: TaskFilter): Promise<{ tasks: TaskRecord[]; total: number }> {
     let list = Array.from(this.tasks.values());
 
-    if (filter.agentId) list = list.filter((t) => t.agentId === filter.agentId);
-    if (filter.state) list = list.filter((t) => t.state === filter.state);
-    if (filter.contextId) list = list.filter((t) => t.contextId === filter.contextId);
-    if (filter.traceId) list = list.filter((t) => t.traceId === filter.traceId);
-    if (filter.rootTaskId) list = list.filter((t) => t.rootTaskId === filter.rootTaskId);
-    if (filter.organizationId) list = list.filter((t) => t.organizationId === filter.organizationId);
-    if (filter.projectId) list = list.filter((t) => t.projectId === filter.projectId);
+    if (filter.agentId) list = list.filter(t => t.agentId === filter.agentId);
+    if (filter.state) list = list.filter(t => t.state === filter.state);
+    if (filter.contextId) list = list.filter(t => t.contextId === filter.contextId);
+    if (filter.traceId) list = list.filter(t => t.traceId === filter.traceId);
+    if (filter.rootTaskId) list = list.filter(t => t.rootTaskId === filter.rootTaskId);
+    if (filter.organizationId) list = list.filter(t => t.organizationId === filter.organizationId);
+    if (filter.projectId) list = list.filter(t => t.projectId === filter.projectId);
 
     const total = list.length;
     list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -55,7 +63,10 @@ class InMemoryTaskRepo {
     return { tasks: list, total };
   }
 
-  async update(id: string, updates: Partial<TaskRecord> & { fromState?: TaskRecord["state"] }): Promise<TaskRecord | null> {
+  async update(
+    id: string,
+    updates: Partial<TaskRecord> & { fromState?: TaskRecord["state"] }
+  ): Promise<TaskRecord | null> {
     const existing = this.tasks.get(id);
     if (!existing) return null;
 
@@ -88,11 +99,17 @@ class InMemoryTaskRepo {
     return this.history.get(taskId) ?? [];
   }
 
-  async getEdges(parentTaskId: string): Promise<Array<{ parentTaskId: string; childTaskId: string; agentId: string; createdAt: string }>> {
+  async getEdges(
+    parentTaskId: string
+  ): Promise<
+    Array<{ parentTaskId: string; childTaskId: string; agentId: string; createdAt: string }>
+  > {
     return this.edges.get(parentTaskId) ?? [];
   }
 
-  async getAllEdges(): Promise<Array<{ parentTaskId: string; childTaskId: string; agentId: string; createdAt: string }>> {
+  async getAllEdges(): Promise<
+    Array<{ parentTaskId: string; childTaskId: string; agentId: string; createdAt: string }>
+  > {
     const all: any[] = [];
     for (const list of this.edges.values()) all.push(...list);
     return all;
@@ -192,7 +209,8 @@ export class TaskRepository {
     if (filter.contextId) conditions.push(eq(schema.tasks.contextId, filter.contextId));
     if (filter.traceId) conditions.push(eq(schema.tasks.traceId, filter.traceId));
     if (filter.rootTaskId) conditions.push(eq(schema.tasks.rootTaskId, filter.rootTaskId));
-    if (filter.organizationId) conditions.push(eq(schema.tasks.organizationId, filter.organizationId as any));
+    if (filter.organizationId)
+      conditions.push(eq(schema.tasks.organizationId, filter.organizationId as any));
 
     let query = db.select().from(schema.tasks).$dynamic();
     if (conditions.length > 0) query = query.where(and(...conditions));
@@ -210,7 +228,10 @@ export class TaskRepository {
     return { tasks: tasks.map(this.mapToRecord), total: Number(count) };
   }
 
-  async update(id: string, updates: Partial<TaskRecord> & { fromState?: TaskRecord["state"]; reason?: string }): Promise<TaskRecord | null> {
+  async update(
+    id: string,
+    updates: Partial<TaskRecord> & { fromState?: TaskRecord["state"]; reason?: string }
+  ): Promise<TaskRecord | null> {
     if (this.useMemory) return memRepo.update(id, updates);
 
     const db = getDb();
@@ -245,8 +266,12 @@ export class TaskRepository {
     if (this.useMemory) return memRepo.getHistory(taskId);
 
     const db = getDb();
-    const rows = await db.select().from(schema.taskHistory).where(eq(schema.taskHistory.taskId, taskId)).orderBy(desc(schema.taskHistory.createdAt));
-    return rows.map((r) => ({
+    const rows = await db
+      .select()
+      .from(schema.taskHistory)
+      .where(eq(schema.taskHistory.taskId, taskId))
+      .orderBy(desc(schema.taskHistory.createdAt));
+    return rows.map(r => ({
       id: r.id,
       taskId: r.taskId,
       fromState: r.fromState as any,
@@ -269,10 +294,17 @@ export class TaskRepository {
     const dfs = async (taskId: string) => {
       if (visited.has(taskId)) return;
       visited.add(taskId);
-      const [task] = await db.select().from(schema.tasks).where(eq(schema.tasks.id, taskId)).limit(1);
+      const [task] = await db
+        .select()
+        .from(schema.tasks)
+        .where(eq(schema.tasks.id, taskId))
+        .limit(1);
       if (!task) return;
       result.push(this.mapToRecord(task));
-      const edges = await db.select().from(schema.taskEdges).where(eq(schema.taskEdges.parentTaskId, taskId));
+      const edges = await db
+        .select()
+        .from(schema.taskEdges)
+        .where(eq(schema.taskEdges.parentTaskId, taskId));
       for (const edge of edges) await dfs(edge.childTaskId);
     };
 

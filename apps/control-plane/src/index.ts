@@ -21,7 +21,7 @@ async function main() {
   healthChecker.start();
 
   const signals: NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
-  signals.forEach((signal) => {
+  signals.forEach(signal => {
     process.on(signal, async () => {
       console.log(`[control-plane] received ${signal}, shutting down...`);
       try {
@@ -38,11 +38,21 @@ async function main() {
 
   try {
     await app.listen({ port: config.CONTROL_PLANE_PORT, host: config.CONTROL_PLANE_HOST });
-    console.log(`[control-plane] listening on http://${config.CONTROL_PLANE_HOST}:${config.CONTROL_PLANE_PORT}`);
-    console.log(`[control-plane] health: http://${config.CONTROL_PLANE_HOST}:${config.CONTROL_PLANE_PORT}/health`);
-    console.log(`[control-plane] v1 health: http://${config.CONTROL_PLANE_HOST}:${config.CONTROL_PLANE_PORT}/v1/health`);
-    console.log(`[control-plane] registry: http://${config.CONTROL_PLANE_HOST}:${config.CONTROL_PLANE_PORT}/v1/agents`);
-    console.log(`[control-plane] discovery: http://${config.CONTROL_PLANE_HOST}:${config.CONTROL_PLANE_PORT}/v1/agents/discover?skill=code-review`);
+    console.log(
+      `[control-plane] listening on http://${config.CONTROL_PLANE_HOST}:${config.CONTROL_PLANE_PORT}`
+    );
+    console.log(
+      `[control-plane] health: http://${config.CONTROL_PLANE_HOST}:${config.CONTROL_PLANE_PORT}/health`
+    );
+    console.log(
+      `[control-plane] v1 health: http://${config.CONTROL_PLANE_HOST}:${config.CONTROL_PLANE_PORT}/v1/health`
+    );
+    console.log(
+      `[control-plane] registry: http://${config.CONTROL_PLANE_HOST}:${config.CONTROL_PLANE_PORT}/v1/agents`
+    );
+    console.log(
+      `[control-plane] discovery: http://${config.CONTROL_PLANE_HOST}:${config.CONTROL_PLANE_PORT}/v1/agents/discover?skill=code-review`
+    );
   } catch (err) {
     app.log.error(err);
     process.exit(1);

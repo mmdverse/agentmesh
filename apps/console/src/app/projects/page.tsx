@@ -4,13 +4,17 @@ export default function ProjectsPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Projects</h1>
-      <p className="text-sm text-muted-foreground">Organization → Projects • Tenant Isolation • Versioning per Project</p>
+      <p className="text-sm text-muted-foreground">
+        Organization → Projects • Tenant Isolation • Versioning per Project
+      </p>
 
       <Card>
-        <CardHeader><CardTitle>Multi-Tenancy Model</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Multi-Tenancy Model</CardTitle>
+        </CardHeader>
         <CardContent>
           <pre className="text-xs bg-secondary p-4 rounded">
-{`Organization (e.g., org_123)
+            {`Organization (e.g., org_123)
   name: "Acme Corp"
   slug: "acme"
 

@@ -7,7 +7,10 @@ import { getTenantManager } from "@agentmesh/tenancy";
 
 export class ArtifactService {
   private manager = getArtifactManager(new InMemoryArtifactStore());
-  private eventBus = createEventBus({ serviceName: "control-plane-artifacts", url: process.env.NATS_URL });
+  private eventBus = createEventBus({
+    serviceName: "control-plane-artifacts",
+    url: process.env.NATS_URL,
+  });
   private tenantManager = getTenantManager();
 
   async create(input: {
@@ -50,7 +53,10 @@ export class ArtifactService {
     return artifact;
   }
 
-  async getById(id: string, tenant?: TenantContext): Promise<{ metadata: ArtifactMetadata; data: Buffer; contentType: string }> {
+  async getById(
+    id: string,
+    tenant?: TenantContext
+  ): Promise<{ metadata: ArtifactMetadata; data: Buffer; contentType: string }> {
     const result = await this.manager.getArtifact(id, {
       organizationId: tenant?.organizationId,
       projectId: tenant?.projectId,
@@ -80,7 +86,16 @@ export class ArtifactService {
     return meta;
   }
 
-  async list(filter: { organizationId?: string; projectId?: string; taskId?: string; agentId?: string; limit?: number; offset?: number; contentType?: string; tenant?: TenantContext }): Promise<{ artifacts: ArtifactMetadata[]; total: number }> {
+  async list(filter: {
+    organizationId?: string;
+    projectId?: string;
+    taskId?: string;
+    agentId?: string;
+    limit?: number;
+    offset?: number;
+    contentType?: string;
+    tenant?: TenantContext;
+  }): Promise<{ artifacts: ArtifactMetadata[]; total: number }> {
     if (filter.tenant) {
       filter.organizationId = filter.organizationId ?? filter.tenant.organizationId;
       filter.projectId = filter.projectId ?? filter.tenant.projectId;
@@ -105,7 +120,10 @@ export class ArtifactService {
     });
   }
 
-  async presignedUrl(id: string, tenant?: TenantContext): Promise<{ url: string; metadata: ArtifactMetadata }> {
+  async presignedUrl(
+    id: string,
+    tenant?: TenantContext
+  ): Promise<{ url: string; metadata: ArtifactMetadata }> {
     const meta = await this.manager.getMetadata(id);
     if (!meta) throw new NotFoundError("Artifact", id);
 
@@ -119,7 +137,12 @@ export class ArtifactService {
     return this.manager.presignedUrl(id);
   }
 
-  private async publishEvent(type: AgentMeshEvent["type"], subject: string, data: unknown, tenant?: TenantContext): Promise<void> {
+  private async publishEvent(
+    type: AgentMeshEvent["type"],
+    subject: string,
+    data: unknown,
+    tenant?: TenantContext
+  ): Promise<void> {
     try {
       const event: AgentMeshEvent = {
         id: `evt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,

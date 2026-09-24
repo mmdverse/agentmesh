@@ -30,8 +30,14 @@ export class OIDCVerifier {
       audience: this.config.clientId,
     });
 
-    const identity = (payload.sub ?? payload.email ?? payload.preferred_username ?? "unknown") as string;
-    const scopes = typeof payload.scope === "string" ? (payload.scope as string).split(" ") : (payload.scp as string[]) ?? [];
+    const identity = (payload.sub ??
+      payload.email ??
+      payload.preferred_username ??
+      "unknown") as string;
+    const scopes =
+      typeof payload.scope === "string"
+        ? (payload.scope as string).split(" ")
+        : ((payload.scp as string[]) ?? []);
 
     return { payload, identity, scopes };
   }
@@ -39,7 +45,9 @@ export class OIDCVerifier {
 
 // Simple API key verifier for Phase 0
 export class ApiKeyVerifier {
-  constructor(private validKeys: Set<string> | Map<string, { identity: string; scopes?: string[] }>) {}
+  constructor(
+    private validKeys: Set<string> | Map<string, { identity: string; scopes?: string[] }>
+  ) {}
 
   verify(apiKey: string): { identity: string; scopes?: string[] } | null {
     if (this.validKeys instanceof Set) {

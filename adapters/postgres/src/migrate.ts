@@ -2,7 +2,8 @@ import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 
-const url = process.env.DATABASE_URL ?? "postgresql://agentmesh:agentmesh_secret@localhost:5432/agentmesh";
+const url =
+  process.env.DATABASE_URL ?? "postgresql://agentmesh:agentmesh_secret@localhost:5432/agentmesh";
 
 async function run() {
   console.log(`[migrate] connecting to ${url.replace(/:[^:@]+@/, ":***@")}`);
@@ -14,7 +15,7 @@ async function run() {
   await client.end();
 }
 
-run().catch((err) => {
+run().catch(err => {
   console.error("[migrate] failed", err);
   process.exit(1);
 });

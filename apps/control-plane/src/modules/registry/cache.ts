@@ -16,9 +16,15 @@ export class RegistryCache {
       const mem = new Map<string, string>();
       const fakeRedis = {
         get: async (k: string) => mem.get(k) ?? null,
-        set: async (k: string, v: string) => { mem.set(k, v); },
-        setex: async (k: string, _ttl: number, v: string) => { mem.set(k, v); },
-        del: async (k: string) => { mem.delete(k); },
+        set: async (k: string, v: string) => {
+          mem.set(k, v);
+        },
+        setex: async (k: string, _ttl: number, v: string) => {
+          mem.set(k, v);
+        },
+        del: async (k: string) => {
+          mem.delete(k);
+        },
         exists: async (k: string) => (mem.has(k) ? 1 : 0),
       } as any;
       this.cache = new RedisCache(fakeRedis, "agentmesh:agent:");
@@ -46,16 +52,26 @@ export class RegistryCache {
   }
 
   async setCard(agentId: string, card: AgentCard, ttlSeconds = 300): Promise<void> {
-    await this.cache.set(`${agentId}:card`, { card, fetchedAt: new Date().toISOString() }, ttlSeconds);
+    await this.cache.set(
+      `${agentId}:card`,
+      { card, fetchedAt: new Date().toISOString() },
+      ttlSeconds
+    );
   }
 
   // Health cache
-  async getHealth(agentId: string): Promise<{ health: string; lastSeenAt: string; latencyMs?: number } | null> {
+  async getHealth(
+    agentId: string
+  ): Promise<{ health: string; lastSeenAt: string; latencyMs?: number } | null> {
     return this.healthCache.get(`${agentId}`);
   }
 
   async setHealth(agentId: string, health: string, latencyMs?: number): Promise<void> {
-    await this.healthCache.set(agentId, { health, lastSeenAt: new Date().toISOString(), latencyMs }, 120);
+    await this.healthCache.set(
+      agentId,
+      { health, lastSeenAt: new Date().toISOString(), latencyMs },
+      120
+    );
   }
 
   // Discovery cache - capability filtering
@@ -69,7 +85,9 @@ export class RegistryCache {
 
   async invalidateDiscovery(): Promise<void> {
     // In Phase 1, we don't have scan, so we just log
-    console.log("[registry-cache] discovery cache invalidation requested (Phase 1: no-op, will implement scan)");
+    console.log(
+      "[registry-cache] discovery cache invalidation requested (Phase 1: no-op, will implement scan)"
+    );
   }
 }
 

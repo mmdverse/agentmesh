@@ -21,13 +21,17 @@ export default async function AgentDetailPage({ params }: { params: { id: string
       <h1 className="text-2xl font-bold">{agent.name}</h1>
       <div className="flex gap-2">
         <Badge>{agent.version}</Badge>
-        <Badge variant={agent.health === "HEALTHY" ? "default" : "destructive"}>{agent.health}</Badge>
+        <Badge variant={agent.health === "HEALTHY" ? "default" : "destructive"}>
+          {agent.health}
+        </Badge>
         <Badge variant="outline">{agent.trustLevel}</Badge>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Details</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Details</CardTitle>
+          </CardHeader>
           <CardContent className="text-sm space-y-2">
             <div>ID: {agent.id}</div>
             <div>URL: {agent.url}</div>
@@ -42,13 +46,27 @@ export default async function AgentDetailPage({ params }: { params: { id: string
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Skills</CardTitle><CardDescription>{agent.skills?.length ?? 0} skills</CardDescription></CardHeader>
+          <CardHeader>
+            <CardTitle>Skills</CardTitle>
+            <CardDescription>{agent.skills?.length ?? 0} skills</CardDescription>
+          </CardHeader>
           <CardContent className="space-y-2">
             {agent.skills?.map((s: any) => (
               <div key={s.skillId} className="border rounded p-2">
-                <div className="font-medium">{s.name} <Badge variant="outline" className="ml-2 text-[10px]">{s.skillId}</Badge></div>
+                <div className="font-medium">
+                  {s.name}{" "}
+                  <Badge variant="outline" className="ml-2 text-[10px]">
+                    {s.skillId}
+                  </Badge>
+                </div>
                 <div className="text-xs text-muted-foreground">{s.description}</div>
-                <div className="flex gap-1 mt-1">{s.tags?.map((t: string) => <Badge key={t} variant="outline" className="text-[10px]">{t}</Badge>)}</div>
+                <div className="flex gap-1 mt-1">
+                  {s.tags?.map((t: string) => (
+                    <Badge key={t} variant="outline" className="text-[10px]">
+                      {t}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             ))}
           </CardContent>
@@ -57,9 +75,13 @@ export default async function AgentDetailPage({ params }: { params: { id: string
 
       {card && (
         <Card>
-          <CardHeader><CardTitle>Agent Card</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Agent Card</CardTitle>
+          </CardHeader>
           <CardContent>
-            <pre className="text-xs bg-secondary p-4 rounded overflow-auto max-h-96">{JSON.stringify(card, null, 2)}</pre>
+            <pre className="text-xs bg-secondary p-4 rounded overflow-auto max-h-96">
+              {JSON.stringify(card, null, 2)}
+            </pre>
           </CardContent>
         </Card>
       )}

@@ -51,10 +51,7 @@ export class TenantManager {
     accessorIdentity?: { id: string; type: string }
   ): { allowed: boolean; reason?: string } {
     // Super admin bypass
-    if (
-      accessorIdentity &&
-      this.options.superAdminIdentities?.includes(accessorIdentity.id)
-    ) {
+    if (accessorIdentity && this.options.superAdminIdentities?.includes(accessorIdentity.id)) {
       return { allowed: true };
     }
 
@@ -66,7 +63,10 @@ export class TenantManager {
     // If accessor has no tenant but resource does, deny unless allowCrossOrganization
     if (!accessorTenant.organizationId && resourceTenant.organizationId) {
       if (this.options.allowCrossOrganization) return { allowed: true };
-      return { allowed: false, reason: "Accessor has no organization, resource is organization-scoped" };
+      return {
+        allowed: false,
+        reason: "Accessor has no organization, resource is organization-scoped",
+      };
     }
 
     // Organization check
@@ -195,7 +195,7 @@ export class InMemoryTenantStore {
   }
 
   listProjects(orgId: string): Project[] {
-    return Array.from(this.projects.values()).filter((p) => p.organizationId === orgId);
+    return Array.from(this.projects.values()).filter(p => p.organizationId === orgId);
   }
 
   validateHierarchy(orgId?: string, projectId?: string): void {

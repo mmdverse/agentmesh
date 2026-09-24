@@ -14,24 +14,37 @@ export default async function RoutesPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Routes & Routing</h1>
-      <p className="text-sm text-muted-foreground">Routing Engine • Strategies: round_robin, weighted, least_loaded, latency_aware, capability_match</p>
+      <p className="text-sm text-muted-foreground">
+        Routing Engine • Strategies: round_robin, weighted, least_loaded, latency_aware,
+        capability_match
+      </p>
 
       <Card>
-        <CardHeader><CardTitle>Gateway Info</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Gateway Info</CardTitle>
+        </CardHeader>
         <CardContent>
-          <pre className="text-xs bg-secondary p-4 rounded overflow-auto">{JSON.stringify(gatewayInfo, null, 2)}</pre>
+          <pre className="text-xs bg-secondary p-4 rounded overflow-auto">
+            {JSON.stringify(gatewayInfo, null, 2)}
+          </pre>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Reliability Stats</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Reliability Stats</CardTitle>
+        </CardHeader>
         <CardContent>
-          <pre className="text-xs bg-secondary p-4 rounded overflow-auto max-h-96">{JSON.stringify(reliability, null, 2)}</pre>
+          <pre className="text-xs bg-secondary p-4 rounded overflow-auto max-h-96">
+            {JSON.stringify(reliability, null, 2)}
+          </pre>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Routing Test</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Routing Test</CardTitle>
+        </CardHeader>
         <CardContent className="text-sm">
           <p>Test routing via API:</p>
           <pre className="bg-secondary p-2 rounded text-xs mt-2">{`POST /v1/route

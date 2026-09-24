@@ -23,7 +23,10 @@ export interface AuthContext {
 
 export interface AuthProvider {
   readonly name: string;
-  authenticate(req: { headers: Record<string, string>; tls?: { clientCert?: string; subject?: string } }): Promise<AuthContext>;
+  authenticate(req: {
+    headers: Record<string, string>;
+    tls?: { clientCert?: string; subject?: string };
+  }): Promise<AuthContext>;
 }
 
 // API Key Provider
@@ -40,7 +43,7 @@ export class ApiKeyProvider implements AuthProvider {
   private keys: Map<string, ApiKeyRecord>;
 
   constructor(keys: ApiKeyRecord[] = []) {
-    this.keys = new Map(keys.map((k) => [k.key, k]));
+    this.keys = new Map(keys.map(k => [k.key, k]));
   }
 
   addKey(record: ApiKeyRecord): void {
@@ -137,7 +140,10 @@ export class JWTProvider implements AuthProvider {
       type: (payload.type as any) ?? "user",
       organizationId: payload.org as string,
       projectId: payload.project as string,
-      scopes: typeof payload.scope === "string" ? (payload.scope as string).split(" ") : (payload.scp as string[]) ?? [],
+      scopes:
+        typeof payload.scope === "string"
+          ? (payload.scope as string).split(" ")
+          : ((payload.scp as string[]) ?? []),
       metadata: { ...payload },
     };
   }
@@ -182,7 +188,10 @@ export class OIDCProvider implements AuthProvider {
         type: "user",
         organizationId: payload.org as string,
         projectId: payload.project as string,
-        scopes: typeof payload.scope === "string" ? (payload.scope as string).split(" ") : (payload.scp as string[]) ?? [],
+        scopes:
+          typeof payload.scope === "string"
+            ? (payload.scope as string).split(" ")
+            : ((payload.scp as string[]) ?? []),
         metadata: { ...payload },
       };
 
@@ -198,7 +207,10 @@ export class OIDCProvider implements AuthProvider {
 export class MTLSProvider implements AuthProvider {
   readonly name = "mtls";
 
-  async authenticate(req: { headers: Record<string, string>; tls?: { clientCert?: string; subject?: string } }): Promise<AuthContext> {
+  async authenticate(req: {
+    headers: Record<string, string>;
+    tls?: { clientCert?: string; subject?: string };
+  }): Promise<AuthContext> {
     const cert = req.tls?.clientCert;
     const subject = req.tls?.subject;
 
@@ -227,7 +239,8 @@ export class WorkloadIdentityProvider implements AuthProvider {
   readonly name = "workload";
 
   async authenticate(req: { headers: Record<string, string> }): Promise<AuthContext> {
-    const workloadHeader = req.headers["x-workload-identity"] ?? req.headers["x-service-account"] ?? "";
+    const workloadHeader =
+      req.headers["x-workload-identity"] ?? req.headers["x-service-account"] ?? "";
     if (!workloadHeader) return { method: "none", authenticated: false };
 
     // Simplified - in production verify token via metadata server
@@ -295,7 +308,9 @@ export function createAuthProvider(config: {
 
   // OIDC
   if (config.oidcIssuer) {
-    composite.addProvider(new OIDCProvider({ issuer: config.oidcIssuer, clientId: config.oidcClientId }));
+    composite.addProvider(
+      new OIDCProvider({ issuer: config.oidcIssuer, clientId: config.oidcClientId })
+    );
   }
 
   // mTLS and Workload (always added, they check for presence)
@@ -307,7 +322,10 @@ export function createAuthProvider(config: {
 
 // Helpers
 
-export function extractTenantFromIdentity(identity?: Identity): { organizationId?: string; projectId?: string } {
+export function extractTenantFromIdentity(identity?: Identity): {
+  organizationId?: string;
+  projectId?: string;
+} {
   if (!identity) return {};
   return {
     organizationId: identity.organizationId,

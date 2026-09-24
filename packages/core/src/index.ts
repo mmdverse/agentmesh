@@ -15,7 +15,12 @@ export const TaskState = {
 export type TaskState = (typeof TaskState)[keyof typeof TaskState];
 
 export const TaskStateTransitions: Record<TaskState, TaskState[]> = {
-  [TaskState.SUBMITTED]: [TaskState.WORKING, TaskState.REJECTED, TaskState.CANCELED, TaskState.TIMEOUT],
+  [TaskState.SUBMITTED]: [
+    TaskState.WORKING,
+    TaskState.REJECTED,
+    TaskState.CANCELED,
+    TaskState.TIMEOUT,
+  ],
   [TaskState.WORKING]: [
     TaskState.INPUT_REQUIRED,
     TaskState.AUTH_REQUIRED,
@@ -24,8 +29,18 @@ export const TaskStateTransitions: Record<TaskState, TaskState[]> = {
     TaskState.CANCELED,
     TaskState.TIMEOUT,
   ],
-  [TaskState.INPUT_REQUIRED]: [TaskState.WORKING, TaskState.CANCELED, TaskState.TIMEOUT, TaskState.FAILED],
-  [TaskState.AUTH_REQUIRED]: [TaskState.WORKING, TaskState.CANCELED, TaskState.TIMEOUT, TaskState.REJECTED],
+  [TaskState.INPUT_REQUIRED]: [
+    TaskState.WORKING,
+    TaskState.CANCELED,
+    TaskState.TIMEOUT,
+    TaskState.FAILED,
+  ],
+  [TaskState.AUTH_REQUIRED]: [
+    TaskState.WORKING,
+    TaskState.CANCELED,
+    TaskState.TIMEOUT,
+    TaskState.REJECTED,
+  ],
   [TaskState.COMPLETED]: [],
   [TaskState.FAILED]: [TaskState.SUBMITTED], // retry can go back to SUBMITTED
   [TaskState.CANCELED]: [],
@@ -105,7 +120,13 @@ export class AgentMeshError extends Error {
   public readonly details?: unknown;
   public readonly retryable: boolean;
 
-  constructor(opts: { message: string; code: string; statusCode?: number; details?: unknown; retryable?: boolean }) {
+  constructor(opts: {
+    message: string;
+    code: string;
+    statusCode?: number;
+    details?: unknown;
+    retryable?: boolean;
+  }) {
     super(opts.message);
     this.name = this.constructor.name;
     this.code = opts.code;
@@ -127,7 +148,11 @@ export class TaskStateTransitionError extends AgentMeshError {
 
 export class NotFoundError extends AgentMeshError {
   constructor(resource: string, id: string) {
-    super({ message: `${resource} not found: ${id}`, code: `${resource.toUpperCase()}_NOT_FOUND`, statusCode: 404 });
+    super({
+      message: `${resource} not found: ${id}`,
+      code: `${resource.toUpperCase()}_NOT_FOUND`,
+      statusCode: 404,
+    });
   }
 }
 
