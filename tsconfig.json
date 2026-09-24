@@ -1,0 +1,28 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "references": [
+    { "path": "./packages/config" },
+    { "path": "./packages/core" },
+    { "path": "./packages/a2a-protocol" },
+    { "path": "./packages/telemetry" },
+    { "path": "./packages/routing" },
+    { "path": "./packages/tasks" },
+    { "path": "./packages/events" },
+    { "path": "./packages/artifacts" },
+    { "path": "./packages/sdk" },
+    { "path": "./packages/server-sdk" },
+    { "path": "./adapters/postgres" },
+    { "path": "./adapters/redis" },
+    { "path": "./adapters/nats" },
+    { "path": "./adapters/s3" },
+    { "path": "./adapters/oidc" },
+    { "path": "./apps/gateway" },
+    { "path": "./apps/control-plane" }
+  ],
+  "include": [],
+  "files": []
+}

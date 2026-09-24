@@ -1,0 +1,61 @@
+# Default values for agentmesh - Phase 5 will be fully templated
+
+replicaCount:
+  gateway: 3
+  controlPlane: 2
+
+image:
+  gateway:
+    repository: agentmesh/gateway
+    tag: "0.1.0-phase0"
+    pullPolicy: IfNotPresent
+  controlPlane:
+    repository: agentmesh/control-plane
+    tag: "0.1.0-phase0"
+    pullPolicy: IfNotPresent
+
+service:
+  gateway:
+    type: ClusterIP
+    port: 3001
+  controlPlane:
+    type: ClusterIP
+    port: 3002
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+  hosts: []
+  tls: []
+
+resources:
+  gateway:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+  controlPlane:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+
+autoscaling:
+  gateway:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+config:
+  databaseUrl: "postgresql://agentmesh:agentmesh_secret@postgres:5432/agentmesh"
+  redisUrl: "redis://redis:6379"
+  natsUrl: "nats://nats:4222"
+  s3Endpoint: "http://minio:9000"
+
+# Phase 5: will include postgres, redis, nats, minio as subcharts or external

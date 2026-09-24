@@ -1,0 +1,14 @@
+{
+  "name": "@agentmesh/console",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AgentMesh Web Console - Phase 4",
+  "scripts": {
+    "build": "echo 'Console - Phase 4: Next.js + shadcn + React Flow will be here'",
+    "dev": "echo 'Console Phase 4 not yet implemented' && sleep 999999",
+    "typecheck": "echo ok",
+    "lint": "echo ok",
+    "clean": "echo ok",
+    "test": "echo ok"
+  }
+}

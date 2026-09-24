@@ -1,0 +1,19 @@
+apiVersion: v2
+name: agentmesh
+description: AgentMesh - Infrastructure Gateway and Control Plane for AI Agents
+type: application
+version: 0.1.0
+appVersion: "0.1.0-phase0"
+keywords:
+  - ai
+  - agents
+  - a2a
+  - gateway
+  - service-mesh
+  - mcp
+home: https://github.com/mmdverse/agentmesh
+sources:
+  - https://github.com/mmdverse/agentmesh
+maintainers:
+  - name: Mohammad
+    url: https://t.me/llllxyz
