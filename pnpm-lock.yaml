@@ -108,6 +108,9 @@ importers:
       '@agentmesh/a2a-protocol':
         specifier: workspace:*
         version: link:../../packages/a2a-protocol
+      '@agentmesh/authorization':
+        specifier: workspace:*
+        version: link:../../packages/authorization
       '@agentmesh/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -117,15 +120,24 @@ importers:
       '@agentmesh/events':
         specifier: workspace:*
         version: link:../../packages/events
+      '@agentmesh/identity':
+        specifier: workspace:*
+        version: link:../../packages/identity
       '@agentmesh/nats-adapter':
         specifier: workspace:*
         version: link:../../adapters/nats
       '@agentmesh/postgres-adapter':
         specifier: workspace:*
         version: link:../../adapters/postgres
+      '@agentmesh/rate-limit':
+        specifier: workspace:*
+        version: link:../../packages/rate-limit
       '@agentmesh/redis-adapter':
         specifier: workspace:*
         version: link:../../adapters/redis
+      '@agentmesh/reliability':
+        specifier: workspace:*
+        version: link:../../packages/reliability
       '@agentmesh/routing':
         specifier: workspace:*
         version: link:../../packages/routing
@@ -135,6 +147,12 @@ importers:
       '@agentmesh/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
+      '@agentmesh/tenancy':
+        specifier: workspace:*
+        version: link:../../packages/tenancy
+      '@agentmesh/versioning':
+        specifier: workspace:*
+        version: link:../../packages/versioning
       '@fastify/cors':
         specifier: ^10.0.1
         version: 10.1.0
@@ -150,6 +168,9 @@ importers:
       fastify:
         specifier: ^5.3.2
         version: 5.12.5
+      fastify-plugin:
+        specifier: ^6.0.0
+        version: 6.0.0
       zod:
         specifier: ^3.23.8
         version: 3.25.76
@@ -172,6 +193,9 @@ importers:
       '@agentmesh/artifacts':
         specifier: workspace:*
         version: link:../../packages/artifacts
+      '@agentmesh/authorization':
+        specifier: workspace:*
+        version: link:../../packages/authorization
       '@agentmesh/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -181,15 +205,30 @@ importers:
       '@agentmesh/events':
         specifier: workspace:*
         version: link:../../packages/events
+      '@agentmesh/identity':
+        specifier: workspace:*
+        version: link:../../packages/identity
+      '@agentmesh/rate-limit':
+        specifier: workspace:*
+        version: link:../../packages/rate-limit
       '@agentmesh/redis-adapter':
         specifier: workspace:*
         version: link:../../adapters/redis
+      '@agentmesh/reliability':
+        specifier: workspace:*
+        version: link:../../packages/reliability
       '@agentmesh/routing':
         specifier: workspace:*
         version: link:../../packages/routing
       '@agentmesh/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
+      '@agentmesh/tenancy':
+        specifier: workspace:*
+        version: link:../../packages/tenancy
+      '@agentmesh/versioning':
+        specifier: workspace:*
+        version: link:../../packages/versioning
       '@fastify/cors':
         specifier: ^10.0.1
         version: 10.1.0
@@ -202,6 +241,9 @@ importers:
       fastify:
         specifier: ^5.3.2
         version: 5.12.5
+      fastify-plugin:
+        specifier: ^6.0.0
+        version: 6.0.0
       zod:
         specifier: ^3.23.8
         version: 3.25.76
@@ -242,6 +284,25 @@ importers:
         specifier: ^5.6.3
         version: 5.9.3
 
+  packages/authorization:
+    dependencies:
+      '@agentmesh/core':
+        specifier: workspace:*
+        version: link:../core
+      '@agentmesh/identity':
+        specifier: workspace:*
+        version: link:../identity
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
   packages/config:
     dependencies:
       zod:
@@ -270,6 +331,60 @@ importers:
 
   packages/events:
     dependencies:
+      nats:
+        specifier: ^2.28.2
+        version: 2.29.3
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
+  packages/identity:
+    dependencies:
+      '@agentmesh/core':
+        specifier: workspace:*
+        version: link:../core
+      jose:
+        specifier: ^5.6.3
+        version: 5.10.0
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
+  packages/rate-limit:
+    dependencies:
+      '@agentmesh/core':
+        specifier: workspace:*
+        version: link:../core
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
+  packages/reliability:
+    dependencies:
+      '@agentmesh/core':
+        specifier: workspace:*
+        version: link:../core
       zod:
         specifier: ^3.23.8
         version: 3.25.76
@@ -371,6 +486,38 @@ importers:
       '@opentelemetry/semantic-conventions':
         specifier: ^1.26.0
         version: 1.43.0
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
+  packages/tenancy:
+    dependencies:
+      '@agentmesh/core':
+        specifier: workspace:*
+        version: link:../core
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
+  packages/versioning:
+    dependencies:
+      '@agentmesh/core':
+        specifier: workspace:*
+        version: link:../core
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
     devDependencies:
       '@types/node':
         specifier: ^20.14.0

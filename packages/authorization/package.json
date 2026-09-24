@@ -1,8 +1,8 @@
 {
-  "name": "@agentmesh/events",
+  "name": "@agentmesh/authorization",
   "version": "0.1.0",
   "private": true,
-  "description": "Event Bus abstraction",
+  "description": "Authorization subsystem - Policy engine, RBAC, ABAC, delegation",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -21,8 +21,9 @@
     "test": "echo ok"
   },
   "dependencies": {
+    "@agentmesh/core": "workspace:*",
     "zod": "^3.23.8",
-    "nats": "^2.28.2"
+    "@agentmesh/identity": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

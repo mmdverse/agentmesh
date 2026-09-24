@@ -7,6 +7,11 @@ import { createRoutingEngine } from "@agentmesh/routing";
 import { createEventBus } from "@agentmesh/events";
 import { healthRoutes } from "./routes/health.js";
 import { v1Routes } from "./routes/v1/index.js";
+import { authPlugin } from "./plugins/auth.js";
+import { tenantPlugin } from "./plugins/tenant.js";
+import { rateLimitPlugin } from "./plugins/rate-limit.js";
+import { resourceLimitsPlugin } from "./plugins/resource-limits.js";
+import { circuitBreakerPlugin } from "./plugins/circuit-breaker.js";
 
 export interface BuildAppOptions {
   config: GatewayConfig;
@@ -22,10 +27,30 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
     bodyLimit: opts.config.MAX_MESSAGE_SIZE,
   });
 
-  // Plugins
+  // Core plugins
   await app.register(cors, { origin: true });
   await app.register(helmet, { contentSecurityPolicy: false });
   await app.register(sensible);
+
+  // Phase 3 - Security & Reliability plugins
+  await app.register(authPlugin, {
+    jwtSecret: opts.config.JWT_SECRET,
+    publicRoutes: ["/health", "/ready", "/v1/health", "/v1/info", "/v1/reliability/stats"],
+  });
+  await app.register(tenantPlugin);
+  await app.register(rateLimitPlugin, { enabled: true });
+  await app.register(resourceLimitsPlugin, {
+    limits: {
+      maxMessageSize: opts.config.MAX_MESSAGE_SIZE,
+      maxArtifactSize: opts.config.MAX_ARTIFACT_SIZE,
+      maxFanOut: 10,
+    },
+  });
+  await app.register(circuitBreakerPlugin, {
+    failureThreshold: 5,
+    timeoutMs: 60000,
+    maxConcurrent: 50,
+  });
 
   // Decorators / shared
   const routingEngine = createRoutingEngine();
@@ -43,7 +68,17 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
 
   app.addHook("onResponse", async (req, reply) => {
     if (req.url.includes("/health")) return;
-    app.log.info({ method: req.method, url: req.url, status: reply.statusCode, traceId: (req as any).traceId }, "request completed");
+    app.log.info(
+      {
+        method: req.method,
+        url: req.url,
+        status: reply.statusCode,
+        traceId: (req as any).traceId,
+        tenant: (req as any).tenant,
+        auth: (req as any).auth?.method,
+      },
+      "request completed"
+    );
   });
 
   // Routes

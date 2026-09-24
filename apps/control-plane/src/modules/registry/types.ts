@@ -13,8 +13,8 @@ export interface RegisterAgentInput {
   metadata?: Record<string, unknown>;
   organizationId?: string;
   projectId?: string;
-  card?: AgentCard; // if already fetched
-  fetchCard?: boolean; // whether to fetch card from URL
+  card?: AgentCard;
+  fetchCard?: boolean;
   ttlSeconds?: number;
 }
 
@@ -32,6 +32,10 @@ export interface AgentFilter {
   limit?: number;
   offset?: number;
   search?: string;
+  version?: string; // exact version match
+  versionStrategy?: "latest" | "stable" | "canary" | "minimum" | "specific" | "max_satisfying";
+  minVersion?: string;
+  versionRange?: string; // semver range
 }
 
 export interface AgentRecord {

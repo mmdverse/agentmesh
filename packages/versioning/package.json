@@ -1,17 +1,12 @@
 {
-  "name": "@agentmesh/events",
+  "name": "@agentmesh/versioning",
   "version": "0.1.0",
   "private": true,
-  "description": "Event Bus abstraction",
+  "description": "Versioning subsystem - semver resolution, compatibility rules, canary/stable/latest",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
-  },
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
@@ -21,8 +16,8 @@
     "test": "echo ok"
   },
   "dependencies": {
-    "zod": "^3.23.8",
-    "nats": "^2.28.2"
+    "@agentmesh/core": "workspace:*",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "typescript": "^5.6.3",
