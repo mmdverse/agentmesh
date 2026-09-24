@@ -182,3 +182,5 @@ export function isExpired(expiresAt: string | Date): boolean {
   const d = typeof expiresAt === "string" ? new Date(expiresAt) : expiresAt;
   return d.getTime() < Date.now();
 }
+
+export * from "./security.js";
