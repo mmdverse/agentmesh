@@ -5,6 +5,7 @@ import { artifactsRoutes } from "./artifacts.js";
 import { messagesRoutes } from "./messages.js";
 import { webhooksRoutes } from "./webhooks.js";
 import { mcpRoutes } from "./mcp.js";
+import { extraRoutes } from "./extra.js";
 
 export async function v1Routes(app: FastifyInstance) {
   app.get("/health", async () => {
@@ -62,6 +63,7 @@ export async function v1Routes(app: FastifyInstance) {
   await app.register(messagesRoutes, { prefix: "/messages" });
   await app.register(webhooksRoutes, { prefix: "/webhooks" });
   await app.register(mcpRoutes, { prefix: "/mcp" });
+  await app.register(extraRoutes, { prefix: "/" });
 
   // Observability
   app.get("/observability/traces/:traceId", async (req, reply) => {
@@ -98,14 +100,7 @@ export async function v1Routes(app: FastifyInstance) {
     return { spans: spans.slice(-100), total: spans.length };
   });
 
-  // Legacy placeholders
+  // Legacy placeholder kept only for events (not duplicated in extra)
   app.get("/registry", async () => ({ message: "Use /v1/agents for registry - Phase 4" }));
-  app.get("/routes", async () => ({ message: "Routing via gateway /v1/route - Phase 4" }));
-  app.get("/policies", async () => ({
-    message: "Policies enforced via authorization plugin - Phase 3+4",
-  }));
   app.get("/events", async () => ({ message: "Events via NATS JetStream - Phase 4" }));
-  app.get("/organizations", async () => ({
-    message: "Multi-tenancy via tenant plugin - Phase 3+4",
-  }));
 }

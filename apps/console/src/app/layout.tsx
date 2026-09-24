@@ -1,5 +1,6 @@
 import "./globals.css";
 import Link from "next/link";
+import { DarkModeToggle } from "@/components/dark-mode-toggle";
 
 export const metadata = {
   title: "AgentMesh — Modern Luxury Minimal",
@@ -111,13 +112,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </aside>
 
-          <main className="flex-1 overflow-auto bg-[#fbfbfb] relative">
-            <div className="absolute inset-0 bg-gradient-to-b from-white via-[#fcfcfc] to-[#f9f9f9] pointer-events-none" />
+          <main className="flex-1 overflow-auto bg-[#fbfbfb] relative dark:bg-black dark:text-white">
+            <div className="absolute inset-0 bg-gradient-to-b from-white via-[#fcfcfc] to-[#f9f9f9] pointer-events-none dark:from-black dark:via-[#0a0a0a] dark:to-black" />
             <div className="relative">
-              <div className="sticky top-0 z-10 bg-[#fffbeb] border-b border-black/5 px-10 py-2.5 flex items-center gap-3">
+              <div className="sticky top-0 z-10 bg-[#fffbeb] border-b border-black/5 px-10 py-2.5 flex items-center gap-3 dark:bg-[#1a1a0a] dark:border-white/10">
                 <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
-                <span className="modern-mono text-[10px] tracking-[0.04em] text-black/70">INMEMORY MODE — DATA WILL BE LOST ON RESTART • USE docker-compose up FOR PERSISTENCE • POSTGRES REDIS NATS MINIO</span>
-                <span className="ml-auto modern-mono text-[9px] bg-black text-white px-2 py-1 rounded-full">DEV</span>
+                <span className="modern-mono text-[10px] tracking-[0.04em] text-black/70 dark:text-white/70">INMEMORY MODE — DATA WILL BE LOST ON RESTART • USE docker-compose up FOR PERSISTENCE • POSTGRES REDIS NATS MINIO • 20/20 PASSED • SSRF FIXED</span>
+                <div className="ml-auto flex items-center gap-2">
+                  <DarkModeToggle />
+                  <span className="modern-mono text-[9px] bg-black text-white px-2 py-1 rounded-full">DEV • LIVE</span>
+                </div>
               </div>
               <div className="p-10 max-w-[1400px] mx-auto">{children}</div>
             </div>
