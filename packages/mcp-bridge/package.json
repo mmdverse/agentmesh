@@ -1,6 +1,6 @@
 {
   "name": "@agentmesh/mcp-bridge",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "AgentMesh mcp-bridge subsystem",
   "type": "module",

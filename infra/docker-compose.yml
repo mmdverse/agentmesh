@@ -65,7 +65,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Optional: create bucket on startup
   minio-setup:
     image: minio/mc:latest
     depends_on:
@@ -78,6 +77,119 @@ services:
       /usr/bin/mc anonymous set public myminio/${S3_BUCKET:-agentmesh-artifacts} || true;
       exit 0;
       "
+
+  control-plane:
+    build:
+      context: ../
+      dockerfile: apps/control-plane/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${CONTROL_PLANE_PORT:-3002}:3002"
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-agentmesh}:${POSTGRES_PASSWORD:-agentmesh_secret}@postgres:5432/${POSTGRES_DB:-agentmesh}
+      REDIS_URL: redis://redis:6379
+      NATS_URL: nats://nats:4222
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minioadmin}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-minioadmin123}
+      S3_BUCKET: ${S3_BUCKET:-agentmesh-artifacts}
+      S3_FORCE_PATH_STYLE: "true"
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_change_in_production}
+      CONTROL_PLANE_PORT: 3002
+      CONTROL_PLANE_HOST: 0.0.0.0
+      VERSION: ${VERSION:-0.1.0-phase5}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  gateway:
+    build:
+      context: ../
+      dockerfile: apps/gateway/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${GATEWAY_PORT:-3001}:3001"
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-agentmesh}:${POSTGRES_PASSWORD:-agentmesh_secret}@postgres:5432/${POSTGRES_DB:-agentmesh}
+      REDIS_URL: redis://redis:6379
+      NATS_URL: nats://nats:4222
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minioadmin}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-minioadmin123}
+      S3_BUCKET: ${S3_BUCKET:-agentmesh-artifacts}
+      S3_FORCE_PATH_STYLE: "true"
+      CONTROL_PLANE_URL: http://control-plane:3002
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_change_in_production}
+      GATEWAY_PORT: 3001
+      GATEWAY_HOST: 0.0.0.0
+      VERSION: ${VERSION:-0.1.0-phase5}
+      MAX_MESSAGE_SIZE: 1048576
+      MAX_ARTIFACT_SIZE: 104857600
+      MAX_CONCURRENT_TASKS: 100
+      MAX_FAN_OUT: 10
+    depends_on:
+      control-plane:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      replicas: 1
+
+  # Gateway cluster - additional replicas for HA
+  gateway-2:
+    extends:
+      service: gateway
+    ports:
+      - "${GATEWAY_PORT_2:-3003}:3001"
+    depends_on:
+      control-plane:
+        condition: service_healthy
+
+  console:
+    build:
+      context: ../
+      dockerfile: apps/console/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${CONSOLE_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      CONTROL_PLANE_URL: http://control-plane:3002
+      GATEWAY_URL: http://gateway:3001
+      NEXT_PUBLIC_CONTROL_PLANE_URL: http://localhost:3002
+      NEXT_PUBLIC_GATEWAY_URL: http://localhost:3001
+    depends_on:
+      control-plane:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   pgdata:

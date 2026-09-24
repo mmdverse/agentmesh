@@ -1,6 +1,6 @@
 {
   "name": "@agentmesh/gateway",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "AgentMesh Gateway - Data Plane",
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "@agentmesh/identity",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Authentication providers - API Keys, JWT, OIDC, mTLS, Workload Identity",
   "type": "module",

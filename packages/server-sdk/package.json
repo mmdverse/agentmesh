@@ -1,6 +1,6 @@
 {
   "name": "@agentmesh/server-sdk",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "AgentMesh Server SDK for building A2A-compatible agents",
   "type": "module",

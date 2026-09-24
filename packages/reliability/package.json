@@ -1,6 +1,6 @@
 {
   "name": "@agentmesh/reliability",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Reliability primitives - Circuit Breaker, Bulkhead, Retry, Timeout, Deduplication",
   "type": "module",

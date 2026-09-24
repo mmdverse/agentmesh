@@ -1,6 +1,6 @@
 {
   "name": "@agentmesh/core",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "AgentMesh core domain types, state machines, errors",
   "type": "module",

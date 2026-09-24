@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "agentmesh.fullname" . }}-config
+  labels:
+    {{- include "agentmesh.labels" . | nindent 4 }}
+data:
+  NODE_ENV: {{ .Values.config.nodeEnv | quote }}
+  VERSION: {{ .Values.config.version | quote }}
+  NATS_URL: {{ .Values.config.natsUrl | quote }}
+  REDIS_URL: {{ .Values.config.redisUrl | quote }}
+  DATABASE_URL: {{ .Values.config.databaseUrl | quote }}
+  S3_ENDPOINT: {{ .Values.config.s3Endpoint | quote }}
+  S3_REGION: {{ .Values.config.s3Region | quote }}
+  S3_BUCKET: {{ .Values.config.s3Bucket | quote }}
+  CONTROL_PLANE_URL: {{ .Values.config.controlPlaneUrl | quote }}
+  GATEWAY_URL: {{ .Values.config.gatewayUrl | quote }}
+  GATEWAY_PORT: "3001"
+  CONTROL_PLANE_PORT: "3002"
+  MAX_MESSAGE_SIZE: {{ .Values.config.maxMessageSize | quote }}
+  MAX_ARTIFACT_SIZE: {{ .Values.config.maxArtifactSize | quote }}

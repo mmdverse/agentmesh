@@ -1,14 +1,37 @@
 {
   "name": "@agentmesh/console",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
-  "description": "AgentMesh Web Console - Phase 4",
+  "description": "AgentMesh Web Console - Infrastructure-grade UI for AI Agent Gateway and Control Plane",
+  "type": "module",
   "scripts": {
-    "build": "echo 'Console - Phase 4: Next.js + shadcn + React Flow will be here'",
-    "dev": "echo 'Console Phase 4 not yet implemented' && sleep 999999",
-    "typecheck": "echo ok",
-    "lint": "echo ok",
-    "clean": "echo ok",
-    "test": "echo ok"
+    "build": "next build",
+    "dev": "next dev -p 3000 -H 0.0.0.0",
+    "start": "next start -p 3000 -H 0.0.0.0",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "next lint",
+    "clean": "rm -rf .next dist out"
+  },
+  "dependencies": {
+    "@agentmesh/sdk": "workspace:*",
+    "@tanstack/react-query": "^5.56.2",
+    "@tanstack/react-table": "^8.20.5",
+    "next": "^14.2.13",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "reactflow": "^11.11.3",
+    "tailwind-merge": "^2.5.2",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.441.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.10",
+    "typescript": "^5.6.3"
   }
 }
