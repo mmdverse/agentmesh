@@ -1,17 +1,12 @@
 {
-  "name": "@agentmesh/server-sdk",
+  "name": "@agentmesh/webhooks",
   "version": "0.1.0",
   "private": true,
-  "description": "AgentMesh Server SDK for building A2A-compatible agents",
+  "description": "AgentMesh webhooks subsystem",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
-  },
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
@@ -21,12 +16,9 @@
     "test": "echo ok"
   },
   "dependencies": {
-    "@agentmesh/a2a-protocol": "workspace:*",
     "@agentmesh/core": "workspace:*",
-    "zod": "^3.23.8",
-    "@agentmesh/observability": "workspace:*",
-    "fastify": "^5.3.2",
-    "@fastify/cors": "^10.0.1"
+    "@agentmesh/events": "workspace:*",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

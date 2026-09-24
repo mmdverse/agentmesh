@@ -4,6 +4,7 @@ import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentation
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { Resource } from "@opentelemetry/resources";
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from "@opentelemetry/semantic-conventions";
+import { getObservability } from "@agentmesh/observability";
 
 let sdk: NodeSDK | null = null;
 
@@ -33,7 +34,7 @@ export function initTelemetry(config: TelemetryConfig): NodeSDK | null {
 
   const resource = new Resource({
     [ATTR_SERVICE_NAME]: config.serviceName,
-    [ATTR_SERVICE_VERSION]: config.serviceVersion ?? "0.1.0-phase0",
+    [ATTR_SERVICE_VERSION]: config.serviceVersion ?? "0.1.0-phase4",
   });
 
   const traceExporter = config.otlpEndpoint ? new OTLPTraceExporter({ url: `${config.otlpEndpoint}/v1/traces` }) : undefined;
@@ -50,9 +51,8 @@ export function initTelemetry(config: TelemetryConfig): NodeSDK | null {
   });
 
   sdk.start();
-  console.log(`[telemetry] initialized for ${config.serviceName}${config.otlpEndpoint ? ` -> ${config.otlpEndpoint}` : " (no exporter)"}`);
+  console.log(`[telemetry] initialized for ${config.serviceName}${config.otlpEndpoint ? ` -> ${config.otlpEndpoint}` : " (no exporter, using in-memory observability)"}`);
 
-  // graceful shutdown
   process.on("SIGTERM", async () => {
     try {
       await sdk?.shutdown();
@@ -69,7 +69,6 @@ export async function shutdownTelemetry(): Promise<void> {
   }
 }
 
-// Helpers for manual tracing
 export function getTracer(name = "agentmesh") {
   return trace.getTracer(name);
 }
@@ -77,13 +76,18 @@ export function getTracer(name = "agentmesh") {
 export async function withSpan<T>(name: string, fn: (span: ReturnType<ReturnType<typeof getTracer>["startSpan"]>) => Promise<T>, kind = SpanKind.INTERNAL): Promise<T> {
   const tracer = getTracer();
   const span = tracer.startSpan(name, { kind });
+  const obs = getObservability();
+  const internalSpan = obs["tracer"].startSpan(name, { kind: kind === SpanKind.CLIENT ? "client" : kind === SpanKind.SERVER ? "server" : "internal" });
+
   try {
     const result = await context.with(trace.setSpan(context.active(), span), () => fn(span));
     span.setStatus({ code: SpanStatusCode.OK });
+    obs.endSpan(internalSpan.id);
     return result;
   } catch (err) {
     span.setStatus({ code: SpanStatusCode.ERROR, message: (err as Error).message });
     span.recordException(err as Error);
+    obs.endSpan(internalSpan.id, { error: err as Error });
     throw err;
   } finally {
     span.end();
@@ -103,4 +107,30 @@ function generateTraceId(): string {
 
 function generateSpanId(): string {
   return Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+}
+
+// Re-export observability for convenience
+export { getObservability, createObservability } from "@agentmesh/observability";
+
+// Metrics helpers
+export function recordLatency(metricName: string, latencyMs: number, labels: Record<string, string> = {}): void {
+  const obs = getObservability();
+  obs["tracer"].recordMetric({
+    name: metricName,
+    value: latencyMs,
+    timestamp: Date.now(),
+    labels,
+    type: "histogram",
+  });
+}
+
+export function recordCounter(metricName: string, value = 1, labels: Record<string, string> = {}): void {
+  const obs = getObservability();
+  obs["tracer"].recordMetric({
+    name: metricName,
+    value,
+    timestamp: Date.now(),
+    labels,
+    type: "counter",
+  });
 }

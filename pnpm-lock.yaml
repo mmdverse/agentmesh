@@ -108,6 +108,9 @@ importers:
       '@agentmesh/a2a-protocol':
         specifier: workspace:*
         version: link:../../packages/a2a-protocol
+      '@agentmesh/artifacts':
+        specifier: workspace:*
+        version: link:../../packages/artifacts
       '@agentmesh/authorization':
         specifier: workspace:*
         version: link:../../packages/authorization
@@ -123,9 +126,18 @@ importers:
       '@agentmesh/identity':
         specifier: workspace:*
         version: link:../../packages/identity
+      '@agentmesh/mcp-bridge':
+        specifier: workspace:*
+        version: link:../../packages/mcp-bridge
+      '@agentmesh/messaging':
+        specifier: workspace:*
+        version: link:../../packages/messaging
       '@agentmesh/nats-adapter':
         specifier: workspace:*
         version: link:../../adapters/nats
+      '@agentmesh/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@agentmesh/postgres-adapter':
         specifier: workspace:*
         version: link:../../adapters/postgres
@@ -153,6 +165,9 @@ importers:
       '@agentmesh/versioning':
         specifier: workspace:*
         version: link:../../packages/versioning
+      '@agentmesh/webhooks':
+        specifier: workspace:*
+        version: link:../../packages/webhooks
       '@fastify/cors':
         specifier: ^10.0.1
         version: 10.1.0
@@ -208,6 +223,15 @@ importers:
       '@agentmesh/identity':
         specifier: workspace:*
         version: link:../../packages/identity
+      '@agentmesh/mcp-bridge':
+        specifier: workspace:*
+        version: link:../../packages/mcp-bridge
+      '@agentmesh/messaging':
+        specifier: workspace:*
+        version: link:../../packages/messaging
+      '@agentmesh/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@agentmesh/rate-limit':
         specifier: workspace:*
         version: link:../../packages/rate-limit
@@ -229,6 +253,9 @@ importers:
       '@agentmesh/versioning':
         specifier: workspace:*
         version: link:../../packages/versioning
+      '@agentmesh/webhooks':
+        specifier: workspace:*
+        version: link:../../packages/webhooks
       '@fastify/cors':
         specifier: ^10.0.1
         version: 10.1.0
@@ -273,6 +300,9 @@ importers:
 
   packages/artifacts:
     dependencies:
+      '@agentmesh/core':
+        specifier: workspace:*
+        version: link:../core
       zod:
         specifier: ^3.23.8
         version: 3.25.76
@@ -364,6 +394,63 @@ importers:
         specifier: ^5.6.3
         version: 5.9.3
 
+  packages/mcp-bridge:
+    dependencies:
+      '@agentmesh/core':
+        specifier: workspace:*
+        version: link:../core
+      '@agentmesh/events':
+        specifier: workspace:*
+        version: link:../events
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
+  packages/messaging:
+    dependencies:
+      '@agentmesh/core':
+        specifier: workspace:*
+        version: link:../core
+      '@agentmesh/events':
+        specifier: workspace:*
+        version: link:../events
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
+  packages/observability:
+    dependencies:
+      '@agentmesh/core':
+        specifier: workspace:*
+        version: link:../core
+      '@agentmesh/events':
+        specifier: workspace:*
+        version: link:../events
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
   packages/rate-limit:
     dependencies:
       '@agentmesh/core':
@@ -439,6 +526,15 @@ importers:
       '@agentmesh/core':
         specifier: workspace:*
         version: link:../core
+      '@agentmesh/observability':
+        specifier: workspace:*
+        version: link:../observability
+      '@fastify/cors':
+        specifier: ^10.0.1
+        version: 10.1.0
+      fastify:
+        specifier: ^5.3.2
+        version: 5.12.5
       zod:
         specifier: ^3.23.8
         version: 3.25.76
@@ -468,6 +564,9 @@ importers:
 
   packages/telemetry:
     dependencies:
+      '@agentmesh/observability':
+        specifier: workspace:*
+        version: link:../observability
       '@opentelemetry/api':
         specifier: ^1.9.0
         version: 1.9.1
@@ -515,6 +614,25 @@ importers:
       '@agentmesh/core':
         specifier: workspace:*
         version: link:../core
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
+  packages/webhooks:
+    dependencies:
+      '@agentmesh/core':
+        specifier: workspace:*
+        version: link:../core
+      '@agentmesh/events':
+        specifier: workspace:*
+        version: link:../events
       zod:
         specifier: ^3.23.8
         version: 3.25.76

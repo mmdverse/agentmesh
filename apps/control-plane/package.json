@@ -37,7 +37,12 @@
     "drizzle-orm": "^0.35.3",
     "fastify": "^5.3.2",
     "fastify-plugin": "^6.0.0",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "@agentmesh/messaging": "workspace:*",
+    "@agentmesh/mcp-bridge": "workspace:*",
+    "@agentmesh/webhooks": "workspace:*",
+    "@agentmesh/observability": "workspace:*",
+    "@agentmesh/artifacts": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
